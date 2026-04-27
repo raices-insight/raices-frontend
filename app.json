@@ -9,7 +9,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundlerIdentifier": "com.raicesfrontend.app",
+      "bundleIdentifier": "com.raicesfrontend.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +21,22 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.raicesfrontend.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "com.googleusercontent.apps.854043985624-83j0qtt90032du6ob54ml25lbps8elpc"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "output": "static",
@@ -38,11 +55,24 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.854043985624-n4708ke1qtuaokbu7ckvt3p1msoov4v4"
+        }
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2c8c1641-d09a-416f-9c50-5b48a39a9bf4"
+      }
     }
   }
 }
