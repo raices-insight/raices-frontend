@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAudioRecorder, RecordingPresets, requestRecordingPermissionsAsync } from 'expo-audio';
-import { apiClient } from '../lib/api';
-import { UploadTicketSchema, NotifyUploadResponseSchema } from '../lib/schemas';
+import { apiClient } from '@/core/api/client';
+import { UploadTicketSchema, NotifyUploadResponseSchema } from '@/features/assistant/api/schemas';
 import { Platform } from 'react-native';
 
 export type UploadStatus = 'idle' | 'recording' | 'processing' | 'uploading' | 'success' | 'error';

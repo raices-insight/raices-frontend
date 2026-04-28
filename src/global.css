@@ -1,0 +1,59 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+/* Platform-specific font families fallback */
+@media android {
+  :root {
+    --font-mono: monospace;
+    --font-rounded: normal;
+    --font-serif: serif;
+    --font-sans: normal;
+  }
+}
+
+@media ios {
+  :root {
+    --font-mono: ui-monospace;
+    --font-serif: ui-serif;
+    --font-sans: system-ui;
+    --font-rounded: ui-rounded;
+  }
+}
+
+/* Base styles and variables */
+@layer base {
+  :root {
+    --color-raices-bg: #F0F5EC;
+    --color-raices-surface: #FFFFFF;
+    --color-raices-primary: #325F3F;
+    --color-raices-secondary: #53815F;
+    --color-raices-tertiary: #7BA87D;
+    --color-raices-text: #1F1B15;
+    --color-raices-text-muted: rgba(31, 27, 21, 0.6);
+    --color-raices-error: #E53E3E;
+    
+    /* Typography from DESIGN.md */
+    --font-headline: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+    --font-body: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+    --font-label: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Register as Tailwind theme colors */
+@layer theme {
+  @theme {
+    --color-raices-bg: var(--color-raices-bg);
+    --color-raices-surface: var(--color-raices-surface);
+    --color-raices-primary: var(--color-raices-primary);
+    --color-raices-secondary: var(--color-raices-secondary);
+    --color-raices-tertiary: var(--color-raices-tertiary);
+    --color-raices-text: var(--color-raices-text);
+    --color-raices-text-muted: var(--color-raices-text-muted);
+    --color-raices-error: var(--color-raices-error);
+    
+    --font-headline: var(--font-headline);
+    --font-body: var(--font-body);
+    --font-label: var(--font-label);
+  }
+}
