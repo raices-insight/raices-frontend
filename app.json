@@ -62,7 +62,13 @@
           "iosUrlScheme": "com.googleusercontent.apps.854043985624-n4708ke1qtuaokbu7ckvt3p1msoov4v4"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Raíces necesita acceso al micrófono para que puedas responder a los eventos."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
