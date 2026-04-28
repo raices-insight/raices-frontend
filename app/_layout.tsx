@@ -1,3 +1,4 @@
+import '../src/core/patch-warnings';
 import { BeVietnamPro_700Bold } from '@expo-google-fonts/be-vietnam-pro';
 import {
   PlusJakartaSans_400Regular,
@@ -13,7 +14,9 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import '../src/global.css';
 
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/core/hooks/use-color-scheme';
+import { ToastProvider } from '@/core/toast/toast-provider';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -41,14 +44,18 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        <Stack.Screen name="terms" options={{ presentation: 'modal', title: 'Términos de Servicio' }} />
-        <Stack.Screen name="privacy" options={{ presentation: 'modal', title: 'Política de Privacidad' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ToastProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+            <Stack.Screen name="terms" options={{ presentation: 'modal', title: 'Términos de Servicio' }} />
+            <Stack.Screen name="privacy" options={{ presentation: 'modal', title: 'Política de Privacidad' }} />
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </ToastProvider>
+    </SafeAreaProvider>
   );
 }
