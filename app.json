@@ -68,7 +68,8 @@
         {
           "microphonePermission": "Raíces necesita acceso al micrófono para que puedas responder a los eventos."
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,
