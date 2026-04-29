@@ -1,7 +1,8 @@
 import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, StyleSheet, View } from 'react-native';
 
+import { AccountSetupScreen } from '@/components/account-setup-screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useGoogleAuth } from '@/hooks/use-google-auth';
@@ -10,10 +11,19 @@ const TERMS_ROUTE = '/terms' as Href;
 const PRIVACY_ROUTE = '/privacy' as Href;
 
 export default function HomeScreen() {
-  const { user, loading, error, signIn, signOut } = useGoogleAuth();
+  const { user, loading, error, isNewUser, signIn, signOut, completeOnboarding } = useGoogleAuth();
 
   return (
     <ThemedView style={styles.container}>
+      <Modal visible={!!(user && isNewUser)} presentationStyle="fullScreen" animationType="slide">
+        {user && (
+          <AccountSetupScreen
+            user={user}
+            onComplete={(_role) => completeOnboarding()}
+          />
+        )}
+      </Modal>
+
       {user ? (
         <View style={styles.profileScreen}>
           <View style={styles.profileCard}>
