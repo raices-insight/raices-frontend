@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { GoogleUser } from '@/hooks/use-google-auth';
+import type { GoogleUser } from '@/features/auth/hooks/use-google-auth';
 
 type Role = 'caregiver' | 'elderly';
 
