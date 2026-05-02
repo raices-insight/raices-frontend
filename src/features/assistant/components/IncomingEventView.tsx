@@ -71,6 +71,10 @@ export function IncomingEventView() {
 
   const handleMicPress = async () => {
     if (isRecording) {
+      // Real recording flow
+      // await stopAndUpload('11111111-1111-1111-1111-111111111111', 'adulto_mayor');
+
+      
       // For simulation: Resolve the asset URI before uploading
       const asset = Asset.fromModule(MOCK_AUDIO_FILE);
       await asset.downloadAsync();
