@@ -6,6 +6,7 @@ import {
 } from '@react-native-google-signin/google-signin';
 import { useCallback, useState } from 'react';
 import { Platform } from 'react-native';
+import { verifyGoogleToken } from '@/services/auth-api';
 
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
@@ -22,20 +23,26 @@ export interface GoogleUser {
   email: string;
   name: string | null;
   photo: string | null;
+  role: string;
 }
 
 interface GoogleAuthState {
   user: GoogleUser | null;
+  sessionToken: string | null;
   loading: boolean;
   error: string | null;
+  isNewUser: boolean | null;
   signIn: () => void;
   signOut: () => void;
+  completeOnboarding: () => void;
 }
 
 export function useGoogleAuth(): GoogleAuthState {
   const [user, setUser] = useState<GoogleUser | null>(null);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isNewUser, setIsNewUser] = useState<boolean | null>(null);
 
   const handleSignIn = useCallback(async () => {
     setError(null);
@@ -54,8 +61,26 @@ export function useGoogleAuth(): GoogleAuthState {
     try {
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
+
       if (isSuccessResponse(response)) {
-        setUser(response.data.user);
+        const { idToken } = response.data;
+
+        if (!idToken) {
+          setError('Google no retornó un id_token. Verifica que webClientId esté configurado.');
+          return;
+        }
+
+        const session = await verifyGoogleToken(idToken);
+
+        setSessionToken(session.accessToken);
+        setIsNewUser(session.isNewUser);
+        setUser({
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.name ?? null,
+          photo: session.user.avatar ?? null,
+          role: session.user.role,
+        });
       }
     } catch (e) {
       if (isErrorWithCode(e)) {
@@ -77,7 +102,6 @@ export function useGoogleAuth(): GoogleAuthState {
               );
               break;
             }
-
             setError(`Error Google: ${code}${message}`);
         }
       } else {
@@ -88,20 +112,29 @@ export function useGoogleAuth(): GoogleAuthState {
     }
   }, []);
 
+  const completeOnboarding = useCallback(() => {
+    setIsNewUser(false);
+  }, []);
+
   const handleSignOut = useCallback(async () => {
     try {
       await GoogleSignin.signOut();
     } finally {
       setUser(null);
+      setSessionToken(null);
+      setIsNewUser(null);
       setError(null);
     }
   }, []);
 
   return {
     user,
+    sessionToken,
     loading,
     error,
+    isNewUser,
     signIn: () => { void handleSignIn(); },
     signOut: () => { void handleSignOut(); },
+    completeOnboarding,
   };
 }
