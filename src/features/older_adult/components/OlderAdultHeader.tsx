@@ -12,7 +12,7 @@ export function OlderAdultHeader({ onProfilePress }: OlderAdultHeaderProps) {
         <View className="w-10 h-10 rounded-full border-2 border-raices-primary items-center justify-center bg-raices-surface">
           <Text className="text-raices-primary font-bold text-lg">R</Text>
         </View>
-        <Text className="text-2xl font-headline font-bold text-raices-primary">Vínculo</Text>
+        <Text className="text-2xl font-headline font-bold text-raices-primary">Raíces</Text>
       </View>
       <Pressable
         className="w-10 h-10 rounded-full bg-raices-surface items-center justify-center shadow-sm"

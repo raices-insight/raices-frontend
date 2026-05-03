@@ -60,7 +60,7 @@ export function AccountSetupScreen({ user, onComplete, onSignOut, loading = fals
             ) : (
               <View style={[styles.headerAvatar, styles.headerAvatarFallback]} />
             )}
-            <Text style={styles.brandText}>Vínculo</Text>
+            <Text style={styles.brandText}>Raíces</Text>
           </View>
           {onSignOut && (
             <Pressable style={styles.closeButton} onPress={onSignOut} hitSlop={8}>
@@ -110,7 +110,7 @@ export function AccountSetupScreen({ user, onComplete, onSignOut, loading = fals
         <View style={styles.roleSection}>
           <Text style={styles.roleSectionTitle}>Selecciona tu perfil</Text>
           <Text style={styles.roleSectionSubtitle}>
-            ¿Cuál es tu rol en la comunidad Vínculo?
+            ¿Cuál es tu rol en la comunidad Raíces?
           </Text>
 
           <View style={styles.cardsContainer}>
