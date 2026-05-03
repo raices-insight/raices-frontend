@@ -68,6 +68,12 @@
         {
           "microphonePermission": "Raíces necesita acceso al micrófono para que puedas responder a los eventos."
         }
+      ],
+      [
+        "expo-location",
+        {
+          "isAndroidBackgroundLocationEnabled":true
+        }
       ]
     ],
     "experiments": {
