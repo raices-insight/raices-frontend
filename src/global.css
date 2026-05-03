@@ -33,6 +33,11 @@
     --color-raices-text-muted: rgba(31, 27, 21, 0.6);
     --color-raices-error: #E53E3E;
     
+    /* Traffic Light / Status Colors */
+    --color-raices-status-green: #DBE9A9;
+    --color-raices-status-yellow: #FDE68A;
+    --color-raices-status-red: #FFDAD3;
+    
     /* Typography from DESIGN.md */
     --font-headline: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
     --font-body: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
@@ -51,6 +56,11 @@
     --color-raices-text: var(--color-raices-text);
     --color-raices-text-muted: var(--color-raices-text-muted);
     --color-raices-error: var(--color-raices-error);
+
+    /* Traffic Light / Status Colors */
+    --color-raices-status-green: var(--color-raices-status-green);
+    --color-raices-status-yellow: var(--color-raices-status-yellow);
+    --color-raices-status-red: var(--color-raices-status-red);
     
     --font-headline: var(--font-headline);
     --font-body: var(--font-body);

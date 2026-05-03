@@ -57,6 +57,12 @@ const MAPPING = {
   'questionmark.circle.fill':                 'help-circle',
   'lock.fill':                                'lock',
   'calendar':                                 'calendar',
+  
+  // --- Dashboard / Medical ---
+  'chart.bar.fill':                           'chart-bar',
+  'waveform.path.ecg':                        'heart-pulse',
+  'checkmark.seal.fill':                      'check-decagram',
+  'exclamationmark.octagon.fill':             'alert-octagon',
 } as IconMapping;
 
 /**
