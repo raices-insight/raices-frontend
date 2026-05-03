@@ -32,3 +32,29 @@ export async function verifyGoogleToken(idToken: string): Promise<SessionRespons
 
   return res.json() as Promise<SessionResponse>;
 }
+
+export async function updateProfileRole(
+  profileId: string,
+  roleName: string,
+  accessToken: string,
+): Promise<SessionResponse> {
+  if (!API_URL) {
+    throw new Error('Falta EXPO_PUBLIC_API_URL en .env');
+  }
+
+  const res = await fetch(`${API_URL}/auth/profile/role`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ profileId, roleName }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`Error del servidor (${res.status}): ${text}`);
+  }
+
+  return res.json() as Promise<SessionResponse>;
+}

@@ -18,6 +18,7 @@ import '../src/global.css';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/core/hooks/use-color-scheme';
 import { ToastProvider } from '@/core/toast/toast-provider';
+import { AuthProvider } from '@/features/auth/context/auth-context';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -48,6 +49,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <AuthProvider>
       <ToastProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack>
@@ -59,6 +61,7 @@ export default function RootLayout() {
           <StatusBar style="auto" />
         </ThemeProvider>
       </ToastProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

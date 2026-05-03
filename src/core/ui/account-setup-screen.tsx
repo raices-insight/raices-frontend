@@ -13,14 +13,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { GoogleUser } from '@/features/auth/hooks/use-google-auth';
 
-type Role = 'caregiver' | 'elderly';
+type Role = 'caregiver' | 'older_adult';
 
 interface Props {
   user: GoogleUser;
   onComplete: (role: Role) => void;
+  onSignOut?: () => void;
+  loading?: boolean;
 }
 
-export function AccountSetupScreen({ user, onComplete }: Props) {
+export function AccountSetupScreen({ user, onComplete, onSignOut, loading = false }: Props) {
   const [age, setAge] = useState(65);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
@@ -28,13 +30,19 @@ export function AccountSetupScreen({ user, onComplete }: Props) {
 
   const updateAge = (next: number) => {
     setAge(next);
-    if (next < 65 && selectedRole === 'elderly') setSelectedRole(null);
+    if (next < 65 && selectedRole === 'older_adult') setSelectedRole(null);
   };
 
   const handleAgeText = (v: string) => {
     if (v === '') return;
     const n = parseInt(v, 10);
     if (!isNaN(n) && n >= 1 && n <= 120) updateAge(n);
+  };
+
+  const handleComplete = () => {
+    if (selectedRole) {
+      onComplete(selectedRole);
+    }
   };
 
   return (
@@ -54,9 +62,11 @@ export function AccountSetupScreen({ user, onComplete }: Props) {
             )}
             <Text style={styles.brandText}>Vínculo</Text>
           </View>
-          <Pressable style={styles.bellButton} hitSlop={8}>
-            <Ionicons name="notifications-outline" size={24} color="#225031" />
-          </Pressable>
+          {onSignOut && (
+            <Pressable style={styles.closeButton} onPress={onSignOut} hitSlop={8}>
+              <Ionicons name="close-outline" size={24} color="#225031" />
+            </Pressable>
+          )}
         </View>
 
         {/* Age section */}
@@ -119,8 +129,8 @@ export function AccountSetupScreen({ user, onComplete }: Props) {
 
             {canBeElderly && (
               <Pressable
-                style={[styles.roleCard, selectedRole === 'elderly' && styles.roleCardActive]}
-                onPress={() => setSelectedRole('elderly')}
+                style={[styles.roleCard, selectedRole === 'older_adult' && styles.roleCardActive]}
+                onPress={() => setSelectedRole('older_adult')}
               >
                 <View style={[styles.roleIconWrap, styles.elderlyIconBg]}>
                   <Ionicons name="sunny-outline" size={28} color="#7BA87D" />
@@ -137,14 +147,15 @@ export function AccountSetupScreen({ user, onComplete }: Props) {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Pressable style={styles.primaryButton} onPress={() => onComplete('caregiver')}>
-          <Text style={styles.primaryButtonText}>Comenzar como Cuidador</Text>
+        <Pressable
+          style={[styles.primaryButton, !selectedRole && styles.primaryButtonDisabled]}
+          onPress={handleComplete}
+          disabled={!selectedRole || loading}
+        >
+          <Text style={styles.primaryButtonText}>
+            {loading ? 'Actualizando...' : selectedRole ? `Comenzar como ${selectedRole === 'caregiver' ? 'Cuidador' : 'Adulto Mayor'}` : 'Selecciona un perfil'}
+          </Text>
         </Pressable>
-        {canBeElderly && (
-          <Pressable style={styles.outlinedButton} onPress={() => onComplete('elderly')}>
-            <Text style={styles.outlinedButtonText}>Comenzar como Adulto Mayor</Text>
-          </Pressable>
-        )}
         <View style={styles.homeIndicator} />
       </View>
     </SafeAreaView>
@@ -190,7 +201,7 @@ const styles = StyleSheet.create({
     color: '#225031',
     lineHeight: 36,
   },
-  bellButton: {
+  closeButton: {
     width: 48,
     height: 48,
     alignItems: 'center',
@@ -357,6 +368,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  primaryButtonDisabled: {
+    backgroundColor: '#A8BFB3',
   },
   primaryButtonText: {
     fontFamily: 'PlusJakartaSans_700Bold',
