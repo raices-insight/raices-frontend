@@ -6,9 +6,12 @@ import { useToast } from '@/core/toast/use-toast';
 import { apiClient } from '@/core/api/client';
 import { CONFIG } from '@/core/config';
 
+import { z } from 'zod';
+
 export const useDashboardSocket = (profileId: string | undefined) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [dailyScore, setDailyScore] = useState<DashboardDailyScore | null>(null);
+  const [yesterdayScore, setYesterdayScore] = useState<DashboardDailyScore | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const toast = useToast();
 
@@ -20,37 +23,42 @@ export const useDashboardSocket = (profileId: string | undefined) => {
     // --- COLD START: Hidratación inicial via Axios ---
     const fetchInitialData = async () => {
       try {
-        logger.info('Fetching initial dashboard data (Cold Start)', { profileId });
+        logger.info('Fetching dashboard history (Cold Start)', { profileId });
         
-        // Usamos el apiClient global para aprovechar timeouts e interceptores
-        const response = await apiClient.get<DashboardDailyScore>(
+        // El backend ahora devuelve una lista: [hoy, ayer]
+        const response = await apiClient.get<DashboardDailyScore[]>(
           `/assistant/dashboard/current/${profileId}`,
           { signal: abortController.signal }
         );
         
-        // Zod Validation para asegurar contrato (aunque Axios tipa, Zod valida en runtime)
-        const parsed = DashboardDailyScoreSchema.safeParse(response.data);
+        // Validación del array de registros
+        const HistorySchema = z.array(DashboardDailyScoreSchema);
+        const parsed = HistorySchema.safeParse(response.data);
         
         if (parsed.success) {
-          setDailyScore(parsed.data);
-          logger.info('Initial dashboard data loaded and validated successfully');
+          const history = parsed.data;
+          // El primer elemento es el más reciente (hoy)
+          if (history.length > 0) setDailyScore(history[0]);
+          // El segundo elemento es el día anterior (ayer)
+          if (history.length > 1) setYesterdayScore(history[1]);
+          
+          logger.info(`Loaded dashboard history: ${history.length} records`);
         } else {
-          logger.error('Initial data validation failed', parsed.error);
+          logger.error('History data validation failed', parsed.error);
         }
       } catch (error: any) {
         if (error.name === 'CanceledError' || error.name === 'AbortError') {
-          logger.info('Fetch initial data aborted');
+          logger.info('Fetch history aborted');
           return;
         }
 
-        // Si es 404, es un estado esperado para usuarios nuevos
         if (error.response?.status === 404) {
-          logger.info('No existing dashboard data found for this profile (expected for new users)');
+          logger.info('No history found (expected for new users)');
           return;
         }
 
-        toast.error('Error al conectar con el servidor. Intenta nuevamente.');
-        logger.error('Failed to fetch initial dashboard data', error);
+        toast.error('Error al conectar con el servidor.');
+        logger.error('Failed to fetch dashboard history', error);
       }
     };
 
@@ -62,7 +70,6 @@ export const useDashboardSocket = (profileId: string | undefined) => {
       transports: ['websocket'],
     });
 
-    // ... rest of socket listeners ...
     newSocket.on('connect', () => {
       logger.info('Connected to Dashboard Socket', { profileId });
       setIsConnected(true);
@@ -70,17 +77,16 @@ export const useDashboardSocket = (profileId: string | undefined) => {
 
     newSocket.on('connect_error', (error) => {
       logger.error('Dashboard Socket connection error', error);
-      toast.error('Error al conectar con el servidor en tiempo real.');
     });
 
     newSocket.on('daily_score_update', (data: unknown) => {
-      logger.info('Received daily_score_update payload');
+      logger.info('Received daily_score_update');
       const parsed = DashboardDailyScoreSchema.safeParse(data);
       if (!parsed.success) {
-        logger.error('Invalid payload format received from Socket', parsed.error);
-        toast.error('Error de sincronización: Formato de datos inválido.');
+        logger.error('Invalid payload format from Socket', parsed.error);
         return;
       }
+      // Las actualizaciones en tiempo real siempre corresponden al día actual
       setDailyScore(parsed.data);
     });
 
@@ -91,13 +97,11 @@ export const useDashboardSocket = (profileId: string | undefined) => {
 
     setSocket(newSocket);
 
-    // Limpieza al desmontar
     return () => {
-      logger.info('Cleaning up Dashboard Socket and HTTP requests');
-      abortController.abort(); // Cancelar fetch si sigue pendiente
-      newSocket.disconnect();  // Cerrar socket
+      abortController.abort();
+      newSocket.disconnect();
     };
   }, [profileId, toast]);
 
-  return { socket, dailyScore, isConnected };
+  return { socket, dailyScore, yesterdayScore, isConnected };
 };

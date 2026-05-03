@@ -4,13 +4,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, Text } from '@/core/ui/tw';
 import { GlobalMockHeader } from '@/core/ui/GlobalMockHeader';
 import { SemanticStatusCard } from './SemanticStatusCard';
+import { HistoryAccordionCard } from './HistoryAccordionCard';
 import { useDashboardSocket } from '../hooks/useDashboardSocket';
 
 // MOCK: Cuando se integre Auth, esto vendrá del estado global de sesión del usuario.
-const MOCK_PROFILE_ID = '11111111-1111-1111-1111-111111111111';
+const MOCK_PROFILE_ID = 'b02bd0cc-fb75-4295-9328-afd8c1281de8';
 
 export function CaretakerDashboardScreen() {
-  const { dailyScore, isConnected } = useDashboardSocket(MOCK_PROFILE_ID);
+  const { dailyScore, yesterdayScore, isConnected } = useDashboardSocket(MOCK_PROFILE_ID);
   const insets = useSafeAreaInsets();
 
   return (
@@ -34,7 +35,10 @@ export function CaretakerDashboardScreen() {
         </Text>
       </View>
 
-      {/* ── Semantic Traffic Light Card ── */}
+      {/* ── Historial (Ayer) ── */}
+      <HistoryAccordionCard data={yesterdayScore} />
+
+      {/* ── Semantic Traffic Light Card (Hoy) ── */}
       <SemanticStatusCard dailyScore={dailyScore} />
 
       {/* ── Placeholder para el Futuro ── */}
