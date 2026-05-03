@@ -34,11 +34,18 @@ const MAPPING = {
   'trash.fill':                               'trash-can',
   'pencil':                                   'pencil',
   'plus':                                     'plus',
+  'plus.circle.fill':                         'plus-circle',
   'minus':                                    'minus',
+
+  // --- Health & Wellness ---
+  'heart.fill':                               'heart',
+  'figure.walk':                              'walk',
+  'face.smiling':                             'emoticon-happy-outline',
 
   // --- People & Social ---
   'person.fill':                              'account',
   'person.2.fill':                            'account-group',
+  'person.3.fill':                           'account-group',
   'person.crop.circle':                       'account-circle',
 
   // --- Media & Files ---
@@ -49,6 +56,7 @@ const MAPPING = {
   // --- System ---
   'bell.fill':                                'bell',
   'gear':                                     'cog',
+  'gearshape.fill':                            'cog',
   'magnifyingglass':                          'magnify',
   'exclamationmark.triangle.fill':            'alert',
   'info.circle.fill':                         'information',
@@ -57,6 +65,8 @@ const MAPPING = {
   'questionmark.circle.fill':                 'help-circle',
   'lock.fill':                                'lock',
   'calendar':                                 'calendar',
+  'pill.fill':                                'pill',
+  'stethoscope':                              'stethoscope',
   
   // --- Dashboard / Medical ---
   'chart.bar.fill':                           'chart-bar',

@@ -6,7 +6,7 @@ import {
 } from '@react-native-google-signin/google-signin';
 import { useCallback, useState } from 'react';
 import { Platform } from 'react-native';
-import { verifyGoogleToken } from '@/services/auth-api';
+import { verifyGoogleToken, updateProfileRole } from '@/services/auth-api';
 
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
@@ -34,7 +34,7 @@ interface GoogleAuthState {
   isNewUser: boolean | null;
   signIn: () => void;
   signOut: () => void;
-  completeOnboarding: () => void;
+  completeOnboarding: (role: 'caregiver' | 'older_adult') => Promise<void>;
 }
 
 export function useGoogleAuth(): GoogleAuthState {
@@ -112,9 +112,27 @@ export function useGoogleAuth(): GoogleAuthState {
     }
   }, []);
 
-  const completeOnboarding = useCallback(() => {
-    setIsNewUser(false);
-  }, []);
+  const completeOnboarding = useCallback(async (role: 'caregiver' | 'older_adult') => {
+    if (!sessionToken || !user) {
+      setError('Sesión no encontrada');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const session = await updateProfileRole(user.id, role, sessionToken);
+      setSessionToken(session.accessToken);
+      setUser({
+        ...user,
+        role: session.user.role,
+      });
+      setIsNewUser(false);
+    } catch (e) {
+      setError(`Error al actualizar rol: ${String(e)}`);
+    } finally {
+      setLoading(false);
+    }
+  }, [sessionToken, user]);
 
   const handleSignOut = useCallback(async () => {
     try {
