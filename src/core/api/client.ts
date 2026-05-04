@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { CONFIG } from '../config';
+import { getSessionToken } from '../session';
 
 export const apiClient = axios.create({
   baseURL: CONFIG.API_URL,
@@ -8,11 +9,12 @@ export const apiClient = axios.create({
   },
 });
 
-// Interceptor for attaching auth tokens automatically in the future
 apiClient.interceptors.request.use(
-  async (config) => {
-    // Example: const token = await SecureStore.getItemAsync('token');
-    // if (token) config.headers.Authorization = `Bearer ${token}`;
+  (config) => {
+    const token = getSessionToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {

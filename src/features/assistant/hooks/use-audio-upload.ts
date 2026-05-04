@@ -37,7 +37,7 @@ export function useAudioUpload() {
     }
   }, [audioRecorder]);
 
-  const stopAndUpload = useCallback(async (profileId: string, role: string, mockUri?: string) => {
+  const stopAndUpload = useCallback(async (mockUri?: string) => {
     try {
       setStatus('processing');
       await audioRecorder.stop();
@@ -81,11 +81,9 @@ export function useAudioUpload() {
 
       logger.info('Audio file uploaded to storage successfully');
 
-      // 3. Notify Gateway
+      // 3. Notify Gateway — user identity comes from the JWT (Authorization header)
       setStatus('processing');
       const notifyResponse = await apiClient.post('/assistant/audio/notify', {
-        profileId,
-        role,
         audioProfileId: ticket.audioProfileId,
         objectKey: ticket.objectKey,
       });
