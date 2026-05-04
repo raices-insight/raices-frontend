@@ -10,12 +10,28 @@ export function LocationIndicator(){
     useEffect(()=>{
         async function getCurrentLocation(){
             let {status}=await Location.requestForegroundPermissionsAsync();
+            //let bgResponse=await Location.requestBackgroundPermissionsAsync();
+            if (status !== 'granted'/*|| bgResponse.status!=="granted"*/) {
+                setErrorMsg('Permission to access location was denied');
+                return;
+            }
+
+            await new Promise(resolve=>setTimeout(resolve, 2000))
+            let location = await Location.getCurrentPositionAsync({});
+            console.log("latlng",location!.coords.latitude,location!.coords.longitude)
+            setLocation(location);
+        }
+
+        async function getBackgroundLocation(){
+            let {status}=await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
             setErrorMsg('Permission to access location was denied');
             return;
             }
 
+            await new Promise(resolve=>setTimeout(resolve, 2000))
             let location = await Location.getCurrentPositionAsync({});
+            
             setLocation(location);
         }
 
@@ -39,9 +55,9 @@ export function LocationIndicator(){
                     >
                         
                     </Camera>
-                    <Marker lngLat={[location!.coords.longitude, location!.coords.latitude]}>
+                    <Marker lngLat={[location!.coords.longitude, location!.coords.latitude]} className="">
                         <Text>
-                            V
+                            !
                         </Text>
                     </Marker>
                 </Map>
