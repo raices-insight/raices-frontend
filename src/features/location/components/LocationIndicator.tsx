@@ -1,7 +1,7 @@
-import { Text } from '@/core/ui/tw';
+import { Text } from "@/src/core/ui/tw";
+import { Camera, Map } from "@maplibre/maplibre-react-native";
 import * as Location from 'expo-location';
 import { useEffect, useState } from 'react';
-
 
 export function LocationIndicator(){
     const [location, setLocation] = useState<Location.LocationObject | null>(null);
@@ -24,10 +24,19 @@ export function LocationIndicator(){
     let text = 'Esperando...';
     if (errorMsg) {
         text = errorMsg;
+        return (<Map mapStyle="https://demotiles.maplibre.org/style.json" >
+            <Camera
+                zoom={12}
+                center={[location!.coords.longitude, location!.coords.latitude]}
+            >
+
+            </Camera>
+        </Map>)
     } else if (location) {
         text = JSON.stringify(location);
-    }
-    return (<Text className="font-headline font-bold text-[72px] leading-[84px] text-raices-secondary text-center tracking-tight">
+        return (<Text className="font-headline font-bold text-[72px] leading-[84px] text-raices-secondary text-center tracking-tight">
               {text}
     </Text>)
+    }
+    
 }

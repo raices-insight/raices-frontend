@@ -1,7 +1,7 @@
-import { router, type Href } from 'expo-router';
-import { ActivityIndicator } from 'react-native';
 import { Image } from '@/core/ui/image';
 import { Pressable, Text, View } from '@/core/ui/tw';
+import { router, type Href } from 'expo-router';
+import { ActivityIndicator } from 'react-native';
 
 const TERMS_ROUTE = '/terms' as Href;
 const PRIVACY_ROUTE = '/privacy' as Href;

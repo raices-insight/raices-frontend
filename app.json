@@ -84,7 +84,8 @@
         {
           "isAndroidBackgroundLocationEnabled": true
         }
-      ]
+      ],
+      "@maplibre/maplibre-react-native"
     ],
     "experiments": {
       "typedRoutes": true,
