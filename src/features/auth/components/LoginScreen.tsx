@@ -1,14 +1,18 @@
-import { ActivityIndicator } from 'react-native';
-import { View, Text, Pressable } from '@/core/ui/tw';
-import { Image } from '@/core/ui/image';
 import { router, type Href } from 'expo-router';
-import { useGoogleAuth } from '@/features/auth/hooks/use-google-auth';
+import { ActivityIndicator } from 'react-native';
+import { Image } from '@/core/ui/image';
+import { Pressable, Text, View } from '@/core/ui/tw';
 
 const TERMS_ROUTE = '/terms' as Href;
 const PRIVACY_ROUTE = '/privacy' as Href;
 
-export function LoginScreen() {
-  const { loading, error, signIn } = useGoogleAuth();
+interface LoginScreenProps {
+  loading: boolean;
+  error: string | null;
+  onSignIn: () => void;
+}
+
+export function LoginScreen({ loading, error, onSignIn }: LoginScreenProps) {
 
   return (
     <View className="flex-1 px-6 py-8 justify-center items-center overflow-hidden bg-raices-bg">
@@ -39,7 +43,7 @@ export function LoginScreen() {
       <View className="mt-16 w-full max-w-[360px]">
         <Pressable
           className={`py-4 px-8 rounded-full items-center justify-center flex-row gap-4 w-full bg-raices-surface border-2 border-orange-100/20 shadow-md elevation-3 ${loading ? 'opacity-50' : ''}`}
-          onPress={signIn}
+          onPress={onSignIn}
           disabled={loading}
         >
           {loading ? (

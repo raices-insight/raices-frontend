@@ -37,11 +37,11 @@ export function useAudioUpload() {
     }
   }, [audioRecorder]);
 
-  const stopAndUpload = useCallback(async (profileId: string, role: string) => {
+  const stopAndUpload = useCallback(async (profileId: string, role: string, mockUri?: string) => {
     try {
       setStatus('processing');
       await audioRecorder.stop();
-      const uri = audioRecorder.uri;
+      const uri = mockUri || audioRecorder.uri;
 
       if (!uri) {
         throw new Error('No se pudo obtener el archivo de audio.');
@@ -87,6 +87,7 @@ export function useAudioUpload() {
         profileId,
         role,
         audioProfileId: ticket.audioProfileId,
+        objectKey: ticket.objectKey,
       });
 
       // Validate the notification response (parse-use-safeparse)

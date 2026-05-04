@@ -1,15 +1,33 @@
+import { AccountSetupScreen } from '@/core/ui/account-setup-screen';
 import { Image } from '@/core/ui/image';
 import { Pressable, Text, View } from '@/core/ui/tw';
-import { useGoogleAuth } from '@/features/auth/hooks/use-google-auth';
+import type { GoogleUser } from '@/features/auth/hooks/use-google-auth';
+import { Modal } from 'react-native';
 import { LocationIndicator } from '../../location/components/LocationIndicator';
 
-export function ProfileScreen() {
-  const { user, signOut } = useGoogleAuth();
 
-  if (!user) return null;
+interface ProfileScreenProps {
+  user: GoogleUser;
+  isNewUser: boolean;
+  onSignOut: () => void;
+  onCompleteOnboarding: () => void;
+}
+
+export function ProfileScreen({
+  user,
+  isNewUser,
+  onSignOut,
+  onCompleteOnboarding,
+}: ProfileScreenProps) {
 
   return (
     <View className="flex-1 items-center justify-center p-6 bg-raices-bg">
+      <Modal visible={isNewUser} presentationStyle="fullScreen" animationType="slide">
+        <AccountSetupScreen
+          user={user}
+          onComplete={() => onCompleteOnboarding()}
+        />
+      </Modal>
       <View className="w-full max-w-[360px] items-center gap-3 bg-raices-surface rounded-[24px] border border-raices-secondary/15 py-7 px-5 shadow-sm elevation-2">
         {user.photo && (
           <Image 
@@ -26,7 +44,7 @@ export function ProfileScreen() {
         <LocationIndicator></LocationIndicator>
         <Pressable 
           className="mt-4 py-4 px-8 rounded-full items-center justify-center w-full max-w-[280px] bg-raices-secondary" 
-          onPress={signOut}
+          onPress={onSignOut}
         >
           <Text className="font-headline font-bold text-white text-base">
             Cerrar sesión

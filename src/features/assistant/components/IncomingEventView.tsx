@@ -9,6 +9,7 @@ import { View, Text, Pressable } from '@/core/ui/tw';
 import { Animated } from '@/core/ui/animated';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { Button } from '@/core/ui/button';
+import { Asset } from 'expo-asset';
 
 // ---------------------------------------------------------------------------
 // Mock data — replace with event props once backend is wired
@@ -16,6 +17,7 @@ import { Button } from '@/core/ui/button';
 const MOCK_EVENT_TITLE = 'Toma de pastillas';
 const MOCK_SENDER      = 'Eduardo';
 const MOCK_TRANSCRIPT  = '"Hola, ¿cómo te sientes hoy? Recuerda tomar tus pastillas después del almuerzo."';
+const MOCK_AUDIO_FILE  = require('@/../assets/audio/adulto-mayor-animo-positivo.mp3');
 
 // ---------------------------------------------------------------------------
 // Component
@@ -67,9 +69,15 @@ export function IncomingEventView() {
     opacity:   pulseOpacity.value,
   }));
 
-  const handleMicPress = () => {
-    if (isRecording) stopAndUpload('11111111-1111-1111-1111-111111111111', 'adulto_mayor');
-    else startRecording();
+  const handleMicPress = async () => {
+    if (isRecording) {
+      // For simulation: Resolve the asset URI before uploading
+      const asset = Asset.fromModule(MOCK_AUDIO_FILE);
+      await asset.downloadAsync();
+      stopAndUpload('11111111-1111-1111-1111-111111111111', 'adulto_mayor', asset.localUri || asset.uri);
+    } else {
+      startRecording();
+    }
   };
 
   const buttonLabel = isSuccess  ? '¡ENVIADO!'
