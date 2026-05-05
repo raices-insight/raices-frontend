@@ -1,73 +1,64 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { QrScanner } from './QrScanner';
-import { IconSymbol } from '@/core/ui/icon-symbol';
+import { ManualInputCard } from './ManualInputCard';
+import { CreateFamilyCard } from './CreateFamilyCard';
+import { QrScannerCard } from './QrScannerCard';
 
 export default function JoinFamilyScreen() {
   const [isScanning, setIsScanning] = useState(false);
 
   if (isScanning) {
-    return <QrScanner />;
+    return <QrScanner onBack={() => setIsScanning(false)} />;
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.headerTitle}>
-        Únete a una Familia
-      </Text>
-      <Text style={styles.headerSubtitle}>
-        Escanea el código QR de un miembro de la familia para unirte y empezar a colaborar.
-      </Text>
-      
-      <Pressable 
-        onPress={() => setIsScanning(true)}
-        style={styles.qrButton}
-      >
-        <IconSymbol name="qrcode.viewfinder" size={40} color="white" />
-      </Pressable>
-      
-      <Text style={styles.qrButtonText}>Toca el ícono para escanear</Text>
-    </View>
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Unirse a Familia</Text>
+        <Text style={styles.headerSubtitle}>
+          Conéctate con tus seres queridos escaneando su código o ingresándolo
+          manualmente.
+        </Text>
+      </View>
+      <View style={styles.grid}>
+        <QrScannerCard onScanPress={() => setIsScanning(true)} />
+        <ManualInputCard />
+        <CreateFamilyCard />
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#F0F5EC',
-        padding: 24,
-    },
-    headerTitle: {
-        fontSize: 30,
-        fontWeight: '800',
-        color: '#1F1B15',
-        textAlign: 'center',
-        marginBottom: 12,
-    },
-    headerSubtitle: {
-        fontSize: 16,
-        color: '#474747',
-        textAlign: 'center',
-        marginBottom: 32,
-    },
-    qrButton: {
-        backgroundColor: '#2E6346',
-        padding: 20,
-        borderRadius: 999,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 4.65,
-        elevation: 8,
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFDF6', // A slightly off-white like in the design
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 30,
+    fontWeight: '800',
+    color: '#1F1B15',
+    textAlign: 'center',
+    fontFamily: 'BeVietnamPro-ExtraBold',
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#474747',
+    textAlign: 'center',
+    marginTop: 12,
+    fontFamily: 'PlusJakartaSans-Regular',
+  },
+  grid: {
+    paddingHorizontal: 24,
+    gap: 16,
+    paddingBottom: 36,
+  },
+});
 
-    },
-    qrButtonText: {
-        color: '#474747',
-        marginTop: 16
-    }
-})

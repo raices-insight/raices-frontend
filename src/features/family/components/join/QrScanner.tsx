@@ -1,9 +1,13 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useState, useEffect } from 'react';
-import { Button, Text, View, StyleSheet, Linking, Alert } from 'react-native';
+import { Button, Text, View, StyleSheet, Linking, Alert, Pressable } from 'react-native';
+import { IconSymbol } from '@/core/ui/icon-symbol';
 
-export function QrScanner() {
-  const [facing, setFacing] = useState('back');
+type QrScannerProps = {
+    onBack: () => void;
+};
+
+export function QrScanner({ onBack }: QrScannerProps) {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
 
@@ -24,6 +28,7 @@ export function QrScanner() {
           Necesitamos tu permiso para mostrar la cámara
         </Text>
         <Button onPress={requestPermission} title="Conceder Permiso" />
+        <Button onPress={onBack} title="Volver" />
       </View>
     );
   }
@@ -55,13 +60,16 @@ export function QrScanner() {
   
   return (
     <View style={StyleSheet.absoluteFillObject} className="flex-1 justify-center items-center bg-black">
+        <Pressable onPress={onBack} style={styles.backButton}>
+            <IconSymbol name="arrow.left" size={24} color="white" />
+        </Pressable>
       <CameraView
         className="flex-1 w-full h-full"
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
         barcodeScannerSettings={{
           barcodeTypes: ['qr'],
         }}
-        facing={facing}
+        facing="back"
       >
         <View className="flex-1 justify-center items-center">
             <View className="w-64 h-64 border-4 border-white rounded-lg" />
@@ -70,3 +78,16 @@ export function QrScanner() {
     </View>
   );
 }
+
+
+const styles = StyleSheet.create({
+    backButton: {
+        position: 'absolute',
+        top: 60,
+        left: 24,
+        zIndex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        borderRadius: 20,
+        padding: 8,
+    }
+})
