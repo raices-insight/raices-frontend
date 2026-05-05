@@ -2,6 +2,8 @@ import { router, type Href } from 'expo-router';
 import { ActivityIndicator, TextInput as RNTextInput } from 'react-native';
 import { Image } from '@/core/ui/image';
 import { Pressable, Text, View } from '@/core/ui/tw';
+import { useState } from 'react';
+import { Feather } from '@expo/vector-icons';
 
 const TERMS_ROUTE = '/terms' as Href;
 const PRIVACY_ROUTE = '/privacy' as Href;
@@ -27,6 +29,12 @@ export function LocalLoginScreen({
   onEmailChange,
   onPasswordChange,
 }: LocalLoginScreenProps) {
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isFormValid = isEmailValid && password.length > 0;
+  const isButtonDisabled = loading || !isFormValid;
+
   return (
     <View className="flex-1 px-6 py-8 justify-center items-center overflow-hidden bg-raices-bg">
       {/* Decorative Blobs */}
@@ -75,29 +83,42 @@ export function LocalLoginScreen({
           onChangeText={onEmailChange}
           editable={!loading}
         />
-        <RNTextInput
-          style={{
-            width: '100%',
-            paddingVertical: 16,
-            paddingHorizontal: 20,
-            borderRadius: 16,
-            backgroundColor: '#FFFFFF',
-            borderWidth: 1,
-            borderColor: 'rgba(255,237,213,0.2)',
-            fontSize: 16,
-            color: '#1F1B15',
-          }}
-          placeholder="Contraseña"
-          placeholderTextColor="#A0978A"
-          secureTextEntry
-          value={password}
-          onChangeText={onPasswordChange}
-          editable={!loading}
-        />
+        <View className="relative w-full">
+          <RNTextInput
+            style={{
+              width: '100%',
+              paddingVertical: 16,
+              paddingHorizontal: 20,
+              paddingRight: 50,
+              borderRadius: 16,
+              backgroundColor: '#FFFFFF',
+              borderWidth: 1,
+              borderColor: 'rgba(255,237,213,0.2)',
+              fontSize: 16,
+              color: '#1F1B15',
+            }}
+            placeholder="Contraseña"
+            placeholderTextColor="#A0978A"
+            secureTextEntry={!isPasswordVisible}
+            value={password}
+            onChangeText={onPasswordChange}
+            editable={!loading}
+          />
+          <Pressable
+            className="absolute right-0 h-full px-4 justify-center"
+            onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+          >
+            <Feather
+              name={isPasswordVisible ? 'eye-off' : 'eye'}
+              size={20}
+              color="#A0978A"
+            />
+          </Pressable>
+        </View>
         <Pressable
-          className={`py-4 px-8 rounded-full items-center justify-center w-full bg-raices-secondary shadow-md elevation-3 ${loading ? 'opacity-50' : ''}`}
+          className={`py-4 px-8 rounded-full items-center justify-center w-full bg-raices-secondary shadow-md elevation-3 ${isButtonDisabled ? 'opacity-50' : ''}`}
           onPress={onLocalSignIn}
-          disabled={loading}
+          disabled={isButtonDisabled}
         >
           {loading ? (
             <ActivityIndicator color="#FFFFFF" />
