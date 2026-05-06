@@ -79,7 +79,7 @@ export function useGoogleAuth(): GoogleAuthState {
           email: session.user.email,
           name: session.user.name ?? null,
           photo: session.user.avatar ?? null,
-          role: session.user.role,
+          role: session.user.roles?.[0] ?? 'user',
         });
       }
     } catch (e) {
@@ -124,7 +124,7 @@ export function useGoogleAuth(): GoogleAuthState {
       setSessionToken(session.accessToken);
       setUser({
         ...user,
-        role: session.user.role,
+        role: session.user.roles?.[0] ?? 'user',
       });
       setIsNewUser(false);
     } catch (e) {
