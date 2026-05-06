@@ -1,10 +1,26 @@
 import { View, Text, StyleSheet, ScrollView, TextInput, Image } from 'react-native';
+import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { Button } from '@/core/ui/button';
 import { IconSymbol } from '@/core/ui/icon-symbol';
+import { useCreateFamily } from '../hooks/use-family';
 
 const heroImage = require('../../../../assets/images/create-family-hero.png');
 
 export default function CreateFamilyScreen() {
+  const [familyName, setFamilyName] = useState('');
+  const { createFamily, loading } = useCreateFamily();
+  const router = useRouter();
+
+  const trimmedName = familyName.trim();
+
+  const handleCreate = async () => {
+    const result = await createFamily({ name: trimmedName });
+    if (result) {
+      router.back();
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.headerImageContainer}>
@@ -28,6 +44,8 @@ export default function CreateFamilyScreen() {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Nombre de la Familia</Text>
           <TextInput
+            value={familyName}
+            onChangeText={setFamilyName}
             style={styles.input}
             placeholder="Ej: Familia García López"
             placeholderTextColor="rgba(255,255,255,0.8)"
@@ -58,11 +76,19 @@ export default function CreateFamilyScreen() {
           </View>
         </View>
 
-        <Button label="Crear Familia" onPress={() => {}} fullWidth style={{ marginTop: 24 }} />
+        <Button
+          label="Crear Familia"
+          onPress={handleCreate}
+          disabled={!trimmedName}
+          loading={loading}
+          fullWidth
+          style={{ marginTop: 24 }}
+        />
       </View>
     </ScrollView>
   );
 }
+
 
 
 const styles = StyleSheet.create({

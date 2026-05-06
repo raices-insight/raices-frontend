@@ -2,32 +2,48 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Button } from '@/core/ui/button';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 
-export function InvitationSection() {
-  const invitationCode = 'HGR-9821';
+interface InvitationSectionProps {
+  invitationCode: string | undefined;
+  onRegenerateCode: () => void;
+  isRegenerating: boolean;
+  onShowQr: () => void;
+}
 
+export function InvitationSection({
+  invitationCode,
+  onRegenerateCode,
+  isRegenerating,
+  onShowQr,
+}: InvitationSectionProps) {
   const handleCopyCode = () => {
     // Implement copy to clipboard
   };
 
-  const handleShowQr = () => {
-    // Implement show QR code modal
-  };
 
   return (
     <View style={styles.container}>
       <View style={styles.circleDecoration} />
       <Text style={styles.title}>Invitar nuevos miembros</Text>
       <Text style={styles.subtitle}>
-        Comparte este código con los familiares o cuidadores que desees agregar a tu círculo de
-        confianza.
+        Comparte este código con los familiares o cuidadores que desees agregar
+        a tu círculo de confianza.
       </Text>
       <View style={styles.codeContainer}>
-        <Text style={styles.codeText}>{invitationCode}</Text>
+        <Text style={styles.codeText}>{invitationCode ?? '--------'}</Text>
         <Pressable onPress={handleCopyCode} style={styles.copyButton}>
           <IconSymbol name="doc.on.doc" size={24} color="#777777" />
         </Pressable>
       </View>
-      <Button label="Mostrar QR" onPress={handleShowQr} fullWidth />
+      <View style={styles.actions}>
+        <Button label="Mostrar QR" onPress={onShowQr} fullWidth />
+        <Button
+          label="Regenerar Código"
+          onPress={onRegenerateCode}
+          loading={isRegenerating}
+          variant="outline"
+          size="sm"
+        />
+      </View>
     </View>
   );
 }
@@ -83,5 +99,9 @@ const styles = StyleSheet.create({
   },
   copyButton: {
     padding: 8,
+  },
+  actions: {
+    width: '100%',
+    gap: 12,
   },
 });

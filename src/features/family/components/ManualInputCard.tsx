@@ -1,7 +1,16 @@
 import { View, Text, StyleSheet, TextInput } from 'react-native';
+import { useState } from 'react';
 import { Button } from '@/core/ui/button';
+import { useJoinFamily } from '../hooks/use-join-family';
 
 export function ManualInputCard() {
+  const [code, setCode] = useState('');
+  const { joinFamily, loading } = useJoinFamily();
+
+  const handleJoin = () => {
+    joinFamily({ code });
+  };
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -13,13 +22,19 @@ export function ManualInputCard() {
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="INGRESA EL CÓDIGO DE 6 DÍGITOS"
+          placeholder="INGRESA EL CÓDIGO"
           placeholderTextColor="#6B7280"
-          maxLength={6}
-          keyboardType="number-pad"
+          value={code}
+          onChangeText={setCode}
+          autoCapitalize="characters"
         />
       </View>
-      <Button label="Validar Código" onPress={() => {}} />
+      <Button
+        label="Validar Código"
+        onPress={handleJoin}
+        disabled={code.length < 3}
+        loading={loading}
+      />
     </View>
   );
 }

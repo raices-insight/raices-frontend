@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
 import { FamilyHeader } from '../components/FamilyHeader';
 import { MemberList } from '../components/MemberList';
@@ -6,21 +6,48 @@ import { InvitationSection } from '../components/InvitationSection';
 import { MemberActionsModal } from '../components/MemberActionsModal';
 import { MOCK_MEMBERS, FamilyMember } from '../components/managment/mock-data';
 import { Button } from '@/core/ui/button';
+import { useFamily, useRegenerateCode, useDeleteFamily } from '../hooks/use-family';
+import { QrCodeModal } from '../components/QrCodeModal';
+import { DeleteFamilyModal } from '../components/DeleteFamilyModal';
 
 export default function FamilyManagementScreen() {
+  const { family } = useFamily();
+  const { regenerateCode, loading: regenerating } = useRegenerateCode();
+  const { deleteFamily, loading: deleting } = useDeleteFamily();
+
   const [members, setMembers] = useState(MOCK_MEMBERS);
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isActionsModalVisible, setIsActionsModalVisible] = useState(false);
+  const [isQrModalVisible, setIsQrModalVisible] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [invitationCode, setInvitationCode] = useState<string | undefined>(
+    family?.invitationCode,
+  );
+
+  useEffect(() => {
+    if (family?.invitationCode) {
+      setInvitationCode(family.invitationCode);
+    }
+  }, [family?.invitationCode]);
+
+  const handleRegenerateCode = async () => {
+    if (!family?.id) return;
+    const newCode = await regenerateCode(family.id);
+    if (newCode) {
+      setInvitationCode(newCode);
+    }
+  };
 
   const handleShowActions = (member: FamilyMember) => {
     setSelectedMember(member);
-    setIsModalVisible(true);
+    setIsActionsModalVisible(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalVisible(false);
+  const handleCloseActionsModal = () => {
+    setIsActionsModalVisible(false);
     setSelectedMember(null);
   };
+
 
   const handleSetRole = (role: 'ADMINISTRATOR' | 'MEMBER' | 'CAREGIVER') => {
     if (selectedMember) {
@@ -29,7 +56,7 @@ export default function FamilyManagementScreen() {
       );
       setMembers(updatedMembers);
     }
-    handleCloseModal();
+    handleCloseActionsModal();
   };
 
   const handleRemoveMember = () => {
@@ -45,7 +72,7 @@ export default function FamilyManagementScreen() {
             onPress: () => {
               const updatedMembers = members.filter((m) => m.id !== selectedMember.id);
               setMembers(updatedMembers);
-              handleCloseModal();
+              handleCloseActionsModal();
             },
           },
         ]
@@ -53,23 +80,12 @@ export default function FamilyManagementScreen() {
     }
   };
 
-  const handleDeleteFamily = () => {
-    Alert.alert(
-      'Eliminar Familia',
-      '¿Estás seguro de que quieres eliminar la familia? Esta acción es irreversible.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: () => {
-            // Here you would typically make an API call to delete the family
-            // and then navigate the user away or update the UI accordingly.
-            console.log('Familia eliminada');
-          },
-        },
-      ]
-    );
+  const handleDeleteFamily = async () => {
+    if (!family?.id) return;
+    const success = await deleteFamily(family.id);
+    if (success) {
+      setIsDeleteModalVisible(false);
+    }
   };
 
   return (
@@ -77,17 +93,37 @@ export default function FamilyManagementScreen() {
       <FamilyHeader />
       <MemberList onShowActions={handleShowActions} />
       <View style={styles.separator} />
-      <InvitationSection />
+      <InvitationSection
+        invitationCode={invitationCode}
+        onRegenerateCode={handleRegenerateCode}
+        isRegenerating={regenerating}
+        onShowQr={() => setIsQrModalVisible(true)}
+      />
       <View style={styles.separator} />
       <View style={styles.footer}>
-        <Button label="Eliminar Familia" onPress={handleDeleteFamily} variant="danger" />
+        <Button
+          label="Eliminar Familia"
+          onPress={() => setIsDeleteModalVisible(true)}
+          variant="danger"
+        />
       </View>
       <MemberActionsModal
         member={selectedMember}
-        visible={isModalVisible}
-        onClose={handleCloseModal}
+        visible={isActionsModalVisible}
+        onClose={handleCloseActionsModal}
         onSetRole={handleSetRole}
         onRemove={handleRemoveMember}
+      />
+      <QrCodeModal
+        visible={isQrModalVisible}
+        onClose={() => setIsQrModalVisible(false)}
+        invitationCode={invitationCode}
+      />
+      <DeleteFamilyModal
+        visible={isDeleteModalVisible}
+        onClose={() => setIsDeleteModalVisible(false)}
+        onConfirm={handleDeleteFamily}
+        loading={deleting}
       />
     </ScrollView>
   );
