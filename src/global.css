@@ -33,6 +33,19 @@
     --color-raices-text-muted: rgba(31, 27, 21, 0.6);
     --color-raices-error: #E53E3E;
     
+    /* Traffic Light / Status Colors */
+    --color-raices-status-green-bg: #e8fde8;
+    --color-raices-status-green-text: #325F3F;
+    --color-raices-status-green-accent: #53815F;
+
+    --color-raices-status-yellow-bg: #FEF3C7;
+    --color-raices-status-yellow-text: #B7791F;
+    --color-raices-status-yellow-accent: #D69E2E;
+
+    --color-raices-status-red-bg: #FFDAD3;
+    --color-raices-status-red-text: #C53030;
+    --color-raices-status-red-accent: #E53E3E;
+    
     /* Typography from DESIGN.md */
     --font-headline: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
     --font-body: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
@@ -51,6 +64,11 @@
     --color-raices-text: var(--color-raices-text);
     --color-raices-text-muted: var(--color-raices-text-muted);
     --color-raices-error: var(--color-raices-error);
+
+    /* Traffic Light / Status Colors */
+    --color-raices-status-green: var(--color-raices-status-green);
+    --color-raices-status-yellow: var(--color-raices-status-yellow);
+    --color-raices-status-red: var(--color-raices-status-red);
     
     --font-headline: var(--font-headline);
     --font-body: var(--font-body);

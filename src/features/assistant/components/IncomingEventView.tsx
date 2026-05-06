@@ -71,10 +71,14 @@ export function IncomingEventView() {
 
   const handleMicPress = async () => {
     if (isRecording) {
+      // Real recording flow
+      // await stopAndUpload('b02bd0cc-fb75-4295-9328-afd8c1281de8', 'adulto_mayor');
+
+      
       // For simulation: Resolve the asset URI before uploading
       const asset = Asset.fromModule(MOCK_AUDIO_FILE);
       await asset.downloadAsync();
-      stopAndUpload(asset.localUri || asset.uri);
+      stopAndUpload('b02bd0cc-fb75-4295-9328-afd8c1281de8');
     } else {
       startRecording();
     }

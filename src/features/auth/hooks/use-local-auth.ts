@@ -43,9 +43,9 @@ export function useLocalAuth(): LocalAuthState {
         email: session.user.email,
         name: session.user.name ?? null,
         photo: session.user.avatar ?? null,
-        role: session.user.role,
+        role: session.user.roles?.[0] ?? 'user',
       });
-      console.log('[LocalAuth] user seteado, role:', session.user.role);
+      console.log('[LocalAuth] user seteado, role:', session.user.roles?.[0]);
     } catch (e) {
       console.error('[LocalAuth] error en login:', e);
       setError(e instanceof Error ? e.message : `Error inesperado: ${String(e)}`);

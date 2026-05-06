@@ -67,6 +67,12 @@ const MAPPING = {
   'calendar':                                 'calendar',
   'pill.fill':                                'pill',
   'stethoscope':                              'stethoscope',
+  
+  // --- Dashboard / Medical ---
+  'chart.bar.fill':                           'chart-bar',
+  'waveform.path.ecg':                        'heart-pulse',
+  'checkmark.seal.fill':                      'check-decagram',
+  'exclamationmark.octagon.fill':             'alert-octagon',
 } as IconMapping;
 
 /**
