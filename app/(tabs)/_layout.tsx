@@ -30,6 +30,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
         }}
       />
+			<Tabs.Screen
+				name="family"
+				options={{
+					title: 'Familia',
+					tabBarIcon: ({ color }) => <IconSymbol size={28} name="family" color={color} />,
+				}}
+			/>
       <Tabs.Screen
         name="settings"
         options={{

@@ -1,16 +1,31 @@
-import { View, Text } from '@/core/ui/tw';
-import { IconSymbol } from '@/core/ui/icon-symbol';
+import { View, Text, StyleSheet } from 'react-native';
 
 export function FamilyHeader() {
   return (
-    <View className="bg-raices-primary h-28 pt-8 px-6 flex-row items-center justify-between">
-      <View>
-        <Text className="text-white font-label font-bold text-lg">Familia</Text>
-      </View>
-      <View className="flex-row items-center gap-4">
-        <IconSymbol name="magnifyingglass" size={24} color="white" weight="bold" />
-        <IconSymbol name="bell" size={24} color="white" weight="bold" />
-      </View>
+    <View style={styles.container}>
+      <Text style={styles.title}>Mi Familia</Text>
+      <Text style={styles.subtitle}>
+        Gestiona los miembros de tu hogar y comparte momentos seguros.
+      </Text>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    gap: 8,
+  },
+  title: {
+    fontFamily: 'BeVietnamPro-ExtraBold',
+    fontSize: 30,
+    color: '#1F1B15',
+  },
+  subtitle: {
+    fontFamily: 'BeVietnamPro-Regular',
+    fontSize: 16,
+    color: '#474747',
+    textAlign: 'center',
+  },
+});

@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import JoinFamilyScreen from '@/features/family/components/join';
-import FamilyScreen from '@/features/family/components/created/FamilyScreen';
+import JoinFamilyScreen from '@/features/family/screens/JoinFamilyScreen';
 
-export default function FamilyTabScreen() {
-  const [familyExists, setFamilyExists] = useState(false);
+import {useFamily} from "@/features/family/hooks/use-family";
+import FamilyManagementScreen from "@/features/family/screens/FamilyManagementScreen";
 
-  // This is a placeholder for logic that checks if a family exists.
-  // In a real app, this would come from an API call or global state.
+export default function FamilyRoute() {
+	const {isFamily } = useFamily();
 
-  return familyExists ? <FamilyScreen /> : <JoinFamilyScreen />;
+  if (!isFamily) {
+    return <JoinFamilyScreen />;
+  }
+
+  return <FamilyManagementScreen />;
 }

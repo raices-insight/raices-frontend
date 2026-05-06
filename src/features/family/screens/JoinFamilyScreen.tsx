@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useState } from 'react';
-import { QrScanner } from './QrScanner';
-import { ManualInputCard } from './ManualInputCard';
-import { CreateFamilyCard } from './CreateFamilyCard';
-import { QrScannerCard } from './QrScannerCard';
+import { QrScanner } from '../components/QrScanner';
+import { ManualInputCard } from '../components/ManualInputCard';
+import { CreateFamilyCard } from '../components/CreateFamilyCard';
+import { QrScannerCard } from '../components/QrScannerCard';
 
 export default function JoinFamilyScreen() {
   const [isScanning, setIsScanning] = useState(false);
