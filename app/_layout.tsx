@@ -8,7 +8,7 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -31,21 +31,28 @@ function RootLayoutNav() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const navigationState = useRootNavigationState();
 
   useEffect(() => {
-    if (loading) return;
+    // Prevent navigation until the navigation state is ready
+    if (loading || !navigationState?.key) return;
 
     // Type assertion because Expo Router hasn't regenerated typed routes for 'login' yet
     const currentSegment = segments[0] as string | undefined;
     const inAuthGroup = currentSegment === 'login';
 
-    if (!user && !inAuthGroup) {
-      // @ts-ignore: bypass strict typing until expo-env.d.ts is updated
-      router.replace('/login');
-    } else if (user && inAuthGroup) {
-      router.replace('/');
-    }
-  }, [user, loading, segments, router]);
+    // Force navigation with a timeout to fix render order issues
+    const timeout = setTimeout(() => {
+      if (!user && !inAuthGroup) {
+        // @ts-ignore: bypass strict typing until expo-env.d.ts is updated
+        router.replace('/login');
+      } else if (user && inAuthGroup) {
+        router.replace('/');
+      }
+    }, 0);
+
+    return () => clearTimeout(timeout);
+  }, [user, loading, segments, router, navigationState?.key]);
 
   return (
     <ToastProvider>

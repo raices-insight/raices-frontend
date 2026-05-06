@@ -78,7 +78,7 @@ export function IncomingEventView() {
       // For simulation: Resolve the asset URI before uploading
       const asset = Asset.fromModule(MOCK_AUDIO_FILE);
       await asset.downloadAsync();
-      stopAndUpload('b02bd0cc-fb75-4295-9328-afd8c1281de8', 'adulto_mayor', asset.localUri || asset.uri);
+      stopAndUpload('b02bd0cc-fb75-4295-9328-afd8c1281de8');
     } else {
       startRecording();
     }
