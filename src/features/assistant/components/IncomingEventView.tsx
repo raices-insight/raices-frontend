@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useWindowDimensions, ActivityIndicator } from 'react-native';
 import {
   useSharedValue, useAnimatedStyle,
@@ -35,6 +35,7 @@ export function IncomingEventView() {
   const iconSize   = Math.round(buttonSize * 0.24);
 
   const { status, error, startRecording, stopAndUpload, cancelRecording, isRecording } = useAudioUpload();
+  const [isCooldown, setIsCooldown] = useState(false);
   const isBusy    = status === 'uploading' || status === 'processing';
   const isSuccess = status === 'success';
 
@@ -73,6 +74,8 @@ export function IncomingEventView() {
   }));
 
   const handleMicPress = async () => {
+    if (isCooldown) return;
+
     if (isRecording) {
       // Real recording flow
       // await stopAndUpload('b02bd0cc-fb75-4295-9328-afd8c1281de8', 'adulto_mayor');
@@ -88,7 +91,9 @@ export function IncomingEventView() {
         console.warn('No user session available to upload audio');
       }
     } else {
+      setIsCooldown(true);
       startRecording();
+      setTimeout(() => setIsCooldown(false), 1000); // 1 sec cooldown
     }
   };
 
@@ -174,7 +179,7 @@ export function IncomingEventView() {
           />
           <Pressable
             onPress={handleMicPress}
-            disabled={isBusy}
+            disabled={isBusy || isCooldown}
             className="rounded-full items-center justify-center"
             style={{
               width: buttonSize,
@@ -187,7 +192,7 @@ export function IncomingEventView() {
               shadowOpacity: 0.35,
               shadowRadius: 40,
               elevation: 16,
-              opacity: isBusy ? 0.75 : 1,
+              opacity: (isBusy || isCooldown) ? 0.75 : 1,
             }}
           >
             {isBusy ? (
