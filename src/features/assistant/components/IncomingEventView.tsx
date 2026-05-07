@@ -10,12 +10,12 @@ import { Animated } from '@/core/ui/animated';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { Button } from '@/core/ui/button';
 import { Asset } from 'expo-asset';
+import { useAuth } from '@/features/auth/context/auth-context';
 
 // ---------------------------------------------------------------------------
 // Mock data — replace with event props once backend is wired
 // ---------------------------------------------------------------------------
 const MOCK_EVENT_TITLE = 'Toma de pastillas';
-const MOCK_SENDER      = 'Eduardo';
 const MOCK_TRANSCRIPT  = '"Hola, ¿cómo te sientes hoy? Recuerda tomar tus pastillas después del almuerzo."';
 const MOCK_AUDIO_FILE  = require('@/../assets/audio/adulto-mayor-animo-positivo.mp3');
 
@@ -25,6 +25,9 @@ const MOCK_AUDIO_FILE  = require('@/../assets/audio/adulto-mayor-animo-positivo.
 
 export function IncomingEventView() {
   const { width: screenWidth } = useWindowDimensions();
+  const { user } = useAuth();
+  
+  const senderName = user?.name || 'Usuario';
 
   // Responsive sizing: avatar ~25% (inside card), button ~72% of screen
   const avatarSize = Math.min(screenWidth * 0.25, 96);
@@ -78,7 +81,12 @@ export function IncomingEventView() {
       // For simulation: Resolve the asset URI before uploading
       const asset = Asset.fromModule(MOCK_AUDIO_FILE);
       await asset.downloadAsync();
-      stopAndUpload('b02bd0cc-fb75-4295-9328-afd8c1281de8');
+      
+      if (user?.id) {
+        stopAndUpload(asset.localUri || asset.uri);
+      } else {
+        console.warn('No user session available to upload audio');
+      }
     } else {
       startRecording();
     }
@@ -140,7 +148,7 @@ export function IncomingEventView() {
             </Text>
             <Text className="font-body text-sm text-raices-text-muted">
               Mensaje de{' '}
-              <Text className="font-body font-semibold text-raices-secondary">{MOCK_SENDER}</Text>
+              <Text className="font-body font-semibold text-raices-secondary">{senderName}</Text>
             </Text>
           </View>
         </View>
@@ -222,7 +230,7 @@ export function IncomingEventView() {
       {/* ── Transcription card — always anchored to the bottom ─── */}
       <View className="mb-6 w-full bg-raices-surface rounded-3xl p-5 shadow-sm elevation-2">
         <Text className="font-headline font-semibold text-xs text-raices-tertiary uppercase tracking-widest mb-2">
-          Mensaje de {MOCK_SENDER}
+          Mensaje de {senderName}
         </Text>
         <Text
           className="font-body text-raices-text text-center text-lg leading-7"

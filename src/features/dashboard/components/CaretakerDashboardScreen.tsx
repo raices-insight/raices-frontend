@@ -6,12 +6,15 @@ import { GlobalMockHeader } from '@/core/ui/GlobalMockHeader';
 import { SemanticStatusCard } from './SemanticStatusCard';
 import { HistoryAccordionCard } from './HistoryAccordionCard';
 import { useDashboardSocket } from '../hooks/useDashboardSocket';
-
-// MOCK: Cuando se integre Auth, esto vendrá del estado global de sesión del usuario.
-const MOCK_PROFILE_ID = 'b02bd0cc-fb75-4295-9328-afd8c1281de8';
+import { useAuth } from '@/features/auth/context/auth-context';
 
 export function CaretakerDashboardScreen() {
-  const { dailyScore, yesterdayScore, isConnected } = useDashboardSocket(MOCK_PROFILE_ID);
+  const { user } = useAuth();
+  
+  // Usamos el ID del usuario logueado para todo el flujo
+  const profileId = user?.id || '';
+
+  const { dailyScore, yesterdayScore, isConnected } = useDashboardSocket(profileId);
   const insets = useSafeAreaInsets();
 
   return (
