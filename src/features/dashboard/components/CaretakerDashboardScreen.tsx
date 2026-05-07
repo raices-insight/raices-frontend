@@ -9,12 +9,12 @@ import { useDashboardSocket } from '../hooks/useDashboardSocket';
 import { useAuth } from '@/features/auth/context/auth-context';
 
 export function CaretakerDashboardScreen() {
-  const { user } = useAuth();
+  const { user, sessionToken } = useAuth();
   
   // Usamos el ID del usuario logueado para todo el flujo
   const profileId = user?.id || '';
 
-  const { dailyScore, yesterdayScore, isConnected } = useDashboardSocket(profileId);
+  const { dailyScore, yesterdayScore, isConnected } = useDashboardSocket(profileId, sessionToken);
   const insets = useSafeAreaInsets();
 
   return (
