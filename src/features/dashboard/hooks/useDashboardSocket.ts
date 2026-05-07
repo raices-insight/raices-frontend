@@ -8,7 +8,7 @@ import { CONFIG } from '@/core/config';
 
 import { z } from 'zod';
 
-export const useDashboardSocket = (profileId: string | undefined) => {
+export const useDashboardSocket = (profileId: string | undefined, sessionToken: string | null | undefined) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [dailyScore, setDailyScore] = useState<DashboardDailyScore | null>(null);
   const [yesterdayScore, setYesterdayScore] = useState<DashboardDailyScore | null>(null);
@@ -16,7 +16,7 @@ export const useDashboardSocket = (profileId: string | undefined) => {
   const toast = useToast();
 
   useEffect(() => {
-    if (!profileId) return;
+    if (!profileId || !sessionToken) return;
 
     const abortController = new AbortController();
 
@@ -66,7 +66,7 @@ export const useDashboardSocket = (profileId: string | undefined) => {
 
     // --- REAL-TIME: Conexión Socket.IO ---
     const newSocket = io(CONFIG.API_URL, {
-      auth: { token: profileId },
+      auth: { token: sessionToken },
       transports: ['websocket'],
     });
 
@@ -101,7 +101,7 @@ export const useDashboardSocket = (profileId: string | undefined) => {
       abortController.abort();
       newSocket.disconnect();
     };
-  }, [profileId, toast]);
+  }, [profileId, sessionToken, toast]);
 
   return { socket, dailyScore, yesterdayScore, isConnected };
 };
