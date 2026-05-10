@@ -4,6 +4,7 @@ import { getSessionToken } from '../session';
 
 export const apiClient = axios.create({
   baseURL: CONFIG.API_URL,
+  timeout: 20000,
   headers: {
     'Content-Type': 'application/json',
   },

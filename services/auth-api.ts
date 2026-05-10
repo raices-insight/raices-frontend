@@ -5,7 +5,7 @@ export interface SessionUser {
   email: string;
   name: string;
   avatar?: string;
-  role: string;
+  roles: string[];
 }
 
 export interface SessionResponse {

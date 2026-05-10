@@ -80,6 +80,7 @@
         }
       ],
       "expo-asset",
+      "expo-barcode-scanner",
       [
         "expo-location",
         {

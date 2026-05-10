@@ -1,5 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, type ViewStyle } from 'react-native';
+import { IconSymbol } from './icon-symbol';
 import { Pressable, Text } from '@/core/ui/tw';
 
 // ---------------------------------------------------------------------------
@@ -13,6 +14,8 @@ export interface ButtonProps {
   // --- Content ---
   /** Label text — omit when using iconOnly */
   label?: string;
+  /** Name of the SF Symbol to render before the label (e.g., "play.fill") */
+  icon?: string;
   /** Node rendered before the label (e.g. <IconSymbol name="play.fill" />) */
   iconLeft?: React.ReactNode;
   /** Node rendered after the label */
@@ -91,6 +94,13 @@ const SIZE_TEXT: Record<ButtonSize, string> = {
   xl: 'text-xl  font-bold',
 };
 
+const SIZE_ICON: Record<ButtonSize, number> = {
+  sm: 16,
+  md: 20,
+  lg: 24,
+  xl: 32,
+};
+
 const SIZE_SPINNER: Record<ButtonSize, 'small' | 'large'> = {
   sm: 'small',
   md: 'small',
@@ -131,20 +141,32 @@ const SIZE_SPINNER: Record<ButtonSize, 'small' | 'large'> = {
  */
 export function Button({
   label,
+  icon,
   iconLeft,
   iconRight,
   iconOnly,
-  variant  = 'primary',
-  size     = 'md',
+  variant = 'primary',
+  size = 'md',
   fullWidth = false,
-  pill      = true,
+  pill = true,
   style,
   onPress,
   disabled = false,
-  loading  = false,
+  loading = false,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
-  const rounded    = pill ? 'rounded-full' : 'rounded-2xl';
+  const rounded = pill ? 'rounded-full' : 'rounded-2xl';
+
+  const finalIconLeft = icon ? (
+    <IconSymbol
+      name={icon}
+      size={SIZE_ICON[size]}
+      color={VARIANT_TEXT[variant]}
+      className="-translate-y-px" // Minor optical adjustment
+    />
+  ) : (
+    iconLeft
+  );
 
   // ---- Icon-only layout ----
   if (iconOnly !== undefined) {
@@ -162,9 +184,14 @@ export function Button({
         // interfere with the fixed button size
         style={[ICON_ONLY_SIZE[size], style]}
       >
-        {loading
-          ? <ActivityIndicator color={VARIANT_SPINNER[variant]} size={SIZE_SPINNER[size]} />
-          : iconOnly}
+        {loading ? (
+          <ActivityIndicator
+            color={VARIANT_SPINNER[variant]}
+            size={SIZE_SPINNER[size]}
+          />
+        ) : (
+          iconOnly
+        )}
       </Pressable>
     );
   }
@@ -185,12 +212,17 @@ export function Button({
       style={style}
     >
       {loading ? (
-        <ActivityIndicator color={VARIANT_SPINNER[variant]} size={SIZE_SPINNER[size]} />
+        <ActivityIndicator
+          color={VARIANT_SPINNER[variant]}
+          size={SIZE_SPINNER[size]}
+        />
       ) : (
         <>
-          {iconLeft}
+          {finalIconLeft}
           {label && (
-            <Text className={`font-headline ${SIZE_TEXT[size]} ${VARIANT_TEXT[variant]}`}>
+            <Text
+              className={`font-headline ${SIZE_TEXT[size]} ${VARIANT_TEXT[variant]}`}
+            >
               {label}
             </Text>
           )}
