@@ -1,18 +1,34 @@
 import { View, StyleSheet, FlatList } from 'react-native';
-import { MOCK_MEMBERS, FamilyMember } from './managment/mock-data';
+import type { FamilyMember } from '../api/schemas';
 import { MemberListItem } from './MemberListItem';
 
 type MemberListProps = {
+  members: FamilyMember[];
+  currentUserId: string | null;
+  currentUserName: string | null;
+  isAdmin: boolean;
   onShowActions: (member: FamilyMember) => void;
 };
 
-export function MemberList({ onShowActions }: MemberListProps) {
+export function MemberList({
+  members,
+  currentUserId,
+  currentUserName,
+  isAdmin,
+  onShowActions,
+}: MemberListProps) {
   return (
     <View style={styles.container}>
       <FlatList
-        data={MOCK_MEMBERS}
+        data={members}
         renderItem={({ item }) => (
-          <MemberListItem member={item} onShowActions={onShowActions} />
+          <MemberListItem
+            member={item}
+            currentUserId={currentUserId}
+            currentUserName={currentUserName}
+            isAdmin={isAdmin}
+            onShowActions={onShowActions}
+          />
         )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}

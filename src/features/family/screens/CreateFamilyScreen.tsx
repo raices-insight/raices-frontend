@@ -66,7 +66,7 @@ export default function CreateFamilyScreen() {
 
         <View style={styles.infoCard}>
           <View style={styles.infoCardIcon}>
-             <IconSymbol name="key.fill" size={20} color="#3E6842" />
+             <IconSymbol name="envelope.fill" size={20} color="#3E6842" />
           </View>
           <View style={styles.infoCardTextContainer}>
             <Text style={styles.infoCardTitle}>Invitaciones</Text>

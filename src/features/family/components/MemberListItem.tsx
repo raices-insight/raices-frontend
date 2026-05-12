@@ -1,29 +1,48 @@
-import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
-import { FamilyMember } from './mock-data';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import type { FamilyMember } from '../api/schemas';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 
 type MemberListItemProps = {
   member: FamilyMember;
+  currentUserId: string | null;
+  currentUserName: string | null;
+  isAdmin: boolean;
   onShowActions: (member: FamilyMember) => void;
 };
 
-export function MemberListItem({ member, onShowActions }: MemberListItemProps) {
-  const roleText = {
-    ADMINISTRATOR: 'ADMINISTRADOR',
+export function MemberListItem({
+  member,
+  currentUserId,
+  currentUserName,
+  isAdmin,
+  onShowActions,
+}: MemberListItemProps) {
+  const roleText: Record<FamilyMember['role'], string> = {
+    ADMINISTRATOR: 'Administrador',
     MEMBER: 'Familiar',
     CAREGIVER: 'Cuidador',
   };
 
+  const displayName =
+    member.name
+
+  const initials = displayName.slice(0, 2).toUpperCase();
+
   return (
     <View style={styles.card}>
-      <Image source={{ uri: member.avatarUrl }} style={styles.avatar} />
+      <View style={styles.avatar}>
+        <Text style={styles.avatarText}>{initials}</Text>
+      </View>
       <View style={styles.memberInfo}>
-        <Text style={styles.name}>{member.name}</Text>
+        <Text style={styles.name}>{displayName}</Text>
         <Text style={styles.role}>{roleText[member.role]}</Text>
       </View>
-      <Pressable onPress={() => onShowActions(member)}>
-        <IconSymbol name="ellipsis" size={24} color="#474747" />
-      </Pressable>
+
+      {isAdmin && (
+        <Pressable onPress={() => onShowActions(member)}>
+          <IconSymbol name="ellipsis" size={24} color="#474747" />
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -42,6 +61,13 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     backgroundColor: '#EBE1D7',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    fontFamily: 'PlusJakartaSans-Bold',
+    fontSize: 18,
+    color: '#1F1B15',
   },
   memberInfo: {
     flex: 1,

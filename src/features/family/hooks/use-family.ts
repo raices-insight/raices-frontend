@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '@/core/api/client';
 import { logger } from '@/core/logger';
 import { useToast } from '@/core/toast/use-toast';
+import { useAuth } from '@/features/auth/context/auth-context';
 import {
   CreateFamilyPayloadSchema,
   type CreateFamilyPayload,
@@ -9,8 +10,13 @@ import {
   type CreateFamilyResponse,
   GetFamilyResponseSchema,
   type GetFamilyResponse,
+  FamilyDetailsResponseSchema,
+  type FamilyDetailsResponse,
+  type FamilyMember,
   RegenerateCodeResponseSchema,
   type RegenerateCodeResponse,
+  type UpdateMemberRolePayload,
+  type ExpulseMemberPayload,
 } from '../api/schemas';
 import { getFamilyState, setFamilyState, subscribe } from '../state/family-state';
 
@@ -22,9 +28,7 @@ export interface UseFamily {
 }
 
 export function useFamily(): UseFamily {
-  const [family, setFamily] = useState<GetFamilyResponse | null>(
-    getFamilyState,
-  );
+  const [family, setFamily] = useState<GetFamilyResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(
     getFamilyState() === null,
   );
@@ -33,8 +37,8 @@ export function useFamily(): UseFamily {
   useEffect(() => {
     let cancelled = false;
 
-    // Si ya hay estado poblado (p.ej. desde useCreateFamily), no re-fetchear
     if (getFamilyState() !== null) {
+      setFamily(getFamilyState());
       setLoading(false);
       return;
     }
@@ -64,7 +68,6 @@ export function useFamily(): UseFamily {
         setFamilyState(validation.data);
       } catch (err: unknown) {
         if (cancelled) return;
-        // 404 u otro error → el usuario no tiene familia, es esperado
         const message =
           err instanceof Error ? err.message : 'Error al consultar familia';
         logger.info('No se encontró familia para el usuario', err);
@@ -76,9 +79,9 @@ export function useFamily(): UseFamily {
 
     void fetchFamily();
 
-    // Suscribirse a cambios externos (p.ej. useCreateFamily)
     const unsubscribe = subscribe(() => {
-      setFamily(getFamilyState());
+      const state = getFamilyState();
+      setFamily(state);
       setError(null);
     });
 
@@ -131,8 +134,13 @@ export function useCreateFamily() {
           return null;
         }
 
-        // Persistir en el estado compartido para que useFamily reaccione
-        setFamilyState(responseValidation.data);
+        setFamilyState({
+          ...responseValidation.data,
+          invitationCode: '',
+          imageUrl: null,
+          createdAt: new Date().toISOString(),
+          members: [],
+        });
 
         toast.success(
           `Familia "${responseValidation.data.name}" creada exitosamente`,
@@ -154,6 +162,144 @@ export function useCreateFamily() {
 
   return {
     createFamily,
+    loading,
+    error,
+  };
+}
+
+export function useFamilyDetails(familyId: string | undefined) {
+  const { user } = useAuth();
+  const [details, setDetails] = useState<FamilyDetailsResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchDetails = useCallback(async () => {
+    if (!familyId) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data } = await apiClient.get<FamilyDetailsResponse>(
+        `/family/${familyId}/details`,
+      );
+
+      const validation = FamilyDetailsResponseSchema.safeParse(data);
+      if (!validation.success) {
+        logger.error(
+          'Respuesta inesperada al obtener detalles de familia',
+          validation.error,
+        );
+        setError('Error al procesar los detalles de la familia');
+        return;
+      }
+
+      setDetails(validation.data);
+      setFamilyState(validation.data);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Error al obtener detalles de la familia';
+      logger.error('Error al obtener detalles de familia', err);
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [familyId]);
+
+  useEffect(() => {
+    void fetchDetails();
+  }, [fetchDetails]);
+
+  return {
+    details,
+    members: details?.members ?? [],
+    loading,
+    error,
+    refetch: fetchDetails,
+    isAdmin: details
+      ? details.members.some(
+          (m: FamilyMember) =>
+            m.profileId === user?.id && m.role === 'ADMINISTRATOR',
+        )
+      : false,
+    currentMember: details
+      ? details.members.find((m: FamilyMember) => m.profileId === user?.id) ?? null
+      : null,
+  };
+}
+
+export function useUpdateMemberRole() {
+  const toast = useToast();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const updateRole = useCallback(
+    async (
+      familyId: string,
+      payload: UpdateMemberRolePayload,
+    ): Promise<boolean> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        await apiClient.patch(`/family/${familyId}/member-role`, payload);
+
+        toast.success('Rol actualizado exitosamente');
+        return true;
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Error al actualizar el rol';
+        logger.error('Error al actualizar rol de miembro', err);
+        setError(message);
+        toast.error(message);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [toast],
+  );
+
+  return {
+    updateRole,
+    loading,
+    error,
+  };
+}
+
+export function useExpulseMember() {
+  const toast = useToast();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const expulse = useCallback(
+    async (
+      familyId: string,
+      payload: ExpulseMemberPayload,
+    ): Promise<boolean> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        await apiClient.post(`/family/${familyId}/expulse`, payload);
+
+        toast.success('Miembro expulsado exitosamente');
+        return true;
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Error al expulsar al miembro';
+        logger.error('Error al expulsar miembro', err);
+        setError(message);
+        toast.error(message);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [toast],
+  );
+
+  return {
+    expulse,
     loading,
     error,
   };
@@ -223,7 +369,6 @@ export function useDeleteFamily() {
       try {
         await apiClient.delete(`/family/${familyId}`);
 
-        // Limpia el estado global de la familia
         setFamilyState(null);
 
         toast.success('Familia eliminada exitosamente');
