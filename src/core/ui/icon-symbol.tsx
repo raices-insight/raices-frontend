@@ -36,6 +36,7 @@ const MAPPING = {
   'plus':                                     'plus',
   'plus.circle.fill':                         'plus-circle',
   'minus':                                    'minus',
+	'ellipsis':                                 'dots-horizontal',
 
   // --- Health & Wellness ---
   'heart.fill':                               'heart',
@@ -73,6 +74,11 @@ const MAPPING = {
   'waveform.path.ecg':                        'heart-pulse',
   'checkmark.seal.fill':                      'check-decagram',
   'exclamationmark.octagon.fill':             'alert-octagon',
+
+	'shield.checkered':                        'shield-check',
+	'envelope.fill':                           'email',
+	'camera.fill':																	'camera',
+	"qrcode.viewfinder":																	'qrcode-scan',
 } as IconMapping;
 
 /**

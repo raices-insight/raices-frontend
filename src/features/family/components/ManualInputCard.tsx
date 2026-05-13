@@ -2,6 +2,8 @@ import { View, Text, StyleSheet, TextInput } from 'react-native';
 import { useState } from 'react';
 import { Button } from '@/core/ui/button';
 import { useJoinFamily } from '../hooks/use-join-family';
+import {IconSymbol} from "@/core/ui/icon-symbol";
+import {getPrimaryColor} from "@expo/config-plugins/build/android/PrimaryColor";
 
 export function ManualInputCard() {
   const [code, setCode] = useState('');
@@ -15,7 +17,7 @@ export function ManualInputCard() {
     <View style={styles.card}>
       <View style={styles.header}>
         <View style={styles.iconContainer}>
-          {/* Placeholder for icon */}
+				<IconSymbol name="qrcode.viewfinder" color="primary"></IconSymbol>
         </View>
         <Text style={styles.title}>Código manual</Text>
       </View>
@@ -34,6 +36,7 @@ export function ManualInputCard() {
         onPress={handleJoin}
         disabled={code.length < 3}
         loading={loading}
+
       />
     </View>
   );
@@ -74,6 +77,7 @@ const styles = StyleSheet.create({
     paddingVertical: 23,
     paddingHorizontal: 20,
     alignItems: 'center',
+		flexDirection: 'row',
   },
   input: {
     fontFamily: 'PlusJakartaSans-Medium',
@@ -81,5 +85,6 @@ const styles = StyleSheet.create({
     color: '#1F1B15',
     letterSpacing: 2, // Approximate the tracking
     textAlign: 'center',
+		flex: 1,
   },
 });

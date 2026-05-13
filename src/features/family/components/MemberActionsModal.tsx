@@ -1,13 +1,14 @@
-import { Modal, View, Text, StyleSheet, Pressable } from 'react-native';
-import { FamilyMember } from './mock-data';
+import { Modal, View, Text, StyleSheet } from 'react-native';
+import type { FamilyMember } from '../api/schemas';
 import { Button } from '@/core/ui/button';
 
 type MemberActionsModalProps = {
   member: FamilyMember | null;
   visible: boolean;
   onClose: () => void;
-  onSetRole: (role: 'ADMINISTRATOR' | 'MEMBER' | 'CAREGIVER') => void;
+  onSetRole: (role: FamilyMember['role']) => void;
   onRemove: () => void;
+  loading?: boolean;
 };
 
 export function MemberActionsModal({
@@ -16,6 +17,7 @@ export function MemberActionsModal({
   onClose,
   onSetRole,
   onRemove,
+  loading,
 }: MemberActionsModalProps) {
   if (!member) return null;
 
@@ -23,7 +25,7 @@ export function MemberActionsModal({
     <Modal visible={visible} transparent={true} animationType="slide">
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.memberName}>{member.name}</Text>
+          <Text style={styles.memberName}>{member.profileId}</Text>
           <View style={styles.roleButtons}>
             <Button
               label="Administrador"
@@ -41,7 +43,7 @@ export function MemberActionsModal({
               variant={member.role === 'CAREGIVER' ? 'primary' : 'outline'}
             />
           </View>
-          <Button label="Eliminar Miembro" onPress={onRemove} variant="danger" />
+          <Button label="Eliminar Miembro" onPress={onRemove} variant="danger" loading={loading} />
           <Button label="Cancelar" onPress={onClose} variant="ghost" />
         </View>
       </View>
