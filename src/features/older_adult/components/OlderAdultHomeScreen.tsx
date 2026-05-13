@@ -1,10 +1,10 @@
-import { View, ScrollView, Text, Pressable } from '@/core/ui/tw';
-import { useState } from 'react';
-import { OlderAdultHeader } from './OlderAdultHeader';
-import { WeeklyPerspective } from './WeeklyPerspective';
-import { FilterTabs } from './FilterTabs';
-import { EventCard, EventItem } from './EventCard';
 import { IconSymbol } from '@/core/ui/icon-symbol';
+import { Pressable, ScrollView, Text, View } from '@/core/ui/tw';
+import { useState } from 'react';
+import { CalendarSelector } from '../../calendar/components/Calendar';
+import { EventCard, EventItem } from './EventCard';
+import { FilterTabs } from './FilterTabs';
+import { OlderAdultHeader } from './OlderAdultHeader';
 
 const MOCK_EVENTS: EventItem[] = [
   {
@@ -37,7 +37,8 @@ export function OlderAdultHomeScreen() {
     <View className="flex-1 bg-raices-bg">
       <OlderAdultHeader />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <WeeklyPerspective />
+        {/* <WeeklyPerspective /> */}
+        <CalendarSelector></CalendarSelector>
         <FilterTabs activeTab={activeTab} onTabChange={setActiveTab} />
         
         <View className="px-6 mt-8 pb-10">
