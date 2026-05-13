@@ -18,6 +18,8 @@ export function CalendarSelector(){
     
     const [selectedDate,setSelectedDate]=useState(new Date())
 
+    const [eventsOnDay,setEventsOnDay]=useState<EventDTO[]>([])
+
 
     const monthEvents=events?.filter((event)=>{
       console.log(event.date.getDate())
@@ -183,7 +185,7 @@ return (
                   }}
                   />
 
-        <EventModal events={dayEvents(selectedDay)} visible={modalVisible} onClose={()=>{
+        <EventModal events={eventsOnDay} visible={modalVisible} onClose={()=>{
           setModalVisible(false)
         }}></EventModal>
       {/* CALENDAR GRID */}
@@ -246,7 +248,7 @@ return (
                   
                 }
                 else{
-                  setSelectedDay(day)
+                  setEventsOnDay(dayEvents)
                   setModalVisible(!modalVisible)
                 }
               }
