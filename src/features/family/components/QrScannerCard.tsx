@@ -16,7 +16,7 @@ export function QrScannerCard({ onScanPress }: QrScannerCardProps) {
       <Text style={styles.subtitle}>
         Apunta tu cámara al código mostrado en el dispositivo de tu familiar.
       </Text>
-      <Button label="Abrir Cámara" onPress={onScanPress} icon="camera" />
+      <Button  label="Abrir Cámara" onPress={onScanPress} icon="camera.fill"  />
     </Pressable>
   );
 }
