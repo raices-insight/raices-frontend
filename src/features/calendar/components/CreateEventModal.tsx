@@ -68,26 +68,7 @@ export function CreateEventModal({selectedDate,visible,addEvent,onClose}:CreateE
             
         }
         console.log("sending uhh ",JSON.stringify(jsonBody))
-        return;
-        let res=await fetch(`${API_URL}/calendar/date`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(jsonBody),
-        });
-        console.log("res ",res.status, "at ",`${API_URL}/calendar/date`)
-        if (res.status==400){
-          console.log("error: ",JSON.stringify(res.json()))
-          return;
-        }
-        let resJson=await res.json()
-        addEvent(new EventDTO(
-         resJson.eventId,
-         resJson.name,
-          new Date(resJson.startDatetime),
-          new Date(resJson.endDatetime)
-        ))
-
-        onClose()
+        
         
         
     }
