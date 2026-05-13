@@ -237,7 +237,11 @@ return (
                 <Pressable onPress={()=>{
                   console.log("pressed")
                 if (dayEvents.length==0){
-                  setSelectedDate(new Date(`${currentMonth}/${day}/${currentYear}`))
+                  
+                  const dateString=`${currentMonth+1}/${day}/${currentYear}`
+                  let date=new Date(currentYear,currentMonth,day,today.getHours(),today.getMinutes())
+                  console.log("using empty date ",dateString," isostring ", date.toISOString())
+                  setSelectedDate(date)
                   setCreateEventModalVisible(true)
                   
                 }

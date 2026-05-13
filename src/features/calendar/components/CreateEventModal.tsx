@@ -1,6 +1,6 @@
 import { Text, View } from "@/src/core/ui/tw";
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import React, { useState, } from "react";
+import React, { useEffect, useState, } from "react";
 import { Modal, Pressable, TextInput as RNTextInput, TouchableOpacity, ViewStyle } from "react-native";
 import { EventDTO } from "../dto/dto";
 
@@ -19,6 +19,7 @@ export function CreateEventModal({selectedDate,visible,addEvent,onClose}:CreateE
     const touchableStyle={backgroundColor:"#00af1f", padding:6, margin:8}
     const normalButtonStyle:ViewStyle={flexShrink:3, backgroundColor:"#00ff7f", margin:6,padding:8, alignItems:"center", justifyContent:"center", borderRadius:10}
     const [name,setName]=useState("")
+    console.log("date from modal, ", selectedDate.getDate(),selectedDate.getMonth(),selectedDate.getFullYear())
     const [startDate, setStartDate] = useState(selectedDate);
     const [endDate, setEndDate] = useState<Date>(selectedDate);
 
@@ -30,6 +31,11 @@ export function CreateEventModal({selectedDate,visible,addEvent,onClose}:CreateE
       is24Hour: true,
     });
   };
+
+  useEffect(()=>{
+    setStartDate(selectedDate)
+    setEndDate(selectedDate)
+  },[selectedDate])
 
     const showStartDatePicker=()=>{
         showMode('date',startDate,setStartDate)
@@ -62,7 +68,7 @@ export function CreateEventModal({selectedDate,visible,addEvent,onClose}:CreateE
             
         }
         console.log("sending uhh ",JSON.stringify(jsonBody))
-
+        return;
         let res=await fetch(`${API_URL}/calendar/date`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
