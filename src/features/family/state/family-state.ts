@@ -1,4 +1,4 @@
-import type { CreateFamilyResponse } from '../api/schemas';
+import type { FamilyDetailsResponse } from '../api/schemas';
 
 /**
  * Módulo compartido de estado de familia.
@@ -6,18 +6,18 @@ import type { CreateFamilyResponse } from '../api/schemas';
  * el mismo dato sin necesidad de un React Context a nivel root.
  */
 
-let _family: CreateFamilyResponse | null = null;
+let _family: FamilyDetailsResponse | null = null;
 const _listeners = new Set<() => void>();
 
 function notify(): void {
   _listeners.forEach((fn) => fn());
 }
 
-export function getFamilyState(): CreateFamilyResponse | null {
+export function getFamilyState(): FamilyDetailsResponse | null {
   return _family;
 }
 
-export function setFamilyState(family: CreateFamilyResponse | null): void {
+export function setFamilyState(family: FamilyDetailsResponse | null): void {
   _family = family;
   notify();
 }

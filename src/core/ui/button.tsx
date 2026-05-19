@@ -69,6 +69,14 @@ const VARIANT_SPINNER: Record<ButtonVariant, string> = {
   danger:    '#FFFFFF',
 };
 
+const VARIANT_ICON: Record<ButtonVariant, string> = {
+  primary:   '#FFFFFF',
+  secondary: '#FFFFFF',
+  outline:   '#325F3F',
+  ghost:     '#325F3F',
+  danger:    '#FFFFFF',
+};
+
 /**
  * Icon-only dimensions (width = height).
  * sm → 36px  md → 48px  lg → 64px  xl → 100px
@@ -161,7 +169,7 @@ export function Button({
     <IconSymbol
       name={icon}
       size={SIZE_ICON[size]}
-      color={VARIANT_TEXT[variant]}
+      color={VARIANT_ICON[variant]}
       className="-translate-y-px" // Minor optical adjustment
     />
   ) : (

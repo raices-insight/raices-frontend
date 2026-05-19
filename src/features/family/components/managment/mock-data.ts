@@ -1,33 +1,26 @@
-export type FamilyMember = {
-  id: string;
-  name: string;
-  role: 'ADMINISTRATOR' | 'MEMBER' | 'CAREGIVER';
-  avatarUrl: string;
-};
+import type { FamilyMember } from '../../api/schemas';
+
+export type { FamilyMember };
 
 export const MOCK_MEMBERS: FamilyMember[] = [
   {
     id: '1',
-    name: 'Carlos G.',
+    profileId: 'profile-1',
     role: 'ADMINISTRATOR',
-    avatarUrl: 'https://i.pravatar.cc/150?u=a042581f4e29026704d',
   },
   {
     id: '2',
-    name: 'Elena R.',
+    profileId: 'profile-2',
     role: 'MEMBER',
-    avatarUrl: 'https://i.pravatar.cc/150?u=a042581f4e29026704e',
   },
   {
     id: '3',
-    name: 'Javier S.',
+    profileId: 'profile-3',
     role: 'MEMBER',
-    avatarUrl: 'https://i.pravatar.cc/150?u=a042581f4e29026704f',
   },
   {
     id: '4',
-    name: 'Marta L.',
+    profileId: 'profile-4',
     role: 'CAREGIVER',
-    avatarUrl: 'https://i.pravatar.cc/150?u=a042581f4e29026704g',
   },
 ];

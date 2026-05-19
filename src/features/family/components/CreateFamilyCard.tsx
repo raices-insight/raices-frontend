@@ -11,7 +11,7 @@ export function CreateFamilyCard() {
     >
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          <IconSymbol name="users.2" size={20} color="#9B4431" />
+          <IconSymbol name="person.2.fill" size={20} color="#9B4431" />
         </View>
         <View>
           <Text style={styles.title}>Crear mi propia familia</Text>
