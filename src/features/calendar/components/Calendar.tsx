@@ -6,7 +6,11 @@ import { EventModal } from "./EventModal";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL
 
-export function CalendarSelector(){
+interface CalendarSelectorProps {
+    onEventCreated?: () => void;
+}
+
+export function CalendarSelector({ onEventCreated }: CalendarSelectorProps){
     
     const [modalVisible, setModalVisible] = useState(false);
     const [createEventModalVisible, setCreateEventModalVisible] = useState(false);
@@ -182,6 +186,9 @@ return (
                   addEvent={(event:EventDTO)=>{
                     
                     setEvents(prevEvents=>[...prevEvents,event])
+                    if (onEventCreated) {
+                        onEventCreated();
+                    }
                   }}
                   />
 

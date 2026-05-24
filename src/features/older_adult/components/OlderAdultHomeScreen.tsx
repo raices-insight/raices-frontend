@@ -11,7 +11,7 @@ import { useAssistantCalendarEvents } from '../../calendar/hooks/useAssistantCal
 
 export function OlderAdultHomeScreen() {
   const [activeTab, setActiveTab] = useState('Hoy');
-  const { events, isLoading, error } = useAssistantCalendarEvents();
+  const { events, isLoading, error, refetch } = useAssistantCalendarEvents();
 
   const filteredEvents = events.filter(event => {
     const eventDate = new Date(event.due_date);
@@ -48,16 +48,23 @@ export function OlderAdultHomeScreen() {
       <OlderAdultHeader />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* <WeeklyPerspective /> */}
-        <CalendarSelector></CalendarSelector>
+        <CalendarSelector onEventCreated={() => {
+          // The backend might take a second to process the NATS event and link the AudioProfile
+          setTimeout(() => {
+            refetch();
+          }, 10000);
+        }} />
         <FilterTabs activeTab={activeTab} onTabChange={setActiveTab} />
         
         <View className="px-6 mt-8 pb-10">
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-2xl font-headline font-bold text-raices-primary">Próximos Eventos</Text>
+            {/* 
             <Pressable className="bg-raices-secondary px-4 py-2 rounded-xl flex-row items-center gap-2 shadow-sm">
               <IconSymbol name="plus" size={16} color="white" />
               <Text className="text-white font-label font-bold text-sm">Crear Evento</Text>
             </Pressable>
+            */}
           </View>
 
           <View className="h-[340px]">

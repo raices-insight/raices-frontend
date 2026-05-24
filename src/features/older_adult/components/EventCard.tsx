@@ -2,7 +2,7 @@ import { View, Text, Pressable } from '@/core/ui/tw';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { useAudioPlayer } from 'expo-audio';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { CalendarEvent } from '../../calendar/api/schemas';
 
@@ -21,28 +21,42 @@ function AudioPlayButton({ source }: { source: any }) {
     );
   }
 
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Sync state if audio finishes naturally
+  useEffect(() => {
+    // If the player object supports listening to playback status (optional enhancement)
+    // For now, we rely on the manual toggle.
+    if (!player.playing && isPlaying) {
+        setIsPlaying(false);
+    }
+  }, [player.playing]);
+
   return (
-    <Pressable 
-      onPress={() => {
-        try {
-          // Attempt to play/pause. If the source is invalid/expired, 
-          // expo-audio might throw or player.error could be set.
-          if (player.playing) {
-            player.pause();
-          } else {
-            player.play();
+    <View className="self-start rounded-full">
+      <Pressable 
+        onPress={() => {
+          try {
+            if (isPlaying) {
+              player.pause();
+              setIsPlaying(false);
+            } else {
+              player.play();
+              setIsPlaying(true);
+            }
+          } catch (e) {
+            setHasError(true);
           }
-        } catch (e) {
-          setHasError(true);
-        }
-      }}
-      className="flex-row items-center gap-2 bg-raices-bg px-5 py-3 rounded-full self-start border border-raices-secondary"
-    >
-      <IconSymbol name={player.playing ? "pause.fill" : "play.fill"} size={20} color="#325F3F" />
-      <Text className="text-sm font-label font-semibold text-raices-primary">
-        {player.playing ? "Pausar mensaje" : "Tocar para escuchar"}
-      </Text>
-    </Pressable>
+        }}
+        className={`flex-row items-center justify-center gap-2 px-5 py-3 rounded-full border ${isPlaying ? 'bg-[#E8F3EB] border-[#325F3F]' : 'bg-raices-bg border-raices-secondary'}`}
+        style={{ minWidth: 220 }}
+      >
+        <IconSymbol name={isPlaying ? "pause.fill" : "play.fill"} size={20} color="#325F3F" />
+        <Text className="text-sm font-label font-semibold text-raices-primary">
+          {isPlaying ? "Pausar mensaje" : "Tocar para escuchar"}
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 

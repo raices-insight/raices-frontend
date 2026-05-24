@@ -5,7 +5,7 @@ export const CalendarEventSchema = z.object({
   title: z.string(),
   description: z.string().nullable().optional(),
   due_date: z.string(),
-  caretaker_audio_profile_id: z.string().uuid().nullable().optional(),
+  creator_audio_profile_id: z.string().uuid().nullish(),
   adult_profile_id: z.string().uuid().nullable().optional(),
   audio_url: z.string().nullable().optional(),
   status: z.string(),
