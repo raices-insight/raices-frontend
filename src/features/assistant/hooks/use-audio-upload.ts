@@ -37,15 +37,24 @@ export function useAudioUpload() {
     }
   }, [audioRecorder]);
 
-  const stopAndUpload = useCallback(async (mockUri?: string) => {
+  const stopRecording = useCallback(async () => {
     try {
-      setStatus('processing');
       await audioRecorder.stop();
-      const uri = mockUri || audioRecorder.uri;
+      setStatus('idle');
+      return audioRecorder.uri;
+    } catch (err) {
+      logger.error('Failed to stop recording', err);
+      toast.error('No se pudo detener la grabación.');
+      setError('No se pudo detener la grabación.');
+      setStatus('idle');
+      return null;
+    }
+  }, [audioRecorder]);
 
-      if (!uri) {
-        throw new Error('No se pudo obtener el archivo de audio.');
-      }
+  const uploadAudio = useCallback(async (uri: string) => {
+    try {
+      setError(null);
+      setStatus('uploading');
 
       // 1. Get Pre-Signed URL
       logger.info('Fetching upload URL', { mimeType: Platform.OS === 'ios' ? 'audio/m4a' : 'audio/mpeg' });
@@ -110,8 +119,30 @@ export function useAudioUpload() {
       setError(message);
       setStatus('error');
       setTimeout(() => setStatus('idle'), 5000);
+      throw err;
     }
-  }, [audioRecorder]);
+  }, []);
+
+  const stopAndUpload = useCallback(async (mockUri?: string) => {
+    try {
+      setStatus('processing');
+      await audioRecorder.stop();
+      const uri = mockUri || audioRecorder.uri;
+
+      if (!uri) {
+        throw new Error('No se pudo obtener el archivo de audio.');
+      }
+
+      return await uploadAudio(uri);
+    } catch (err) {
+      logger.error('Upload flow failed', err);
+      const message = err instanceof Error ? err.message : 'Error inesperado durante la subida.';
+      toast.error(message);
+      setError(message);
+      setStatus('error');
+      setTimeout(() => setStatus('idle'), 5000);
+    }
+  }, [audioRecorder, uploadAudio]);
 
   const cancelRecording = useCallback(async () => {
     try {
@@ -126,8 +157,11 @@ export function useAudioUpload() {
     status,
     error,
     startRecording,
+    stopRecording,
+    uploadAudio,
     stopAndUpload,
     cancelRecording,
     isRecording: status === 'recording',
   };
+
 }

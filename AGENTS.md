@@ -1,37 +1,52 @@
-# Frontend Agent Standards (Raíces Project)
+# Frontend Assistant Module Guidelines
 
-This file serves as the definitive guide for any AI assistant or developer working on the `raices-frontend` codebase. You must adhere to these rules strictly to maintain architectural cohesion.
+This document establishes the UI patterns, design system, and coding standards for components interacting with the Assistant and audio subsystems in the `raices-frontend`.
 
-## 1. Feature-Driven Architecture
-- All domain-specific code belongs in `src/features/<feature-name>`.
-- Internal structure of a feature:
-  - `api/`: API clients, Zod schemas, and hooks that fetch/mutate data.
-  - `components/`: UI components specific to the feature.
-  - `hooks/`: Custom React hooks specific to the feature logic (e.g., `useDashboardSocket`).
-- Avoid putting feature-specific logic in `src/core`. Core is reserved for strictly global utilities (like `api/client.ts`, `logger.ts`, `ui/button.tsx`).
+## 🎨 Design System & Colors
 
-## 2. Styling (NativeWind v5 & Global CSS)
-- **CSS Variables:** All colors, fonts, and global variables must be defined in `src/global.css` using the `--color-raices-*` prefix.
-- **Tailwind Classes:** Use NativeWind classes exclusively. Do not use `StyleSheet.create` unless absolutely necessary (e.g., for complex reanimated styles).
-- **Responsive Design:** Avoid hardcoding widths and heights (e.g., `w-[300px]`, `h-[800px]`). Build fluid layouts using `flex-1`, `w-full`, `justify-*`, and margins/paddings (`p-4`, `gap-2`).
-- **Typography:** Always use the `<Text>` component exported from `@/core/ui/tw`. Use `font-headline` and `font-body` classes for consistency.
+When building audio recording or assistant-related interfaces, strictly adhere to the following color scheme and Tailwind classes:
 
-## 3. Data Validation (Zod)
-- **Always Validate External Data:** Any data coming from the backend (REST or WebSockets) MUST be validated using Zod schemas.
-- **Strict Mode:** Use `.strict()` on all object schemas to reject unexpected fields and prevent API drift.
-- **Safe Parsing:** Use `.safeParse()` instead of `.parse()` to handle validation errors gracefully without crashing the app.
+*   **Primary Green (Active/Idle state):** `#325F3F` (`bg-raices-primary` or custom `#325F3F` for recording button).
+*   **Secondary Green (Accent/Labels):** `#53815F` (`text-raices-secondary`, `bg-raices-secondary/10`).
+*   **Recording Active Red (Stop state):** `#C0392B` (`bg-raices-error` or custom `#C0392B`).
+*   **Card Backgrounds:** `bg-raices-surface` (with `rounded-3xl` and `shadow-sm`).
+*   **Typography Colors:** `text-raices-text` (primary), `text-raices-text-muted` (secondary description).
 
-## 4. Error Handling & Traceability
-- **DO NOT** use `console.log` or `console.error` directly.
-- **Logger:** Use the exported `logger` from `@/core/logger` for system logs, debugging, and tracing (`logger.info`, `logger.error`).
-- **Toast:** Use the `useToast` hook from `@/core/toast/use-toast` to provide visible feedback to the user (`toast.error('message')`, `toast.success('message')`).
-- **Pattern:** When an operation fails, log the technical details using `logger.error`, and show a user-friendly message using `toast.error`.
+## 🔤 Typography & Fonts
 
-## 5. UI Extensibility
-- Views should allow natural vertical scrolling (`ScrollView`). Do not enforce rigid `flex-1` boundaries on screens that might need to render dynamic content below the fold.
+*   **Headlines & Action Labels:** Use `font-headline font-bold`.
+*   **Body & Descriptive Text:** Use `font-body` (optionally `text-sm` or `italic`).
 
-## 6. API & Network Management
-- **Axios Client:** Always use the global `apiClient` exported from `@/core/api/client` for REST requests. This ensures that global configurations like `baseURL`, `timeout` (default 20s), and future interceptors are applied.
-- **DO NOT** use native `fetch` or create ad-hoc axios instances for standard domain requests.
-- **Cancellations:** Use `AbortController` (passed via the `signal` option in axios) for any request inside a `useEffect` to ensure cleanup and avoid memory leaks.
-- **Timeouts:** Global timeout is set to 20 seconds. If a specific request needs more time (e.g., file upload), override the `timeout` property in the individual request config.
+## 🔘 Buttons & Interactions (Vercel React Native Skills)
+
+*   **No TouchableOpacity:** Always use `Pressable` (from `@/core/ui/tw` or `react-native`) for touch feedback to ensure performance and native feel.
+*   **Icons:** Use `IconSymbol` for consistent SF Symbols / Material icons representation (e.g. `mic.fill`, `stop.fill`, `checkmark`, `play.fill`, `calendar`).
+*   **Activity Feedback:** Show `<ActivityIndicator color="#FFFFFF" size="large" />` inside buttons when operations (uploading/saving) are in progress.
+*   **Cooldowns:** Implement a 1-second cooldown when starting recording to prevent UI jitter or race conditions.
+
+## 🌀 Animations (Reanimated)
+
+Animations must only touch GPU-accelerated properties (`transform` and `opacity`):
+
+```typescript
+const pulseScale = useSharedValue(1);
+const pulseOpacity = useSharedValue(0);
+
+// Inside useEffect when recording is active:
+pulseScale.value = withRepeat(
+  withSequence(
+    withTiming(1.22, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+    withTiming(1,    { duration: 1000, easing: Easing.inOut(Easing.ease) })
+  ),
+  -1, true
+);
+```
+
+Ensure `cancelAnimation(pulseScale)` and `cancelAnimation(pulseOpacity)` are called in the cleanup function of `useEffect` to prevent memory leaks.
+
+## 🪵 Logging & Toast
+
+*   **Logging:** Use `logger.info` and `logger.error` from `@/core/logger` for state transition tracking (e.g. `Recording started`, `Uploading audio`).
+*   **Toasts:** Use `useToast` hook for user notifications:
+    *   `toast.success("¡Respuesta enviada con éxito!")`
+    *   `toast.error("No se pudo iniciar la grabación.")`
