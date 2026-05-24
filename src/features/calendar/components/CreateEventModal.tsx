@@ -1,7 +1,7 @@
 import { Text, View, Pressable } from "@/src/core/ui/tw";
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from "react";
-import { Modal, TextInput as RNTextInput, ViewStyle, ActivityIndicator } from "react-native";
+import { Modal, TextInput as RNTextInput, ViewStyle, ActivityIndicator, Platform } from "react-native";
 import { EventDTO } from "../dto/dto";
 import { useAudioUpload } from "@/src/features/assistant/hooks/use-audio-upload";
 import { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence, Easing, cancelAnimation } from 'react-native-reanimated';
@@ -19,6 +19,38 @@ interface CreateEventModalProps {
 }
 
 const STATIC_CALENDAR_ID = "primary";
+
+const toLocalISOString = (date: Date) => {
+    try {
+        const tzoffset = date.getTimezoneOffset() * 60000; // offset in milliseconds
+        const localISOTime = (new Date(date.getTime() - tzoffset)).toISOString().slice(0, 16);
+        return localISOTime;
+    } catch {
+        return "";
+    }
+};
+
+const WebDateTimePicker = ({ value, onChange }: { value: string; onChange: (val: string) => void }) => {
+    return React.createElement('input', {
+        type: 'datetime-local',
+        style: {
+            width: '100%',
+            padding: '8px 12px',
+            borderRadius: '12px',
+            backgroundColor: '#FFFFFF',
+            border: '1px solid rgba(50, 95, 63, 0.2)',
+            fontSize: '16px',
+            color: '#1F1B15',
+            outline: 'none',
+            boxSizing: 'border-box',
+            fontFamily: 'inherit',
+        },
+        value: value,
+        onChange: (e: any) => onChange(e.target.value),
+    });
+};
+
+
 
 export function CreateEventModal({ selectedDate, visible, addEvent, onClose }: CreateEventModalProps) {
     const normalButtonStyle: ViewStyle = { flexShrink: 3, backgroundColor: "#325F3F", margin: 6, padding: 8, alignItems: "center", justifyContent: "center", borderRadius: 10 };
@@ -94,6 +126,30 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose }: C
     const onNameChange = (nameInput: string) => setName(nameInput);
 
     const handleMicPress = async () => {
+        // ==========================================
+        // MOCK AUDIO SIMULATION FOR TESTING
+        // ==========================================
+        try {
+            const { Asset } = require('expo-asset');
+            const mockAudio = require('@/../assets/audio/adulto-mayor-animo-positivo.mp3');
+            const asset = Asset.fromModule(mockAudio);
+            await asset.downloadAsync();
+            const uri = asset.localUri || asset.uri;
+            if (uri) {
+                setRecordedAudioUri(uri);
+                toast.success("Audio simulado cargado.");
+            } else {
+                throw new Error("No local URI");
+            }
+        } catch (err) {
+            logger.error("Failed to load mock audio", err);
+            toast.error("Error al cargar audio simulado.");
+        }
+
+        // ==========================================
+        // REAL RECORDING FLOW (COMMENTED OUT FOR DEV)
+        // ==========================================
+        /*
         if (isRecording) {
             const uri = await stopRecording();
             if (uri) {
@@ -103,7 +159,9 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose }: C
             setRecordedAudioUri(null);
             await startRecording();
         }
+        */
     };
+
 
     const handleCancelRecording = async () => {
         await cancelRecording();
@@ -204,39 +262,65 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose }: C
                     </View>
 
                     {/* DATES */}
-                    <View className="w-full flex-row justify-between items-center bg-raices-bg p-3 rounded-2xl">
-                        <View style={{ flex: 1 }}>
+                    {Platform.OS === 'web' ? (
+                        <View className="w-full bg-raices-bg p-3 rounded-2xl" style={{ gap: 6 }}>
                             <Text className="text-xs font-headline font-semibold text-raices-text-muted uppercase tracking-wider">Inicio</Text>
-                            <Text className="text-sm font-body text-raices-text mt-1">
-                                {startDate.getDate()}/{startDate.getMonth() + 1}/{startDate.getFullYear()} a las {startDate.getHours().toString().padStart(2, '0')}:{startDate.getMinutes().toString().padStart(2, '0')}
-                            </Text>
+                            <WebDateTimePicker
+                                value={toLocalISOString(startDate)}
+                                onChange={(val) => {
+                                    if (val) setStartDate(new Date(val));
+                                }}
+                            />
                         </View>
-                        <View className="flex-row" style={{ gap: 6 }}>
-                            <Pressable onPress={showStartDatePicker} style={normalButtonStyle}>
-                                <Text className="font-headline font-semibold text-xs text-white">Fecha</Text>
-                            </Pressable>
-                            <Pressable onPress={showStartTimePicker} style={normalButtonStyle}>
-                                <Text className="font-headline font-semibold text-xs text-white">Hora</Text>
-                            </Pressable>
+                    ) : (
+                        <View className="w-full flex-row justify-between items-center bg-raices-bg p-3 rounded-2xl">
+                            <View style={{ flex: 1 }}>
+                                <Text className="text-xs font-headline font-semibold text-raices-text-muted uppercase tracking-wider">Inicio</Text>
+                                <Text className="text-sm font-body text-raices-text mt-1">
+                                    {startDate.getDate()}/{startDate.getMonth() + 1}/{startDate.getFullYear()} a las {startDate.getHours().toString().padStart(2, '0')}:{startDate.getMinutes().toString().padStart(2, '0')}
+                                </Text>
+                            </View>
+                            <View className="flex-row" style={{ gap: 6 }}>
+                                <Pressable onPress={showStartDatePicker} style={normalButtonStyle}>
+                                    <Text className="font-headline font-semibold text-xs text-white">Fecha</Text>
+                                </Pressable>
+                                <Pressable onPress={showStartTimePicker} style={normalButtonStyle}>
+                                    <Text className="font-headline font-semibold text-xs text-white">Hora</Text>
+                                </Pressable>
+                            </View>
                         </View>
-                    </View>
+                    )}
 
-                    <View className="w-full flex-row justify-between items-center bg-raices-bg p-3 rounded-2xl">
-                        <View style={{ flex: 1 }}>
+                    {Platform.OS === 'web' ? (
+                        <View className="w-full bg-raices-bg p-3 rounded-2xl" style={{ gap: 6 }}>
                             <Text className="text-xs font-headline font-semibold text-raices-text-muted uppercase tracking-wider">Término</Text>
-                            <Text className="text-sm font-body text-raices-text mt-1">
-                                {endDate.getDate()}/{endDate.getMonth() + 1}/{endDate.getFullYear()} a las {endDate.getHours().toString().padStart(2, '0')}:{endDate.getMinutes().toString().padStart(2, '0')}
-                            </Text>
+                            <WebDateTimePicker
+                                value={toLocalISOString(endDate)}
+                                onChange={(val) => {
+                                    if (val) setEndDate(new Date(val));
+                                }}
+                            />
                         </View>
-                        <View className="flex-row" style={{ gap: 6 }}>
-                            <Pressable onPress={showEndDatePicker} style={normalButtonStyle}>
-                                <Text className="font-headline font-semibold text-xs text-white">Fecha</Text>
-                            </Pressable>
-                            <Pressable onPress={showEndTimePicker} style={normalButtonStyle}>
-                                <Text className="font-headline font-semibold text-xs text-white">Hora</Text>
-                            </Pressable>
+                    ) : (
+                        <View className="w-full flex-row justify-between items-center bg-raices-bg p-3 rounded-2xl">
+                            <View style={{ flex: 1 }}>
+                                <Text className="text-xs font-headline font-semibold text-raices-text-muted uppercase tracking-wider">Término</Text>
+                                <Text className="text-sm font-body text-raices-text mt-1">
+                                    {endDate.getDate()}/{endDate.getMonth() + 1}/{endDate.getFullYear()} a las {endDate.getHours().toString().padStart(2, '0')}:{endDate.getMinutes().toString().padStart(2, '0')}
+                                </Text>
+                            </View>
+                            <View className="flex-row" style={{ gap: 6 }}>
+                                <Pressable onPress={showEndDatePicker} style={normalButtonStyle}>
+                                    <Text className="font-headline font-semibold text-xs text-white">Fecha</Text>
+                                </Pressable>
+                                <Pressable onPress={showEndTimePicker} style={normalButtonStyle}>
+                                    <Text className="font-headline font-semibold text-xs text-white">Hora</Text>
+                                </Pressable>
+                            </View>
                         </View>
-                    </View>
+                    )}
+
+
 
                     {/* AUDIO RECORDING SECTION */}
                     <View className="w-full items-center py-2 bg-raices-bg rounded-2xl" style={{ gap: 8 }}>
