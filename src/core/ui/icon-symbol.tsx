@@ -27,8 +27,10 @@ const MAPPING = {
   // --- Actions ---
   'paperplane.fill':                          'send',
   'play.fill':                                'play',
+  'pause.fill':                               'pause',
   'stop.fill':                                'stop',
   'mic.fill':                                 'microphone',
+  'mic.slash.fill':                           'microphone-off',
   'checkmark':                                'check',
   'xmark':                                    'close',
   'trash.fill':                               'trash-can',
@@ -66,6 +68,7 @@ const MAPPING = {
   'questionmark.circle.fill':                 'help-circle',
   'lock.fill':                                'lock',
   'calendar':                                 'calendar',
+  'calendar.badge.minus':                     'calendar-blank',
   'pill.fill':                                'pill',
   'stethoscope':                              'stethoscope',
   
