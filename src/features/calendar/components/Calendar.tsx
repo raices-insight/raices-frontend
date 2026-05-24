@@ -32,7 +32,7 @@ export function CalendarSelector(){
     const fetchEvents = async () => {
     
     const url=new URL(`${API_URL}/calendar/dates`)
-    url.searchParams.append("calendarId","d34562f3ee0bce99009c1e865fc021447681ef26acc045bdb839bd878099a35d@group.calendar.google.com")
+    url.searchParams.append("calendarId","primary")
     const fetchedEvents = await fetch(url, { method: "GET" })
     console.log(fetchedEvents.status,null,url)
     const jsonData = await fetchedEvents.json()

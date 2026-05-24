@@ -13,7 +13,7 @@ interface CreateEventModalProps{
 }
 const API_URL = process.env.EXPO_PUBLIC_API_URL
 
-const STATIC_CALENDAR_ID="d34562f3ee0bce99009c1e865fc021447681ef26acc045bdb839bd878099a35d@group.calendar.google.com"
+const STATIC_CALENDAR_ID="primary"
 
 export function CreateEventModal({selectedDate,visible,addEvent,onClose}:CreateEventModalProps){
     const touchableStyle={backgroundColor:"#00af1f", padding:6, margin:8}
