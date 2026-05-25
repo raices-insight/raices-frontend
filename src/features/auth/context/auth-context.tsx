@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useGoogleAuth, type GoogleUser } from '@/features/auth/hooks/use-google-auth';
 import { useLocalAuth } from '@/features/auth/hooks/use-local-auth';
 import { setSessionToken as setGlobalSessionToken } from '@/core/session';
+import { setFamilyState } from '@/features/family/state/family-state';
 
 const LOGIN_MODE = process.env.EXPO_PUBLIC_LOGIN_MODE;
 
@@ -38,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [activeToken]);
 
   const handleSignOut = () => {
+    setFamilyState(null);
     googleAuth.signOut();
     localAuth.signOut();
   };

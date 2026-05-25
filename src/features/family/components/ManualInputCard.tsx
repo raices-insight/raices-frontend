@@ -24,19 +24,18 @@ export function ManualInputCard() {
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="INGRESA EL CÓDIGO DE 6 DÍGITOS"
+          placeholder="EJ: BRC-7086"
           placeholderTextColor="rgba(31, 27, 21, 0.5)"
           value={code}
           onChangeText={setCode}
           autoCapitalize="characters"
-          maxLength={6}
         />
       </View>
 
       <Button
         label="Validar Código"
         onPress={handleJoin}
-        disabled={code.length < 6}
+        disabled={code.trim().length === 0}
         loading={loading}
         fullWidth
         pill={false}

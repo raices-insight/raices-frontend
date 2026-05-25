@@ -1,13 +1,13 @@
-import { Image } from 'react-native';
-import { View, Text } from '@/core/ui/tw';
+import { View, Text, Pressable } from '@/core/ui/tw';
 import { UserAvatar } from '@/core/ui/UserAvatar';
 import type { GoogleUser } from '@/features/auth/hooks/use-google-auth';
 
 interface CaregiverHeaderProps {
   user?: GoogleUser | null;
+  onProfilePress?: () => void;
 }
 
-export function CaregiverHeader({ user }: CaregiverHeaderProps) {
+export function CaregiverHeader({ user, onProfilePress }: CaregiverHeaderProps) {
   return (
     <View className="px-6 pt-12 pb-6 bg-raices-bg border-b border-raices-tertiary/20">
       <View className="flex-row items-center justify-between mb-2">
@@ -16,9 +16,13 @@ export function CaregiverHeader({ user }: CaregiverHeaderProps) {
             Dashboard - Cuidador
           </Text>
         </View>
-        <View className="w-10 h-10 rounded-full overflow-hidden bg-raices-surface items-center justify-center shadow-sm">
+        <Pressable
+          onPress={onProfilePress}
+          className="w-10 h-10 rounded-full overflow-hidden bg-raices-surface items-center justify-center shadow-sm"
+          hitSlop={8}
+        >
           <UserAvatar name={user?.name ?? null} photo={user?.photo ?? null} size={40} />
-        </View>
+        </Pressable>
       </View>
       <Text className="text-3xl font-headline font-bold text-raices-primary mt-2">
         {user?.name ? `Hola, ${user.name.split(' ')[0]}` : 'Bienvenido'}

@@ -21,8 +21,6 @@ export function useJoinFamily() {
       setError(null);
 
       try {
-				await apiClient.post("family/join", payload);
-
         const { data } = await apiClient.post<JoinFamilyResponse>(
           '/family/join',
           payload,
@@ -39,8 +37,14 @@ export function useJoinFamily() {
           return null;
         }
 
-        // Actualiza el estado global para reflejar que ahora se pertenece a una familia
-        setFamilyState(responseValidation.data);
+        setFamilyState({
+          id: responseValidation.data.id,
+          name: responseValidation.data.name,
+          invitationCode: '',
+          imageUrl: null,
+          createdAt: new Date().toISOString(),
+          members: [],
+        });
 
         toast.success(`Te has unido a la familia "${responseValidation.data.name}"`);
         return responseValidation.data;

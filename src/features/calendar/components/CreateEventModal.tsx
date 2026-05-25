@@ -16,6 +16,7 @@ interface CreateEventModalProps {
     visible: boolean;
     addEvent: (event: EventDTO) => void;
     onClose: () => void;
+    targetProfileId?: string;
 }
 
 const STATIC_CALENDAR_ID = "primary";
@@ -95,7 +96,7 @@ const WebTimeInput = ({ value, onChange }: { value: string; onChange: (val: stri
         onChange: (e: any) => onChange(e.target.value),
     });
 
-export function CreateEventModal({ selectedDate, visible, addEvent, onClose }: CreateEventModalProps) {
+export function CreateEventModal({ selectedDate, visible, addEvent, onClose, targetProfileId }: CreateEventModalProps) {
     const [name, setName] = useState("");
     const [startDate, setStartDate] = useState(selectedDate);
     const [endDate, setEndDate] = useState<Date>(selectedDate);
@@ -264,13 +265,16 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose }: C
                 finalAudioProfileId = await uploadAudio(recordedAudioUri);
             }
 
-            const jsonBody = {
+            const jsonBody: Record<string, unknown> = {
                 calendarId: STATIC_CALENDAR_ID,
                 name,
                 startDatetime: startDate.toISOString(),
                 endDatetime: endDate.toISOString(),
                 audioProfileId: finalAudioProfileId,
             };
+            if (targetProfileId) {
+                jsonBody.targetProfileId = targetProfileId;
+            }
 
             logger.info("Creating event with audio status", { hasAudio: !!finalAudioProfileId });
             const response = await apiClient.post('/calendar/date', jsonBody);
