@@ -79,15 +79,11 @@ export function LocationIndicator(){
 
         
     },[])
-    let text = 'Esperando...';
     if (errorMsg) {
-        text = errorMsg;
-        return (<Text className="font-headline font-bold text-[72px] leading-[84px] text-raices-secondary text-center tracking-tight">
-            {text}
-        </Text>)
+        return null;
+    }
 
-    } else if (location) {
-        text = JSON.stringify(location);
+    if (location) {
         return (
             <View style={{height:300,width:300}}>
                 <Map mapStyle={"https://raw.githubusercontent.com/go2garret/maps/main/src/assets/json/openStreetMap.json"} >

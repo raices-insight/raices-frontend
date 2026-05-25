@@ -40,24 +40,17 @@ export function CalendarSelector({ onEventCreated }: CalendarSelectorProps){
     url.searchParams.append("calendarId","primary")
     const fetchedEvents = await fetch(url, { method: "GET" })
     const jsonData = await fetchedEvents.json()
-    let tempEvents: Array<EventDTO> = []
-    jsonData.forEach((ev: any) => {
-      
-      
-      tempEvents.push(
-        new EventDTO(
-          ev.eventId,
-          ev.name,
-          new Date(ev.startDatetime),
-          
-          new Date(ev.endDatetime),
-
-        )
+    if (!Array.isArray(jsonData)) {
+      return;
+    }
+    const tempEvents: Array<EventDTO> = jsonData.map((ev: any) =>
+      new EventDTO(
+        ev.eventId,
+        ev.name,
+        new Date(ev.startDatetime),
+        new Date(ev.endDatetime),
       )
-
-      
-      
-    })
+    )
     setEvents(tempEvents);
   }
 

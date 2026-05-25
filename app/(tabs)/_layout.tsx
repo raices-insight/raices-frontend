@@ -5,6 +5,7 @@ import { HapticTab } from '@/core/ui/haptic-tab';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/core/hooks/use-color-scheme';
+import { CONFIG } from '@/core/config';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -34,6 +35,14 @@ export default function TabLayout() {
         name="incoming-event"
         options={{
           title: 'Evento',
+          href: CONFIG.IS_PROD ? null : undefined,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="calendario"
+        options={{
+          title: 'Calendario',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
         }}
       />
@@ -48,6 +57,7 @@ export default function TabLayout() {
         name="dashboard"
         options={{
           title: 'Dashboard',
+          href: CONFIG.IS_PROD ? null : undefined,
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="chart.bar.fill" color={color} />,
         }}
       />

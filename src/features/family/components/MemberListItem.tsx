@@ -10,37 +10,51 @@ type MemberListItemProps = {
   onShowActions: (member: FamilyMember) => void;
 };
 
+const ROLE_LABEL: Record<FamilyMember['role'], string> = {
+  ADMINISTRATOR: 'ADMINISTRADOR',
+  MEMBER: 'Familiar',
+  CAREGIVER: 'Cuidador',
+};
+
+// Subtle deterministic background color for the initials avatar
+const AVATAR_BG_PALETTE = ['#F4DDD0', '#E8D7C2', '#D9E2C7', '#E2D6E8', '#D6E2E8'];
+
+function pickColor(seed: string): string {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  return AVATAR_BG_PALETTE[Math.abs(hash) % AVATAR_BG_PALETTE.length];
+}
+
 export function MemberListItem({
   member,
-  currentUserId,
-  currentUserName,
   isAdmin,
   onShowActions,
 }: MemberListItemProps) {
-  const roleText: Record<FamilyMember['role'], string> = {
-    ADMINISTRATOR: 'Administrador',
-    MEMBER: 'Familiar',
-    CAREGIVER: 'Cuidador',
-  };
-
-  const displayName =
-    member.name
-
+  const displayName = member.name;
   const initials = displayName.slice(0, 2).toUpperCase();
+  const isAdminRole = member.role === 'ADMINISTRATOR';
+  const avatarBg = pickColor(member.id);
 
   return (
     <View style={styles.card}>
-      <View style={styles.avatar}>
+      <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
         <Text style={styles.avatarText}>{initials}</Text>
       </View>
+
       <View style={styles.memberInfo}>
-        <Text style={styles.name}>{displayName}</Text>
-        <Text style={styles.role}>{roleText[member.role]}</Text>
+        <Text style={styles.name} numberOfLines={1}>{displayName}</Text>
+        <Text style={[styles.role, isAdminRole ? styles.roleAdmin : styles.roleMember]}>
+          {ROLE_LABEL[member.role]}
+        </Text>
       </View>
 
       {isAdmin && (
-        <Pressable onPress={() => onShowActions(member)}>
-          <IconSymbol name="ellipsis" size={24} color="#474747" />
+        <Pressable
+          onPress={() => onShowActions(member)}
+          hitSlop={8}
+          style={styles.actionsButton}
+        >
+          <IconSymbol name="ellipsis" size={20} color="#474747" />
         </Pressable>
       )}
     </View>
@@ -52,21 +66,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
-    gap: 16,
+    borderRadius: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 14,
+    shadowColor: 'rgba(28, 28, 23, 0.04)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    elevation: 1,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#EBE1D7',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
     fontFamily: 'PlusJakartaSans-Bold',
-    fontSize: 18,
+    fontSize: 16,
     color: '#1F1B15',
   },
   memberInfo: {
@@ -78,9 +97,19 @@ const styles = StyleSheet.create({
     color: '#1F1B15',
   },
   role: {
-    fontFamily: 'BeVietnamPro-Medium',
-    fontSize: 14,
+    fontSize: 13,
+    marginTop: 2,
+  },
+  roleAdmin: {
+    fontFamily: 'BeVietnamPro-SemiBold',
     color: '#586330',
-    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  roleMember: {
+    fontFamily: 'BeVietnamPro-Regular',
+    color: '#6B6B6B',
+  },
+  actionsButton: {
+    padding: 4,
   },
 });

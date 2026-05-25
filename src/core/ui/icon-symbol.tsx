@@ -82,6 +82,11 @@ const MAPPING = {
 	'envelope.fill':                           'email',
 	'camera.fill':																	'camera',
 	"qrcode.viewfinder":																	'qrcode-scan',
+	'keyboard':                                'keyboard-outline',
+	'house.badge.plus':                        'home-plus',
+	'person.badge.plus':                       'account-plus',
+	'doc.on.doc':                              'content-copy',
+	'arrow.clockwise':                         'refresh',
 } as IconMapping;
 
 /**

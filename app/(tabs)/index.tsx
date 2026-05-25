@@ -29,6 +29,7 @@ export default function HomeScreen() {
 
   const isOlderAdult = user?.role === 'older_adult';
   const isCaregiver = user?.role === 'caregiver';
+  const needsOnboarding = !isOlderAdult && !isCaregiver;
 
   // If there's no user, we return null to prevent a flash of the profile screen
   // before the root layout guard redirects the user to the login screen.
@@ -43,7 +44,7 @@ export default function HomeScreen() {
       ) : (
         <ProfileScreen
           user={user}
-          isNewUser={Boolean(isNewUser)}
+          isNewUser={needsOnboarding}
           onSignOut={handleSignOut}
           onCompleteOnboarding={completeOnboarding}
           loading={loading}
