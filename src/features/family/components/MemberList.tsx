@@ -40,9 +40,9 @@ export function MemberList({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
   },
   listContent: {
-    gap: 16,
+    gap: 12,
   },
 });

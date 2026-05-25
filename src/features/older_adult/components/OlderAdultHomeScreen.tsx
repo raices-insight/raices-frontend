@@ -1,17 +1,19 @@
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { Pressable, ScrollView, Text, View } from '@/core/ui/tw';
 import { useState } from 'react';
-import { CalendarSelector } from '../../calendar/components/Calendar';
+import { WeekStrip } from './WeekStrip';
 import { EventCard } from './EventCard';
 import { FilterTabs } from './FilterTabs';
 import { OlderAdultHeader } from './OlderAdultHeader';
 
 import { ActivityIndicator } from 'react-native';
 import { useAssistantCalendarEvents } from '../../calendar/hooks/useAssistantCalendarEvents';
+import { useAuth } from '@/features/auth/context/auth-context';
 
 export function OlderAdultHomeScreen() {
   const [activeTab, setActiveTab] = useState('Hoy');
   const { events, isLoading, error, refetch } = useAssistantCalendarEvents();
+  const { user } = useAuth();
 
   const filteredEvents = events.filter(event => {
     const eventDate = new Date(event.due_date);
@@ -45,15 +47,9 @@ export function OlderAdultHomeScreen() {
 
   return (
     <View className="flex-1 bg-raices-bg">
-      <OlderAdultHeader />
+      <OlderAdultHeader user={user} />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* <WeeklyPerspective /> */}
-        <CalendarSelector onEventCreated={() => {
-          // The backend might take a second to process the NATS event and link the AudioProfile
-          setTimeout(() => {
-            refetch();
-          }, 10000);
-        }} />
+        <WeekStrip />
         <FilterTabs activeTab={activeTab} onTabChange={setActiveTab} />
         
         <View className="px-6 mt-8 pb-10">

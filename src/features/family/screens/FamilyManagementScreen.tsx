@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, Pressable, Text } from 'react-native';
 import { FamilyHeader } from '../components/FamilyHeader';
 import { MemberList } from '../components/MemberList';
 import { InvitationSection } from '../components/InvitationSection';
 import { MemberActionsModal } from '../components/MemberActionsModal';
 import type { FamilyMember } from '../api/schemas';
-import { Button } from '@/core/ui/button';
 import {
   useFamily,
   useFamilyDetails,
@@ -21,7 +20,7 @@ import { useAuth } from '@/features/auth/context/auth-context';
 export default function FamilyManagementScreen() {
   const { user } = useAuth();
   const { family } = useFamily();
-  const { members, refetch, isAdmin } = useFamilyDetails(family?.id);
+  const { details, members, refetch, isAdmin } = useFamilyDetails(family?.id);
   const { regenerateCode, loading: regenerating } = useRegenerateCode();
   const { deleteFamily, loading: deleting } = useDeleteFamily();
   const { updateRole, loading: updatingRole } = useUpdateMemberRole();
@@ -104,8 +103,13 @@ export default function FamilyManagementScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <FamilyHeader />
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <FamilyHeader imageUrl={details?.imageUrl} familyName={family?.name} />
+
       <MemberList
         members={members}
         currentUserId={user?.id ?? null}
@@ -113,25 +117,27 @@ export default function FamilyManagementScreen() {
         isAdmin={isAdmin}
         onShowActions={handleShowActions}
       />
-      <View style={styles.separator} />
+
       {isAdmin && (
         <>
+          <View style={styles.separator} />
           <InvitationSection
             invitationCode={invitationCode}
             onRegenerateCode={handleRegenerateCode}
             isRegenerating={regenerating}
             onShowQr={() => setIsQrModalVisible(true)}
           />
-          <View style={styles.separator} />
-          <View style={styles.footer}>
-            <Button
-              label="Eliminar Familia"
-              onPress={() => setIsDeleteModalVisible(true)}
-              variant="danger"
-            />
-          </View>
+
+          <Pressable
+            onPress={() => setIsDeleteModalVisible(true)}
+            style={styles.deleteFamilyButton}
+            hitSlop={6}
+          >
+            <Text style={styles.deleteFamilyText}>Eliminar Familia</Text>
+          </Pressable>
         </>
       )}
+
       <MemberActionsModal
         member={selectedMember}
         visible={isActionsModalVisible}
@@ -158,13 +164,24 @@ export default function FamilyManagementScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFDF6',
+    backgroundColor: '#F0F5EC',
+  },
+  scrollContent: {
+    paddingBottom: 48,
   },
   separator: {
-    height: 48,
+    height: 32,
   },
-  footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 48,
+  deleteFamilyButton: {
+    alignSelf: 'center',
+    marginTop: 28,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  deleteFamilyText: {
+    fontFamily: 'PlusJakartaSans-Bold',
+    fontSize: 13,
+    color: '#C53030',
+    textDecorationLine: 'underline',
   },
 });

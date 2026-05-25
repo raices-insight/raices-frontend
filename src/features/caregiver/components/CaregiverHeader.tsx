@@ -1,7 +1,13 @@
+import { Image } from 'react-native';
 import { View, Text } from '@/core/ui/tw';
-import { IconSymbol } from '@/core/ui/icon-symbol';
+import { UserAvatar } from '@/core/ui/UserAvatar';
+import type { GoogleUser } from '@/features/auth/hooks/use-google-auth';
 
-export function CaregiverHeader() {
+interface CaregiverHeaderProps {
+  user?: GoogleUser | null;
+}
+
+export function CaregiverHeader({ user }: CaregiverHeaderProps) {
   return (
     <View className="px-6 pt-12 pb-6 bg-raices-bg border-b border-raices-tertiary/20">
       <View className="flex-row items-center justify-between mb-2">
@@ -10,12 +16,12 @@ export function CaregiverHeader() {
             Dashboard - Cuidador
           </Text>
         </View>
-        <View className="w-10 h-10 rounded-full bg-raices-surface items-center justify-center shadow-sm">
-          <IconSymbol name="person.crop.circle" size={24} color="#325F3F" />
+        <View className="w-10 h-10 rounded-full overflow-hidden bg-raices-surface items-center justify-center shadow-sm">
+          <UserAvatar name={user?.name ?? null} photo={user?.photo ?? null} size={40} />
         </View>
       </View>
       <Text className="text-3xl font-headline font-bold text-raices-primary mt-2">
-        Bienvenido
+        {user?.name ? `Hola, ${user.name.split(' ')[0]}` : 'Bienvenido'}
       </Text>
       <Text className="text-base font-body text-raices-text-muted mt-1">
         Aquí podrás gestionar el cuidado de tus seres queridos.

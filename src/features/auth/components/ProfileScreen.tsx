@@ -10,7 +10,8 @@ interface ProfileScreenProps {
   user: GoogleUser;
   isNewUser: boolean;
   onSignOut: () => void;
-  onCompleteOnboarding: () => void;
+  onCompleteOnboarding: (role: 'caregiver' | 'older_adult') => void;
+  loading?: boolean;
 }
 
 export function ProfileScreen({
@@ -18,6 +19,7 @@ export function ProfileScreen({
   isNewUser,
   onSignOut,
   onCompleteOnboarding,
+  loading,
 }: ProfileScreenProps) {
 
   return (
@@ -25,7 +27,8 @@ export function ProfileScreen({
       <Modal visible={isNewUser} presentationStyle="fullScreen" animationType="slide">
         <AccountSetupScreen
           user={user}
-          onComplete={() => onCompleteOnboarding()}
+          onComplete={onCompleteOnboarding}
+          loading={loading}
         />
       </Modal>
       <View className="w-full max-w-[360px] items-center gap-3 bg-raices-surface rounded-[24px] border border-raices-secondary/15 py-7 px-5 shadow-sm elevation-2">

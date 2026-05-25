@@ -2,18 +2,19 @@ import { View, Text, Pressable } from '@/core/ui/tw';
 
 const TABS = ['Hoy', 'Mañana', 'Semana'];
 
-export function FilterTabs({ activeTab, onTabChange }: { activeTab: string, onTabChange: (tab: string) => void }) {
+export function FilterTabs({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) {
   return (
-    <View className="flex-row gap-3 px-6 mt-6">
+    <View className="flex-row px-6 mt-6" style={{ gap: 10 }}>
       {TABS.map((tab) => {
         const isActive = activeTab === tab;
         return (
           <Pressable
             key={tab}
             onPress={() => onTabChange(tab)}
-            className={`px-6 py-3 rounded-full ${isActive ? 'bg-raices-primary shadow-md' : 'bg-raices-surface border border-gray-200'}`}
+            className="flex-1 py-4 rounded-2xl items-center justify-center"
+            style={{ backgroundColor: isActive ? '#325F3F' : '#4a7a56' }}
           >
-            <Text className={`font-label font-bold text-base ${isActive ? 'text-white' : 'text-raices-text-muted'}`}>
+            <Text className="font-label font-bold text-base text-white">
               {tab}
             </Text>
           </Pressable>
