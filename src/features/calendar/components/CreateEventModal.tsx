@@ -1,7 +1,7 @@
-import { Text, View, Pressable } from "@/src/core/ui/tw";
+import { Text, View, Pressable, ScrollView } from "@/src/core/ui/tw";
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from "react";
-import { Modal, TextInput as RNTextInput, ViewStyle, ActivityIndicator, Platform } from "react-native";
+import { Modal, TextInput as RNTextInput, ActivityIndicator, Platform, Image } from "react-native";
 import { EventDTO } from "../dto/dto";
 import { useAudioUpload } from "@/src/features/assistant/hooks/use-audio-upload";
 import { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence, Easing, cancelAnimation } from 'react-native-reanimated';
@@ -20,47 +20,89 @@ interface CreateEventModalProps {
 
 const STATIC_CALENDAR_ID = "primary";
 
-const toLocalISOString = (date: Date) => {
-    try {
-        const tzoffset = date.getTimezoneOffset() * 60000; // offset in milliseconds
-        const localISOTime = (new Date(date.getTime() - tzoffset)).toISOString().slice(0, 16);
-        return localISOTime;
-    } catch {
-        return "";
-    }
+const heroImage = require('@/../assets/images/Gradient.png');
+
+type CategoryKey = 'MED' | 'CITA' | 'ACT' | 'VIS';
+
+const CATEGORIES: { key: CategoryKey; label: string; icon: any; longLabel: string }[] = [
+    { key: 'MED',  label: 'MED',  icon: 'pill.fill',      longLabel: 'Medicación' },
+    { key: 'CITA', label: 'CITA', icon: 'stethoscope',    longLabel: 'Cita' },
+    { key: 'ACT',  label: 'ACT',  icon: 'figure.walk',    longLabel: 'Actividad' },
+    { key: 'VIS',  label: 'VIS',  icon: 'person.2.fill',  longLabel: 'Visita' },
+];
+
+const formatDate = (date: Date) => {
+    const d = date.getDate().toString().padStart(2, '0');
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const y = date.getFullYear().toString().slice(-2);
+    return `${d}-${m}-${y}`;
 };
 
-const WebDateTimePicker = ({ value, onChange }: { value: string; onChange: (val: string) => void }) => {
-    return React.createElement('input', {
-        type: 'datetime-local',
+const formatTime = (date: Date) => {
+    let h = date.getHours();
+    const m = date.getMinutes().toString().padStart(2, '0');
+    const period = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h === 0) h = 12;
+    return `${h.toString().padStart(2, '0')}:${m}${period}`;
+};
+
+const toLocalISODate = (date: Date) => {
+    const y = date.getFullYear();
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const d = date.getDate().toString().padStart(2, '0');
+    return `${y}-${m}-${d}`;
+};
+
+const toLocalISOTime = (date: Date) => {
+    const h = date.getHours().toString().padStart(2, '0');
+    const min = date.getMinutes().toString().padStart(2, '0');
+    return `${h}:${min}`;
+};
+
+const WebDateInput = ({ value, onChange, min }: { value: string; onChange: (val: string) => void; min?: string }) =>
+    React.createElement('input', {
+        type: 'date',
+        min,
         style: {
             width: '100%',
-            padding: '8px 12px',
-            borderRadius: '12px',
-            backgroundColor: '#FFFFFF',
-            border: '1px solid rgba(50, 95, 63, 0.2)',
+            border: 'none',
+            background: 'transparent',
             fontSize: '16px',
             color: '#1F1B15',
             outline: 'none',
-            boxSizing: 'border-box',
             fontFamily: 'inherit',
+            padding: 0,
         },
-        value: value,
+        value,
         onChange: (e: any) => onChange(e.target.value),
     });
-};
 
-
+const WebTimeInput = ({ value, onChange }: { value: string; onChange: (val: string) => void }) =>
+    React.createElement('input', {
+        type: 'time',
+        style: {
+            width: '100%',
+            border: 'none',
+            background: 'transparent',
+            fontSize: '16px',
+            color: '#1F1B15',
+            outline: 'none',
+            fontFamily: 'inherit',
+            padding: 0,
+        },
+        value,
+        onChange: (e: any) => onChange(e.target.value),
+    });
 
 export function CreateEventModal({ selectedDate, visible, addEvent, onClose }: CreateEventModalProps) {
-    const normalButtonStyle: ViewStyle = { flexShrink: 3, backgroundColor: "#325F3F", margin: 6, padding: 8, alignItems: "center", justifyContent: "center", borderRadius: 10 };
-    
     const [name, setName] = useState("");
     const [startDate, setStartDate] = useState(selectedDate);
     const [endDate, setEndDate] = useState<Date>(selectedDate);
     const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
-    
+    const [category, setCategory] = useState<CategoryKey>('MED');
+
     const toast = useToast();
     const { startRecording, stopRecording, uploadAudio, cancelRecording, isRecording } = useAudioUpload();
 
@@ -104,31 +146,67 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose }: C
         setStartDate(selectedDate);
         setEndDate(selectedDate);
         setName("");
-        setRecordedAudioUri(null); // Reset when modal opens/closes
+        setRecordedAudioUri(null);
+        setCategory('MED');
     }, [selectedDate, visible]);
 
-    const showMode = (currentMode: any, date: Date, setDate: (date: Date) => void) => {
+    const startOfToday = (() => {
+        const t = new Date();
+        t.setHours(0, 0, 0, 0);
+        return t;
+    })();
+
+    const clampToNow = (next: Date): Date => {
+        const now = new Date();
+        if (next < startOfToday) {
+            const safe = new Date(now);
+            return safe;
+        }
+        const sameDay =
+            next.getFullYear() === now.getFullYear() &&
+            next.getMonth() === now.getMonth() &&
+            next.getDate() === now.getDate();
+        if (sameDay && next < now) {
+            return now;
+        }
+        return next;
+    };
+
+    const updateStart = (next: Date) => {
+        const safe = clampToNow(next);
+        setStartDate(safe);
+        setEndDate(safe);
+    };
+
+    const showMode = (mode: 'date' | 'time') => {
         DateTimePickerAndroid.open({
-            value: date,
-            onValueChange: (event, selectedDate) => {
-                if (selectedDate) setDate(selectedDate);
+            value: startDate,
+            onValueChange: (_event, selected) => {
+                if (selected) updateStart(selected);
             },
-            mode: currentMode,
-            is24Hour: true,
+            mode,
+            is24Hour: false,
+            minimumDate: mode === 'date' ? startOfToday : undefined,
         });
     };
 
-    const showStartDatePicker = () => showMode('date', startDate, setStartDate);
-    const showStartTimePicker = () => showMode('time', startDate, setStartDate);
-    const showEndDatePicker = () => showMode('date', endDate, setEndDate);
-    const showEndTimePicker = () => showMode('time', endDate, setEndDate);
-    
-    const onNameChange = (nameInput: string) => setName(nameInput);
+    const onDateFromWeb = (val: string) => {
+        if (!val) return;
+        const [y, m, d] = val.split('-').map(Number);
+        const next = new Date(startDate);
+        next.setFullYear(y, (m ?? 1) - 1, d ?? 1);
+        updateStart(next);
+    };
+
+    const onTimeFromWeb = (val: string) => {
+        if (!val) return;
+        const [h, min] = val.split(':').map(Number);
+        const next = new Date(startDate);
+        next.setHours(h ?? 0, min ?? 0, 0, 0);
+        updateStart(next);
+    };
 
     const handleMicPress = async () => {
-        // ==========================================
-        // MOCK AUDIO SIMULATION FOR TESTING
-        // ==========================================
         try {
             const { Asset } = require('expo-asset');
             const mockAudio = require('@/../assets/audio/adulto-mayor-animo-positivo.mp3');
@@ -146,9 +224,6 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose }: C
             toast.error("Error al cargar audio simulado.");
         }
 
-        // ==========================================
-        // REAL RECORDING FLOW (COMMENTED OUT FOR DEV)
-        // ==========================================
         /*
         if (isRecording) {
             const uri = await stopRecording();
@@ -161,7 +236,6 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose }: C
         }
         */
     };
-
 
     const handleCancelRecording = async () => {
         await cancelRecording();
@@ -177,12 +251,16 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose }: C
             return;
         }
 
+        if (startDate < new Date()) {
+            toast.error("No puedes crear eventos en fechas pasadas.");
+            return;
+        }
+
         try {
             setIsSaving(true);
             let finalAudioProfileId: string | undefined = undefined;
 
             if (recordedAudioUri) {
-                // S3 upload + Notify Gateway
                 finalAudioProfileId = await uploadAudio(recordedAudioUri);
             }
 
@@ -219,11 +297,17 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose }: C
         }
     };
 
-    // UI helper states
-    const buttonSize = 72;
-    const iconSize = 24;
-
+    const buttonSize = 80;
+    const iconSize = 28;
     const micButtonColor = isRecording ? '#C0392B' : recordedAudioUri ? '#53815F' : '#325F3F';
+    const selectedCategoryLong = CATEGORIES.find(c => c.key === category)?.longLabel ?? 'Medicación';
+
+    const fieldBoxStyle = {
+        backgroundColor: '#E5E5E5',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+    } as const;
 
     return (
         <Modal
@@ -232,177 +316,246 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose }: C
             onRequestClose={onClose}
             animationType="fade"
         >
-            <View className="flex-1 justify-center items-center px-6 bg-black/50">
-                {/* Modal box */}
-                <View className="w-full bg-raices-surface rounded-3xl p-5 justify-center items-center shadow-lg elevation-5" style={{ gap: 14 }}>
-                    <Text className="text-2xl font-headline font-bold text-raices-text mb-2">Crear evento</Text>
-                    
-                    <View className="w-full" style={{ gap: 6 }}>
-                        <Text className="text-sm font-headline font-semibold text-raices-text-muted">Nombre del evento</Text>
-                        <RNTextInput
-                            style={{
-                                width: '100%',
-                                paddingVertical: 12,
-                                paddingHorizontal: 16,
-                                borderRadius: 16,
-                                backgroundColor: '#FFFFFF',
-                                borderWidth: 1,
-                                borderColor: 'rgba(50, 95, 63, 0.3)',
-                                fontSize: 16,
-                                color: '#1F1B15',
-                            }}
-                            placeholder="Ej. Tomar medicamentos"
-                            placeholderTextColor="#A0978A"
-                            autoCapitalize="sentences"
-                            autoCorrect={true}
-                            value={name}
-                            onChangeText={onNameChange}
-                            editable={!isSaving}
-                        />
-                    </View>
-
-                    {/* DATES */}
-                    {Platform.OS === 'web' ? (
-                        <View className="w-full bg-raices-bg p-3 rounded-2xl" style={{ gap: 6 }}>
-                            <Text className="text-xs font-headline font-semibold text-raices-text-muted uppercase tracking-wider">Inicio</Text>
-                            <WebDateTimePicker
-                                value={toLocalISOString(startDate)}
-                                onChange={(val) => {
-                                    if (val) setStartDate(new Date(val));
-                                }}
+            <View className="flex-1 justify-center items-center px-4 bg-black/50">
+                <View
+                    className="w-full bg-raices-surface rounded-3xl overflow-hidden shadow-lg elevation-5"
+                    style={{ maxHeight: '92%' }}
+                >
+                    <ScrollView
+                        className="w-full"
+                        contentContainerClassName="p-5"
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {/* HERO IMAGE */}
+                        <View className="w-full rounded-2xl overflow-hidden" style={{ height: 110 }}>
+                            <Image
+                                source={heroImage}
+                                resizeMode="cover"
+                                style={{ width: '100%', height: '100%' }}
                             />
                         </View>
-                    ) : (
-                        <View className="w-full flex-row justify-between items-center bg-raices-bg p-3 rounded-2xl">
-                            <View style={{ flex: 1 }}>
-                                <Text className="text-xs font-headline font-semibold text-raices-text-muted uppercase tracking-wider">Inicio</Text>
-                                <Text className="text-sm font-body text-raices-text mt-1">
-                                    {startDate.getDate()}/{startDate.getMonth() + 1}/{startDate.getFullYear()} a las {startDate.getHours().toString().padStart(2, '0')}:{startDate.getMinutes().toString().padStart(2, '0')}
-                                </Text>
-                            </View>
-                            <View className="flex-row" style={{ gap: 6 }}>
-                                <Pressable onPress={showStartDatePicker} style={normalButtonStyle}>
-                                    <Text className="font-headline font-semibold text-xs text-white">Fecha</Text>
-                                </Pressable>
-                                <Pressable onPress={showStartTimePicker} style={normalButtonStyle}>
-                                    <Text className="font-headline font-semibold text-xs text-white">Hora</Text>
-                                </Pressable>
-                            </View>
-                        </View>
-                    )}
 
-                    {Platform.OS === 'web' ? (
-                        <View className="w-full bg-raices-bg p-3 rounded-2xl" style={{ gap: 6 }}>
-                            <Text className="text-xs font-headline font-semibold text-raices-text-muted uppercase tracking-wider">Término</Text>
-                            <WebDateTimePicker
-                                value={toLocalISOString(endDate)}
-                                onChange={(val) => {
-                                    if (val) setEndDate(new Date(val));
-                                }}
-                            />
-                        </View>
-                    ) : (
-                        <View className="w-full flex-row justify-between items-center bg-raices-bg p-3 rounded-2xl">
-                            <View style={{ flex: 1 }}>
-                                <Text className="text-xs font-headline font-semibold text-raices-text-muted uppercase tracking-wider">Término</Text>
-                                <Text className="text-sm font-body text-raices-text mt-1">
-                                    {endDate.getDate()}/{endDate.getMonth() + 1}/{endDate.getFullYear()} a las {endDate.getHours().toString().padStart(2, '0')}:{endDate.getMinutes().toString().padStart(2, '0')}
-                                </Text>
-                            </View>
-                            <View className="flex-row" style={{ gap: 6 }}>
-                                <Pressable onPress={showEndDatePicker} style={normalButtonStyle}>
-                                    <Text className="font-headline font-semibold text-xs text-white">Fecha</Text>
-                                </Pressable>
-                                <Pressable onPress={showEndTimePicker} style={normalButtonStyle}>
-                                    <Text className="font-headline font-semibold text-xs text-white">Hora</Text>
-                                </Pressable>
-                            </View>
-                        </View>
-                    )}
-
-
-
-                    {/* AUDIO RECORDING SECTION */}
-                    <View className="w-full items-center py-2 bg-raices-bg rounded-2xl" style={{ gap: 8 }}>
-                        <Text className="text-xs font-headline font-semibold text-raices-text-muted uppercase tracking-wider">Nota de voz asociada</Text>
-                        
-                        <View className="items-center justify-center" style={{ width: buttonSize * 1.3, height: buttonSize * 1.3 }}>
-                            {isRecording ? (
-                                <Animated.View
-                                    className="absolute rounded-full bg-raices-error/30"
-                                    style={[{ width: buttonSize, height: buttonSize }, pulseStyle]}
-                                />
-                            ) : null}
-                            
-                            <Pressable
-                                onPress={handleMicPress}
-                                disabled={isSaving}
-                                className="rounded-full items-center justify-center"
+                        {/* NAME */}
+                        <View className="w-full mt-5" style={{ gap: 8 }}>
+                            <Text className="text-base font-headline font-bold text-raices-text">Nombre del Evento</Text>
+                            <RNTextInput
                                 style={{
-                                    width: buttonSize,
-                                    height: buttonSize,
-                                    backgroundColor: micButtonColor,
-                                    borderWidth: 4,
-                                    borderColor: 'rgba(255,255,255,0.4)',
-                                    shadowColor: '#000',
-                                    shadowOffset: { width: 0, height: 4 },
-                                    shadowOpacity: 0.15,
-                                    shadowRadius: 8,
-                                    elevation: 4,
-                                    opacity: isSaving ? 0.6 : 1,
+                                    backgroundColor: '#E5E5E5',
+                                    borderRadius: 12,
+                                    paddingHorizontal: 16,
+                                    paddingVertical: 14,
+                                    fontSize: 16,
+                                    color: '#1F1B15',
                                 }}
-                            >
-                                <IconSymbol
-                                    name={isRecording ? 'stop.fill' : recordedAudioUri ? 'checkmark' : 'mic.fill'}
-                                    size={iconSize}
-                                    color="#FFFFFF"
-                                />
-                            </Pressable>
+                                placeholder="Ej: Medicamento Presión"
+                                placeholderTextColor="#8A8A8A"
+                                autoCapitalize="sentences"
+                                autoCorrect
+                                value={name}
+                                onChangeText={setName}
+                                editable={!isSaving}
+                            />
                         </View>
 
-                        {/* Status descriptions & Action links */}
-                        <View className="items-center" style={{ height: 24 }}>
-                            {isRecording ? (
-                                <Pressable onPress={handleCancelRecording}>
-                                    <Text className="text-sm font-headline font-semibold text-raices-error">Cancelar grabación</Text>
-                                </Pressable>
-                            ) : recordedAudioUri ? (
-                                <View className="flex-row items-center" style={{ gap: 10 }}>
-                                    <Text className="text-xs font-body text-raices-secondary font-semibold">Audio grabado</Text>
-                                    <Pressable onPress={handleDeleteAudio}>
-                                        <Text className="text-xs font-headline font-semibold text-raices-error">Eliminar</Text>
-                                    </Pressable>
+                        {/* DATE */}
+                        <View className="w-full mt-4" style={{ gap: 8 }}>
+                            <Text className="text-base font-headline font-bold text-raices-text">Fecha</Text>
+                            {Platform.OS === 'web' ? (
+                                <View style={fieldBoxStyle}>
+                                    <WebDateInput
+                                        value={toLocalISODate(startDate)}
+                                        onChange={onDateFromWeb}
+                                        min={toLocalISODate(startOfToday)}
+                                    />
                                 </View>
                             ) : (
-                                <Text className="text-xs font-body text-raices-text-muted">Presiona para grabar audio</Text>
+                                <Pressable onPress={() => showMode('date')} style={fieldBoxStyle}>
+                                    <Text className="text-base font-body text-raices-text">
+                                        {formatDate(startDate)}
+                                    </Text>
+                                </Pressable>
                             )}
                         </View>
-                    </View>
 
-                    {/* MODAL ACTIONS */}
-                    <View className="flex-row justify-center mt-2" style={{ gap: 12 }}>
-                        <Pressable
-                            onPress={onClose}
-                            disabled={isSaving || isRecording}
-                            className="px-6 py-3 rounded-xl bg-zinc-200 active:bg-zinc-300"
-                            style={{ opacity: (isSaving || isRecording) ? 0.5 : 1 }}
+                        {/* TIME */}
+                        <View className="w-full mt-4" style={{ gap: 8 }}>
+                            <Text className="text-base font-headline font-bold text-raices-text">Hora</Text>
+                            {Platform.OS === 'web' ? (
+                                <View style={[fieldBoxStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+                                    <View style={{ flex: 1 }}>
+                                        <WebTimeInput
+                                            value={toLocalISOTime(startDate)}
+                                            onChange={onTimeFromWeb}
+                                        />
+                                    </View>
+                                    <IconSymbol name="calendar" size={20} color="#325F3F" />
+                                </View>
+                            ) : (
+                                <Pressable
+                                    onPress={() => showMode('time')}
+                                    style={[fieldBoxStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
+                                >
+                                    <Text className="text-base font-body text-raices-text">
+                                        {formatTime(startDate)}
+                                    </Text>
+                                    <IconSymbol name="calendar" size={20} color="#325F3F" />
+                                </Pressable>
+                            )}
+                        </View>
+
+                        {/* CATEGORY */}
+                        <View className="w-full mt-4" style={{ gap: 8 }}>
+                            <Text className="text-base font-headline font-bold text-raices-text">Categoría</Text>
+                            <View style={[fieldBoxStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+                                <Text className="text-base font-body text-raices-text">
+                                    {selectedCategoryLong}
+                                </Text>
+                                <IconSymbol name="chevron.right" size={18} color="#1F1B15" style={{ transform: [{ rotate: '90deg' }] }} />
+                            </View>
+                        </View>
+
+                        {/* CATEGORY CHIPS */}
+                        <View className="w-full flex-row mt-4" style={{ gap: 10 }}>
+                            {CATEGORIES.map(cat => {
+                                const isActive = cat.key === category;
+                                return (
+                                    <Pressable
+                                        key={cat.key}
+                                        onPress={() => setCategory(cat.key)}
+                                        className="flex-1 items-center justify-center"
+                                        style={{
+                                            backgroundColor: isActive ? '#E8EFE5' : '#E5E5E5',
+                                            borderRadius: 10,
+                                            borderWidth: isActive ? 2 : 0,
+                                            borderColor: isActive ? '#325F3F' : 'transparent',
+                                            paddingVertical: 12,
+                                            gap: 4,
+                                        }}
+                                    >
+                                        <IconSymbol
+                                            name={cat.icon}
+                                            size={22}
+                                            color={isActive ? '#325F3F' : '#1F1B15'}
+                                        />
+                                        <Text
+                                            className="font-headline font-semibold"
+                                            style={{
+                                                fontSize: 11,
+                                                color: isActive ? '#325F3F' : '#1F1B15',
+                                            }}
+                                        >
+                                            {cat.label}
+                                        </Text>
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+
+                        {/* AUDIO RECORDING */}
+                        <View
+                            className="w-full items-center mt-5"
+                            style={{
+                                backgroundColor: '#E8EFE5',
+                                borderRadius: 16,
+                                paddingVertical: 22,
+                                paddingHorizontal: 16,
+                                gap: 12,
+                            }}
                         >
-                            <Text className="text-zinc-800 font-headline font-bold text-base">Cancelar</Text>
-                        </Pressable>
+                            <View className="items-center justify-center" style={{ width: buttonSize * 1.3, height: buttonSize * 1.3 }}>
+                                {isRecording ? (
+                                    <Animated.View
+                                        className="absolute rounded-full bg-raices-error/30"
+                                        style={[{ width: buttonSize, height: buttonSize }, pulseStyle]}
+                                    />
+                                ) : null}
 
+                                <Pressable
+                                    onPress={handleMicPress}
+                                    disabled={isSaving}
+                                    className="rounded-full items-center justify-center"
+                                    style={{
+                                        width: buttonSize,
+                                        height: buttonSize,
+                                        backgroundColor: micButtonColor,
+                                        shadowColor: '#000',
+                                        shadowOffset: { width: 0, height: 6 },
+                                        shadowOpacity: 0.2,
+                                        shadowRadius: 10,
+                                        elevation: 6,
+                                        opacity: isSaving ? 0.6 : 1,
+                                    }}
+                                >
+                                    <IconSymbol
+                                        name={isRecording ? 'stop.fill' : recordedAudioUri ? 'checkmark' : 'mic.fill'}
+                                        size={iconSize}
+                                        color="#FFFFFF"
+                                    />
+                                </Pressable>
+                            </View>
+
+                            <Text
+                                className="font-headline font-bold text-center"
+                                style={{ color: '#325F3F', fontSize: 18 }}
+                            >
+                                Graba un recordatorio
+                            </Text>
+                            <Text
+                                className="font-body text-center"
+                                style={{ color: 'rgba(50, 95, 63, 0.6)', fontSize: 13, lineHeight: 18 }}
+                            >
+                                Puedes dejar un mensaje de voz o instrucciones detalladas sobre el evento.
+                            </Text>
+
+                            <View className="items-center" style={{ minHeight: 18 }}>
+                                {isRecording ? (
+                                    <Pressable onPress={handleCancelRecording}>
+                                        <Text className="text-sm font-headline font-semibold text-raices-error">Cancelar grabación</Text>
+                                    </Pressable>
+                                ) : recordedAudioUri ? (
+                                    <View className="flex-row items-center" style={{ gap: 10 }}>
+                                        <Text className="text-xs font-body text-raices-secondary font-semibold">Audio grabado</Text>
+                                        <Pressable onPress={handleDeleteAudio}>
+                                            <Text className="text-xs font-headline font-semibold text-raices-error">Eliminar</Text>
+                                        </Pressable>
+                                    </View>
+                                ) : null}
+                            </View>
+                        </View>
+
+                        {/* SAVE BUTTON */}
                         <Pressable
                             onPress={onSend}
                             disabled={isSaving || isRecording}
-                            className="px-6 py-3 rounded-xl bg-raices-primary active:opacity-90 flex-row items-center justify-center"
-                            style={{ minWidth: 120, backgroundColor: "#325F3F", opacity: (isSaving || isRecording) ? 0.5 : 1 }}
+                            className="w-full flex-row items-center justify-center mt-5"
+                            style={{
+                                backgroundColor: '#325F3F',
+                                borderRadius: 14,
+                                paddingVertical: 16,
+                                gap: 10,
+                                opacity: (isSaving || isRecording) ? 0.5 : 1,
+                            }}
                         >
                             {isSaving ? (
                                 <ActivityIndicator color="#FFFFFF" size="small" />
                             ) : (
-                                <Text className="text-white font-headline font-bold text-base">Agregar</Text>
+                                <>
+                                    <IconSymbol name="plus" size={20} color="#FFFFFF" />
+                                    <Text className="text-white font-headline font-bold text-base">Guardar Evento</Text>
+                                </>
                             )}
                         </Pressable>
-                    </View>
+
+                        {/* CANCEL (kept as a subtle text link to preserve dismiss behavior) */}
+                        <Pressable
+                            onPress={onClose}
+                            disabled={isSaving || isRecording}
+                            className="w-full items-center mt-3"
+                            style={{ opacity: (isSaving || isRecording) ? 0.4 : 1, paddingVertical: 8 }}
+                        >
+                            <Text className="text-sm font-headline font-semibold text-raices-text-muted">Cancelar</Text>
+                        </Pressable>
+                    </ScrollView>
                 </View>
             </View>
         </Modal>

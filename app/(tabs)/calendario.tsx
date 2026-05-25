@@ -71,6 +71,14 @@ export default function CalendarioScreen() {
     currentMonth === selectedDate.getMonth() &&
     currentYear === selectedDate.getFullYear();
 
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const isPastDay = (day: number, type: CellType['type']) => {
+    if (type !== 'current') return false;
+    const cellDate = new Date(currentYear, currentMonth, day);
+    return cellDate < startOfToday;
+  };
+  const selectedIsPast = selectedDate < startOfToday;
+
   // ── events for selected day ─────────────────────────────────────────
   const selectedDayEvents = events.filter(e => {
     const d = new Date(e.due_date);
@@ -136,16 +144,18 @@ export default function CalendarioScreen() {
               const selectedCell = isSelected(cell.day, cell.type);
               const hasDot = cell.type === 'current' && eventDays.has(cell.day);
               const isCurrent = cell.type === 'current';
+              const past = isPastDay(cell.day, cell.type);
+              const selectable = isCurrent && !past;
 
               return (
                 <Pressable
                   key={idx}
                   className="w-[14.28%] items-center py-1"
                   onPress={() => {
-                    if (isCurrent)
+                    if (selectable)
                       setSelectedDate(new Date(currentYear, currentMonth, cell.day));
                   }}
-                  disabled={!isCurrent}
+                  disabled={!selectable}
                 >
                   <View
                     className={[
@@ -157,7 +167,7 @@ export default function CalendarioScreen() {
                     <Text
                       className={[
                         'text-sm font-semibold',
-                        !isCurrent ? 'text-zinc-300' : 'text-raices-text',
+                        !isCurrent ? 'text-zinc-300' : past ? 'text-zinc-300' : 'text-raices-text',
                         todayCell ? 'text-white' : '',
                       ].join(' ')}
                     >
@@ -179,13 +189,19 @@ export default function CalendarioScreen() {
 
         {/* ── CREAR EVENTO ───────────────────────────────────────── */}
         <Pressable
-          onPress={() => setCreateModalVisible(true)}
+          onPress={() => { if (!selectedIsPast) setCreateModalVisible(true); }}
+          disabled={selectedIsPast}
           className="bg-raices-primary rounded-2xl py-4 flex-row items-center justify-center mb-6"
-          style={{ gap: 10 }}
+          style={{ gap: 10, opacity: selectedIsPast ? 0.4 : 1 }}
         >
           <IconSymbol name="plus" size={20} color="white" />
           <Text className="text-white font-headline font-bold text-base">Crear Evento</Text>
         </Pressable>
+        {selectedIsPast ? (
+          <Text className="text-xs font-body text-raices-text-muted text-center -mt-4 mb-4">
+            No puedes crear eventos en días pasados.
+          </Text>
+        ) : null}
 
         {/* ── EVENTS LIST ────────────────────────────────────────── */}
         <Text className="text-xl font-headline font-bold text-raices-text mb-4">
