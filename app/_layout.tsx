@@ -19,6 +19,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/core/hooks/use-color-scheme';
 import { ToastProvider } from '@/core/toast/toast-provider';
 import { AuthProvider, useAuth } from '@/features/auth/context/auth-context';
+import { usePushNotifications } from '@/core/hooks/use-push-notifications';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -32,6 +33,9 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
   const navigationState = useRootNavigationState();
+  
+  // Initialize push notifications
+  usePushNotifications();
 
   useEffect(() => {
     // Prevent navigation until the navigation state is ready

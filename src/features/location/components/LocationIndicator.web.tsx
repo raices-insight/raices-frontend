@@ -1,8 +1,9 @@
 import { Text, View } from "@/src/core/ui/tw";
 import * as Location from 'expo-location';
 import { useEffect, useState } from 'react';
+import { CONFIG } from '@/core/config';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL?.replace(":3000", ":8080");
+const API_URL = CONFIG.API_URL.replace(":3000", ":8080");
 
 export function LocationIndicator() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);

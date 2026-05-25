@@ -3,7 +3,8 @@ import { Camera, Map, Marker } from "@maplibre/maplibre-react-native";
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { useEffect, useState } from 'react';
-const API_URL = process.env.EXPO_PUBLIC_API_URL?.replace(":3000",":8080");
+import { CONFIG } from '@/core/config';
+const API_URL = CONFIG.API_URL.replace(":3000",":8080");
 const LOCATION_TASK_NAME = 'background-location-task';
 
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {

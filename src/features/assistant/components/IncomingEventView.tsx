@@ -11,6 +11,11 @@ import { IconSymbol } from '@/core/ui/icon-symbol';
 import { Button } from '@/core/ui/button';
 import { Asset } from 'expo-asset';
 import { useAuth } from '@/features/auth/context/auth-context';
+import { useLocalSearchParams } from 'expo-router';
+import { useAssistantCalendarEvents } from '@/features/calendar/hooks/useAssistantCalendarEvents';
+import { useAudioPlayer } from 'expo-audio';
+import { logger } from '@/core/logger';
+import { CONFIG } from '@/core/config';
 
 // ---------------------------------------------------------------------------
 // Mock data — replace with event props once backend is wired
@@ -26,6 +31,11 @@ const MOCK_AUDIO_FILE  = require('@/../assets/audio/adulto-mayor-animo-positivo.
 export function IncomingEventView() {
   const { width: screenWidth } = useWindowDimensions();
   const { user } = useAuth();
+  const { eventId } = useLocalSearchParams<{ eventId?: string }>();
+  
+  const { events, isLoading } = useAssistantCalendarEvents();
+  const currentEvent = events.find(e => e.id === eventId);
+  const eventTitle = currentEvent?.title || MOCK_EVENT_TITLE;
   
   const senderName = user?.name || 'Usuario';
 
@@ -38,6 +48,31 @@ export function IncomingEventView() {
   const [isCooldown, setIsCooldown] = useState(false);
   const isBusy    = status === 'uploading' || status === 'processing';
   const isSuccess = status === 'success';
+  
+  // Audio playback setup
+  let audioSource = null;
+  if (currentEvent?.audio_url) {
+    let finalUri = currentEvent.audio_url;
+    if (finalUri.includes('localhost')) {
+      const apiUrl = CONFIG.API_URL;
+      const ipMatch = apiUrl.match(/:\/\/([^\/:]+)/);
+      if (ipMatch && ipMatch[1] && ipMatch[1] !== 'localhost') {
+        finalUri = finalUri.replace('localhost', ipMatch[1]);
+      }
+    }
+    audioSource = { uri: finalUri };
+  } else {
+    audioSource = MOCK_AUDIO_FILE;
+  }
+  
+  const player = useAudioPlayer(audioSource);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    if (!player.playing && isPlaying) {
+        setIsPlaying(false);
+    }
+  }, [player.playing]);
 
   // --- Pulse ring ---
   const pulseScale   = useSharedValue(1);
@@ -149,7 +184,7 @@ export function IncomingEventView() {
               </Text>
             </View>
             <Text className="font-headline font-bold text-xl text-raices-text leading-tight">
-              {MOCK_EVENT_TITLE}
+              {eventTitle}
             </Text>
             <Text className="font-body text-sm text-raices-text-muted">
               Mensaje de{' '}
@@ -160,12 +195,24 @@ export function IncomingEventView() {
 
         {/* Escuchar mensaje button */}
         <Button
-          label="Escuchar mensaje"
+          label={isPlaying ? "Pausar mensaje" : "Escuchar mensaje"}
           variant="secondary"
           size="sm"
           fullWidth
-          iconLeft={<IconSymbol name="play.fill" size={14} color="#FFFFFF" />}
-          onPress={() => { /* TODO: play caretaker audio */ }}
+          iconLeft={<IconSymbol name={isPlaying ? "pause.fill" : "play.fill"} size={14} color="#FFFFFF" />}
+          onPress={() => {
+            try {
+              if (isPlaying) {
+                player.pause();
+                setIsPlaying(false);
+              } else {
+                player.play();
+                setIsPlaying(true);
+              }
+            } catch (e) {
+              logger.error("Error playing event audio:", e);
+            }
+          }}
         />
       </View>
 

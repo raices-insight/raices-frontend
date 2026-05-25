@@ -1,13 +1,26 @@
 import { View, Text, Pressable } from '@/core/ui/tw';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { useAudioPlayer } from 'expo-audio';
+import { logger } from '@/core/logger';
+import { CONFIG } from '@/core/config';
 
 import { useState, useEffect } from 'react';
 
 import { CalendarEvent } from '../../calendar/api/schemas';
 
 function AudioPlayButton({ source }: { source: any }) {
-  const player = useAudioPlayer(source);
+  // Fix localhost URIs for physical devices/emulators
+  let finalSource = source;
+  if (source?.uri && source.uri.includes('localhost')) {
+    const apiUrl = CONFIG.API_URL || '';
+    // Extract IP like 192.168.1.7 from http://192.168.1.7:3000
+    const ipMatch = apiUrl.match(/:\/\/([^\/:]+)/);
+    if (ipMatch && ipMatch[1] && ipMatch[1] !== 'localhost') {
+      finalSource = { ...source, uri: source.uri.replace('localhost', ipMatch[1]) };
+    }
+  }
+
+  const player = useAudioPlayer(finalSource);
   const [hasError, setHasError] = useState(false);
   
   if (hasError) {
@@ -36,15 +49,21 @@ function AudioPlayButton({ source }: { source: any }) {
     <View className="self-start rounded-full">
       <Pressable 
         onPress={() => {
+          logger.debug("[AudioPlayButton] Pressed. Source:", source);
+          logger.debug("[AudioPlayButton] Player state before:", { playing: player.playing, isPlayingState: isPlaying });
           try {
             if (isPlaying) {
+              logger.debug("[AudioPlayButton] Pausing audio...");
               player.pause();
               setIsPlaying(false);
             } else {
+              logger.debug("[AudioPlayButton] Playing audio...");
               player.play();
               setIsPlaying(true);
             }
+            logger.debug("[AudioPlayButton] Player state after action:", { playing: player.playing });
           } catch (e) {
+            logger.error("[AudioPlayButton] Error caught during playback:", e);
             setHasError(true);
           }
         }}

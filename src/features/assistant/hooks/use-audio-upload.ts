@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAudioRecorder, RecordingPresets, requestRecordingPermissionsAsync } from 'expo-audio';
 import { apiClient } from '@/core/api/client';
+import { CONFIG } from '@/core/config';
 import { UploadTicketSchema, NotifyUploadResponseSchema } from '@/features/assistant/api/schemas';
 import { logger } from '@/core/logger';
 import { useToast } from '@/core/toast/use-toast';
@@ -76,7 +77,11 @@ export function useAudioUpload() {
       const fileResponse = await fetch(uri);
       const blob = await fileResponse.blob();
 
-      const uploadResult = await fetch(ticket.uploadUrl, {
+      let finalUploadUrl = ticket.uploadUrl;
+
+      logger.debug(`Final upload URL: ${finalUploadUrl}`);
+
+      const uploadResult = await fetch(finalUploadUrl, {
         method: 'PUT',
         body: blob,
         headers: {
@@ -85,6 +90,8 @@ export function useAudioUpload() {
       });
 
       if (!uploadResult.ok) {
+        const errorText = await uploadResult.text();
+        logger.error(`S3 Upload failed with status ${uploadResult.status}: ${errorText}`);
         throw new Error('Error al subir el archivo al servidor de almacenamiento.');
       }
 
