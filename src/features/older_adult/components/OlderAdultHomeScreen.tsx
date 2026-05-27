@@ -7,12 +7,14 @@ import { FilterTabs } from './FilterTabs';
 import { OlderAdultHeader } from './OlderAdultHeader';
 
 import { ActivityIndicator } from 'react-native';
-import { useAssistantCalendarEvents } from '../../calendar/hooks/useAssistantCalendarEvents';
+import { useOlderAdultCalendarEvents } from '@/features/calendar/context/OlderAdultCalendarEventsContext';
 import { useAuth } from '@/features/auth/context/auth-context';
 
 export function OlderAdultHomeScreen() {
   const [activeTab, setActiveTab] = useState('Hoy');
-  const { events, isLoading, error, refetch } = useAssistantCalendarEvents();
+  // Shared context — same instance as OlderAdultCalendarScreen.
+  // Optimistic events added in the calendar tab are immediately visible here.
+  const { events, isLoading, error } = useOlderAdultCalendarEvents();
   const { user } = useAuth();
 
   const filteredEvents = events.filter(event => {

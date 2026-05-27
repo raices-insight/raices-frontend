@@ -16,6 +16,7 @@ import { useAssistantCalendarEvents } from '@/features/calendar/hooks/useAssista
 import { useAudioPlayer } from 'expo-audio';
 import { logger } from '@/core/logger';
 import { CONFIG } from '@/core/config';
+import { useWebSocket } from '@/core/websocket/websocket-provider';
 
 // ---------------------------------------------------------------------------
 // Mock data — replace with event props once backend is wired
@@ -48,6 +49,38 @@ export function IncomingEventView() {
   const [isCooldown, setIsCooldown] = useState(false);
   const isBusy    = status === 'uploading' || status === 'processing';
   const isSuccess = status === 'success';
+
+  // ── Analysis result from WebSocket ──────────────────────────────────────────
+  // Tracks what the assistant service returns after processing the audio.
+  const [analysisResult, setAnalysisResult] = useState<{
+    /** True between a successful upload and the arrival of assistant:analysis_complete */
+    waiting: boolean;
+    description: string | null;
+    analysisStatus: 'completed' | 'skipped' | 'failed' | null;
+  }>({ waiting: false, description: null, analysisStatus: null });
+
+  const { subscribe } = useWebSocket();
+
+  // Subscribe to assistant:analysis_complete — fires when the backend finishes STT + LLM
+  useEffect(() => {
+    return subscribe('assistant:analysis_complete', (data) => {
+      logger.info('Received assistant:analysis_complete', data);
+      setAnalysisResult({
+        waiting: false,
+        description: data.description ?? null,
+        analysisStatus: data.status as 'completed' | 'skipped' | 'failed',
+      });
+    });
+  }, [subscribe]);
+
+  // When upload is acknowledged by the server, start waiting for the async analysis
+  useEffect(() => {
+    if (status === 'success') {
+      setAnalysisResult({ waiting: true, description: null, analysisStatus: null });
+    } else if (status === 'error') {
+      setAnalysisResult({ waiting: false, description: null, analysisStatus: null });
+    }
+  }, [status]);
   
   // Audio playback setup
   let audioSource = null;
@@ -115,17 +148,18 @@ export function IncomingEventView() {
       // Real recording flow
       // await stopAndUpload('b02bd0cc-fb75-4295-9328-afd8c1281de8', 'adulto_mayor');
 
-      
       // For simulation: Resolve the asset URI before uploading
       const asset = Asset.fromModule(MOCK_AUDIO_FILE);
       await asset.downloadAsync();
-      
+
       if (user?.id) {
         stopAndUpload(asset.localUri || asset.uri);
       } else {
         console.warn('No user session available to upload audio');
       }
     } else {
+      // Reset previous analysis when starting a new recording
+      setAnalysisResult({ waiting: false, description: null, analysisStatus: null });
       setIsCooldown(true);
       startRecording();
       setTimeout(() => setIsCooldown(false), 1000); // 1 sec cooldown
@@ -282,14 +316,43 @@ export function IncomingEventView() {
       {/* ── Transcription card — always anchored to the bottom ─── */}
       <View className="mb-6 w-full bg-raices-surface rounded-3xl p-5 shadow-sm elevation-2">
         <Text className="font-headline font-semibold text-xs text-raices-tertiary uppercase tracking-widest mb-2">
-          Mensaje de {senderName}
+          {analysisResult.description
+            ? `Tu respuesta`
+            : `Mensaje de ${senderName}`}
         </Text>
-        <Text
-          className="font-body text-raices-text text-center text-lg leading-7"
-          style={{ fontStyle: 'italic' }}
-        >
-          {MOCK_TRANSCRIPT}
-        </Text>
+
+        {analysisResult.waiting ? (
+          // Backend is processing — show spinner + label
+          <View className="flex-row items-center justify-center gap-3 py-1">
+            <ActivityIndicator size="small" color="#53815F" />
+            <Text className="font-body text-raices-text-muted text-base">
+              Analizando tu respuesta...
+            </Text>
+          </View>
+        ) : analysisResult.analysisStatus === 'failed' ? (
+          // Pipeline failed — show a friendly error
+          <Text
+            className="font-body text-raices-error text-center text-base leading-6"
+          >
+            No se pudo procesar tu respuesta. Intenta de nuevo.
+          </Text>
+        ) : analysisResult.description ? (
+          // Analysis complete — show real transcript
+          <Text
+            className="font-body text-raices-text text-center text-lg leading-7"
+            style={{ fontStyle: 'italic' }}
+          >
+            {`"${analysisResult.description}"`}
+          </Text>
+        ) : (
+          // Default / before first recording
+          <Text
+            className="font-body text-raices-text text-center text-lg leading-7"
+            style={{ fontStyle: 'italic' }}
+          >
+            {MOCK_TRANSCRIPT}
+          </Text>
+        )}
       </View>
 
     </View>

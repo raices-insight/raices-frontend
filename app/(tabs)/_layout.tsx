@@ -6,11 +6,13 @@ import { IconSymbol } from '@/core/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/core/hooks/use-color-scheme';
 import { CONFIG } from '@/core/config';
+import { OlderAdultCalendarEventsProvider } from '@/features/calendar/context/OlderAdultCalendarEventsContext';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
+    <OlderAdultCalendarEventsProvider>
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
@@ -62,5 +64,6 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    </OlderAdultCalendarEventsProvider>
   );
 }

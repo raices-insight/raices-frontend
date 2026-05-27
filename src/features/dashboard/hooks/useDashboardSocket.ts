@@ -1,107 +1,93 @@
-import { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { DashboardDailyScoreSchema, type DashboardDailyScore } from '@/features/dashboard/api/schemas';
 import { logger } from '@/core/logger';
 import { useToast } from '@/core/toast/use-toast';
 import { apiClient } from '@/core/api/client';
-import { CONFIG } from '@/core/config';
+import { useWebSocket } from '@/core/websocket/websocket-provider';
 
 import { z } from 'zod';
 
-export const useDashboardSocket = (profileId: string | undefined, sessionToken: string | null | undefined) => {
-  const [socket, setSocket] = useState<Socket | null>(null);
+/**
+ * Manages dashboard real-time data for a given profile.
+ *
+ * - Cold start: fetches the last 2 days' scores via HTTP on mount.
+ * - Live updates: subscribes to `daily_score_update` via the global WebSocket.
+ * - On-demand: exposes `refresh()` so callers can re-fetch (e.g. on screen focus).
+ */
+export const useDashboardSocket = (profileId: string | undefined) => {
   const [dailyScore, setDailyScore] = useState<DashboardDailyScore | null>(null);
   const [yesterdayScore, setYesterdayScore] = useState<DashboardDailyScore | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
   const toast = useToast();
+  const { subscribe, isConnected } = useWebSocket();
 
-  useEffect(() => {
-    if (!profileId || !sessionToken) return;
+  // Keep toast in a ref so fetchData doesn't need it as a dependency
+  const toastRef = useRef(toast);
+  useEffect(() => { toastRef.current = toast; }, [toast]);
 
-    const abortController = new AbortController();
+  // ─── Fetch (stable reference, safe to call from useFocusEffect) ───────────────
 
-    // --- COLD START: Hidratación inicial via Axios ---
-    const fetchInitialData = async () => {
-      try {
-        logger.info('Fetching dashboard history (Cold Start)', { profileId });
-        
-        // El backend ahora devuelve una lista: [hoy, ayer]
-        const response = await apiClient.get<DashboardDailyScore[]>(
-          `/assistant/dashboard/current/${profileId}`,
-          { signal: abortController.signal }
-        );
-        
-        // Validación del array de registros
-        const HistorySchema = z.array(DashboardDailyScoreSchema);
-        const parsed = HistorySchema.safeParse(response.data);
-        
-        if (parsed.success) {
-          const history = parsed.data;
-          // El primer elemento es el más reciente (hoy)
-          if (history.length > 0) setDailyScore(history[0]);
-          // El segundo elemento es el día anterior (ayer)
-          if (history.length > 1) setYesterdayScore(history[1]);
-          
-          logger.info(`Loaded dashboard history: ${history.length} records`);
-        } else {
-          logger.error('History data validation failed', parsed.error);
-        }
-      } catch (error: any) {
-        if (error.name === 'CanceledError' || error.name === 'AbortError') {
-          logger.info('Fetch history aborted');
-          return;
-        }
+  const fetchData = useCallback(async (signal?: AbortSignal) => {
+    if (!profileId) return;
+    try {
+      logger.info('Fetching dashboard history', { profileId });
 
-        if (error.response?.status === 404) {
-          logger.info('No history found (expected for new users)');
-          return;
-        }
+      const response = await apiClient.get<DashboardDailyScore[]>(
+        `/assistant/dashboard/current/${profileId}`,
+        { signal }
+      );
 
-        toast.error('Error al conectar con el servidor.');
-        logger.error('Failed to fetch dashboard history', error);
+      const HistorySchema = z.array(DashboardDailyScoreSchema);
+      const parsed = HistorySchema.safeParse(response.data);
+
+      if (parsed.success) {
+        const history = parsed.data;
+        if (history.length > 0) setDailyScore(history[0]);
+        if (history.length > 1) setYesterdayScore(history[1]);
+        logger.info(`Loaded dashboard history: ${history.length} records`);
+      } else {
+        logger.error('History data validation failed', parsed.error);
       }
-    };
-
-    fetchInitialData();
-
-    // --- REAL-TIME: Conexión Socket.IO ---
-    const newSocket = io(CONFIG.API_URL, {
-      auth: { token: sessionToken },
-      transports: ['websocket'],
-    });
-
-    newSocket.on('connect', () => {
-      logger.info('Connected to Dashboard Socket', { profileId });
-      setIsConnected(true);
-    });
-
-    newSocket.on('connect_error', (error) => {
-      logger.error('Dashboard Socket connection error', error);
-    });
-
-    newSocket.on('daily_score_update', (data: unknown) => {
-      logger.info('Received daily_score_update');
-      const parsed = DashboardDailyScoreSchema.safeParse(data);
-      if (!parsed.success) {
-        logger.error('Invalid payload format from Socket', parsed.error);
+    } catch (error: any) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError') {
+        logger.info('Fetch history aborted');
         return;
       }
-      // Las actualizaciones en tiempo real siempre corresponden al día actual
+      if (error.response?.status === 404) {
+        logger.info('No history found (expected for new users)');
+        return;
+      }
+      toastRef.current.error('Error al conectar con el servidor.');
+      logger.error('Failed to fetch dashboard history', error);
+    }
+  }, [profileId]); // toast intentionally excluded — accessed via ref
+
+  // ─── Cold Start: fetch on mount / profileId change ───────────────────────────
+
+  useEffect(() => {
+    const abortController = new AbortController();
+    fetchData(abortController.signal);
+    return () => abortController.abort();
+  }, [fetchData]);
+
+  // ─── Real-time: subscribe to daily score updates via global WebSocket ─────────
+
+  useEffect(() => {
+    return subscribe('daily_score_update', (data) => {
+      logger.info('Received daily_score_update via global WebSocket');
+      const parsed = DashboardDailyScoreSchema.safeParse(data);
+      if (!parsed.success) {
+        logger.error('Invalid daily_score_update payload', parsed.error);
+        return;
+      }
       setDailyScore(parsed.data);
     });
+  }, [subscribe]);
 
-    newSocket.on('disconnect', (reason) => {
-      logger.info('Disconnected from Dashboard Socket', { reason });
-      setIsConnected(false);
-    });
+  // ─── On-demand refresh (call from useFocusEffect in the screen) ───────────────
 
-    setSocket(newSocket);
+  const refresh = useCallback(() => {
+    fetchData();
+  }, [fetchData]);
 
-    return () => {
-      abortController.abort();
-      newSocket.disconnect();
-    };
-  }, [profileId, sessionToken, toast]);
-
-  return { socket, dailyScore, yesterdayScore, isConnected };
+  return { dailyScore, yesterdayScore, isConnected, refresh };
 };

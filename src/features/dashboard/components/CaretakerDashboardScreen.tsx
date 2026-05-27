@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { View, Text } from '@/core/ui/tw';
 import { GlobalMockHeader } from '@/core/ui/GlobalMockHeader';
 import { SemanticStatusCard } from './SemanticStatusCard';
@@ -9,12 +10,21 @@ import { useDashboardSocket } from '../hooks/useDashboardSocket';
 import { useAuth } from '@/features/auth/context/auth-context';
 
 export function CaretakerDashboardScreen() {
-  const { user, sessionToken } = useAuth();
-  
+  const { user } = useAuth();
+
   // Usamos el ID del usuario logueado para todo el flujo
   const profileId = user?.id || '';
 
-  const { dailyScore, yesterdayScore, isConnected } = useDashboardSocket(profileId, sessionToken);
+  // sessionToken is no longer passed — the global WebSocketProvider handles auth
+  const { dailyScore, yesterdayScore, isConnected, refresh } = useDashboardSocket(profileId);
+
+  // Re-fetch every time the dashboard tab comes into focus.
+  // Covers the case where a WebSocket update arrived while this screen was not mounted.
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
   const insets = useSafeAreaInsets();
 
   return (

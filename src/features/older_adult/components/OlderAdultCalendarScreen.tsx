@@ -5,9 +5,11 @@ import { View, Text, Pressable } from '@/core/ui/tw';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { UserAvatar } from '@/core/ui/UserAvatar';
 import { useAuth } from '@/features/auth/context/auth-context';
-import { useAssistantCalendarEvents } from '@/features/calendar/hooks/useAssistantCalendarEvents';
+import { useOlderAdultCalendarEvents } from '@/features/calendar/context/OlderAdultCalendarEventsContext';
 import { CreateEventModal } from '@/features/calendar/components/CreateEventModal';
+import { EditEventModal } from '@/features/calendar/components/EditEventModal';
 import { CalendarDayEventCard } from '@/features/calendar/components/CalendarDayEventCard';
+import type { CalendarEvent } from '@/features/calendar/api/schemas';
 import { CalendarMonthGrid, MONTH_NAMES } from '@/features/calendar/components/CalendarMonthGrid';
 
 export function OlderAdultCalendarScreen() {
@@ -18,8 +20,9 @@ export function OlderAdultCalendarScreen() {
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
 
-  const { events, isLoading, refetch } = useAssistantCalendarEvents();
+  const { events, isLoading, refetch, addEventOptimistically, deleteEvent, editEvent } = useOlderAdultCalendarEvents();
 
   const prevMonth = () => {
     if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear((y) => y - 1); }
@@ -121,16 +124,44 @@ export function OlderAdultCalendarScreen() {
           </View>
         ) : (
           selectedDayEvents.map((event) => (
-            <CalendarDayEventCard key={event.id} event={event} />
+            <CalendarDayEventCard
+              key={event.id}
+              event={event}
+              onDelete={deleteEvent}
+              onEdit={setEditingEvent}
+            />
           ))
         )}
       </RNScrollView>
+
+      <EditEventModal
+        event={editingEvent}
+        visible={editingEvent !== null}
+        onClose={() => setEditingEvent(null)}
+        onSave={editEvent}
+      />
 
       <CreateEventModal
         selectedDate={selectedDate}
         visible={createModalVisible}
         onClose={() => setCreateModalVisible(false)}
-        addEvent={() => { void refetch(); }}
+        addEvent={(dto) => {
+          // Show the event immediately — don't wait for NATS async processing
+          addEventOptimistically({
+            id: `optimistic-${Date.now()}`,
+            title: dto.title,
+            due_date: dto.date.toISOString(),
+            status: 'pending',
+            description: null,
+            creator_audio_profile_id: null,
+            adult_profile_id: null,
+            audio_url: null,
+          });
+          // Background sync: give the assistant service time to persist the event
+          // via NATS before we refetch, then replace the optimistic entry with
+          // the real server record.
+          setTimeout(() => { void refetch(); }, 3000);
+        }}
       />
     </View>
   );

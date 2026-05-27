@@ -7,7 +7,9 @@ import { UserAvatar } from '@/core/ui/UserAvatar';
 import { useAuth } from '@/features/auth/context/auth-context';
 import { useAssistantCalendarEvents } from '@/features/calendar/hooks/useAssistantCalendarEvents';
 import { CreateEventModal } from '@/features/calendar/components/CreateEventModal';
+import { EditEventModal } from '@/features/calendar/components/EditEventModal';
 import { CalendarDayEventCard } from '@/features/calendar/components/CalendarDayEventCard';
+import type { CalendarEvent } from '@/features/calendar/api/schemas';
 import { CalendarMonthGrid, MONTH_NAMES } from '@/features/calendar/components/CalendarMonthGrid';
 import { useFamilyOlderAdults } from '@/features/family/hooks/use-family-older-adults';
 import { usePrivacyForProfile } from '@/features/older_adult/hooks/use-privacy-for-profile';
@@ -83,6 +85,7 @@ export function CaregiverCalendarScreen() {
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [selectedAdultId, setSelectedAdultId] = useState<string | null>(null);
 
   const { olderAdults, loading: adultsLoading, familyId } = useFamilyOlderAdults();
@@ -100,7 +103,7 @@ export function CaregiverCalendarScreen() {
 
   const eventsEnabled = !!selectedAdultId && isActivityShared;
 
-  const { events, isLoading: eventsLoading, refetch } = useAssistantCalendarEvents({
+  const { events, isLoading: eventsLoading, refetch, addEventOptimistically, deleteEvent, editEvent } = useAssistantCalendarEvents({
     profileId: selectedAdultId,
     skip: !eventsEnabled,
   });
@@ -295,18 +298,46 @@ export function CaregiverCalendarScreen() {
               </View>
             ) : (
               selectedDayEvents.map((event) => (
-                <CalendarDayEventCard key={event.id} event={event} />
+                <CalendarDayEventCard
+                  key={event.id}
+                  event={event}
+                  onDelete={deleteEvent}
+                  onEdit={setEditingEvent}
+                />
               ))
             )}
           </>
         )}
       </RNScrollView>
 
+      <EditEventModal
+        event={editingEvent}
+        visible={editingEvent !== null}
+        onClose={() => setEditingEvent(null)}
+        onSave={editEvent}
+      />
+
       <CreateEventModal
         selectedDate={selectedDate}
         visible={createModalVisible}
         onClose={() => setCreateModalVisible(false)}
-        addEvent={() => { void refetch(); }}
+        addEvent={(dto) => {
+          // Show the event immediately — don't wait for NATS async processing
+          addEventOptimistically({
+            id: `optimistic-${Date.now()}`,
+            title: dto.title,
+            due_date: dto.date.toISOString(),
+            status: 'pending',
+            description: null,
+            creator_audio_profile_id: null,
+            adult_profile_id: null,
+            audio_url: null,
+          });
+          // Background sync: give the assistant service time to persist the event
+          // via NATS before we refetch, then replace the optimistic entry with
+          // the real server record.
+          setTimeout(() => { void refetch(); }, 3000);
+        }}
         targetProfileId={selectedAdultId ?? undefined}
       />
     </View>

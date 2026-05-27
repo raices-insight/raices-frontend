@@ -19,6 +19,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/core/hooks/use-color-scheme';
 import { ToastProvider } from '@/core/toast/toast-provider';
 import { AuthProvider, useAuth } from '@/features/auth/context/auth-context';
+import { WebSocketProvider } from '@/core/websocket/websocket-provider';
 import { usePushNotifications } from '@/core/hooks/use-push-notifications';
 
 void SplashScreen.preventAutoHideAsync();
@@ -97,7 +98,10 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <RootLayoutNav />
+        {/* WebSocketProvider must be inside AuthProvider to read sessionToken */}
+        <WebSocketProvider>
+          <RootLayoutNav />
+        </WebSocketProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

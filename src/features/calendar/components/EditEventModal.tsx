@@ -1,0 +1,281 @@
+import { Text, View, Pressable, ScrollView } from "@/src/core/ui/tw";
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import React, { useEffect, useState } from "react";
+import { Modal, TextInput as RNTextInput, ActivityIndicator, Platform, Image } from "react-native";
+import { IconSymbol } from '@/src/core/ui/icon-symbol';
+import { useToast } from '@/src/core/toast/use-toast';
+import { logger } from '@/src/core/logger';
+import type { CalendarEvent } from '../api/schemas';
+
+const heroImage = require('@/../assets/images/Gradient.png');
+
+interface EditEventModalProps {
+  event: CalendarEvent | null;
+  visible: boolean;
+  onClose: () => void;
+  onSave: (id: string, updates: { title?: string; due_date?: string }) => Promise<void>;
+}
+
+const formatDate = (date: Date) => {
+  const d = date.getDate().toString().padStart(2, '0');
+  const m = (date.getMonth() + 1).toString().padStart(2, '0');
+  const y = date.getFullYear().toString().slice(-2);
+  return `${d}-${m}-${y}`;
+};
+
+const formatTime = (date: Date) => {
+  let h = date.getHours();
+  const m = date.getMinutes().toString().padStart(2, '0');
+  const period = h >= 12 ? 'PM' : 'AM';
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h.toString().padStart(2, '0')}:${m}${period}`;
+};
+
+const toLocalISODate = (date: Date) => {
+  const y = date.getFullYear();
+  const m = (date.getMonth() + 1).toString().padStart(2, '0');
+  const d = date.getDate().toString().padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
+const toLocalISOTime = (date: Date) => {
+  const h = date.getHours().toString().padStart(2, '0');
+  const min = date.getMinutes().toString().padStart(2, '0');
+  return `${h}:${min}`;
+};
+
+const WebDateInput = ({ value, onChange }: { value: string; onChange: (val: string) => void }) =>
+  React.createElement('input', {
+    type: 'date',
+    style: {
+      width: '100%',
+      border: 'none',
+      background: 'transparent',
+      fontSize: '16px',
+      color: '#1F1B15',
+      outline: 'none',
+      fontFamily: 'inherit',
+      padding: 0,
+    },
+    value,
+    onChange: (e: any) => onChange(e.target.value),
+  });
+
+const WebTimeInput = ({ value, onChange }: { value: string; onChange: (val: string) => void }) =>
+  React.createElement('input', {
+    type: 'time',
+    style: {
+      width: '100%',
+      border: 'none',
+      background: 'transparent',
+      fontSize: '16px',
+      color: '#1F1B15',
+      outline: 'none',
+      fontFamily: 'inherit',
+      padding: 0,
+    },
+    value,
+    onChange: (e: any) => onChange(e.target.value),
+  });
+
+export function EditEventModal({ event, visible, onClose, onSave }: EditEventModalProps) {
+  const [title, setTitle] = useState('');
+  const [eventDate, setEventDate] = useState(new Date());
+  const [isSaving, setIsSaving] = useState(false);
+  const toast = useToast();
+
+  // Pre-fill when event changes or modal opens
+  useEffect(() => {
+    if (event && visible) {
+      setTitle(event.title ?? '');
+      setEventDate(new Date(event.due_date));
+    }
+  }, [event, visible]);
+
+  const showMode = (mode: 'date' | 'time') => {
+    DateTimePickerAndroid.open({
+      value: eventDate,
+      onValueChange: (_e, selected) => {
+        if (selected) setEventDate(selected);
+      },
+      mode,
+      is24Hour: false,
+    });
+  };
+
+  const onDateFromWeb = (val: string) => {
+    if (!val) return;
+    const [y, m, d] = val.split('-').map(Number);
+    const next = new Date(eventDate);
+    next.setFullYear(y, (m ?? 1) - 1, d ?? 1);
+    setEventDate(next);
+  };
+
+  const onTimeFromWeb = (val: string) => {
+    if (!val) return;
+    const [h, min] = val.split(':').map(Number);
+    const next = new Date(eventDate);
+    next.setHours(h ?? 0, min ?? 0, 0, 0);
+    setEventDate(next);
+  };
+
+  const handleSave = async () => {
+    if (!title.trim()) {
+      toast.error('Por favor, ingresa el nombre del evento.');
+      return;
+    }
+    if (!event) return;
+
+    try {
+      setIsSaving(true);
+      await onSave(event.id, {
+        title: title.trim(),
+        due_date: eventDate.toISOString(),
+      });
+      toast.success('¡Evento actualizado con éxito!');
+      onClose();
+    } catch (err) {
+      logger.error('Failed to update calendar event', err);
+      toast.error('Error al actualizar el evento.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const fieldBoxStyle = {
+    backgroundColor: '#E5E5E5',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  } as const;
+
+  return (
+    <Modal
+      transparent
+      visible={visible}
+      onRequestClose={onClose}
+      animationType="fade"
+    >
+      <View className="flex-1 justify-center items-center px-4 bg-black/50">
+        <View
+          className="w-full bg-raices-surface rounded-3xl overflow-hidden shadow-lg elevation-5"
+          style={{ maxHeight: '85%' }}
+        >
+          <ScrollView
+            className="w-full"
+            contentContainerClassName="p-5"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* HERO IMAGE */}
+            <View className="w-full rounded-2xl overflow-hidden" style={{ height: 110 }}>
+              <Image
+                source={heroImage}
+                resizeMode="cover"
+                style={{ width: '100%', height: '100%' }}
+              />
+            </View>
+
+            <Text className="text-xl font-headline font-bold text-raices-text mt-4 mb-1">
+              Editar Evento
+            </Text>
+
+            {/* NAME */}
+            <View className="w-full mt-4" style={{ gap: 8 }}>
+              <Text className="text-base font-headline font-bold text-raices-text">Nombre del Evento</Text>
+              <RNTextInput
+                style={{
+                  backgroundColor: '#E5E5E5',
+                  borderRadius: 12,
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
+                  fontSize: 16,
+                  color: '#1F1B15',
+                }}
+                placeholder="Ej: Medicamento Presión"
+                placeholderTextColor="#8A8A8A"
+                autoCapitalize="sentences"
+                autoCorrect
+                value={title}
+                onChangeText={setTitle}
+                editable={!isSaving}
+              />
+            </View>
+
+            {/* DATE */}
+            <View className="w-full mt-4" style={{ gap: 8 }}>
+              <Text className="text-base font-headline font-bold text-raices-text">Fecha</Text>
+              {Platform.OS === 'web' ? (
+                <View style={fieldBoxStyle}>
+                  <WebDateInput value={toLocalISODate(eventDate)} onChange={onDateFromWeb} />
+                </View>
+              ) : (
+                <Pressable onPress={() => showMode('date')} style={fieldBoxStyle}>
+                  <Text className="text-base font-body text-raices-text">
+                    {formatDate(eventDate)}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+
+            {/* TIME */}
+            <View className="w-full mt-4" style={{ gap: 8 }}>
+              <Text className="text-base font-headline font-bold text-raices-text">Hora</Text>
+              {Platform.OS === 'web' ? (
+                <View style={[fieldBoxStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+                  <View style={{ flex: 1 }}>
+                    <WebTimeInput value={toLocalISOTime(eventDate)} onChange={onTimeFromWeb} />
+                  </View>
+                  <IconSymbol name="calendar" size={20} color="#325F3F" />
+                </View>
+              ) : (
+                <Pressable
+                  onPress={() => showMode('time')}
+                  style={[fieldBoxStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
+                >
+                  <Text className="text-base font-body text-raices-text">
+                    {formatTime(eventDate)}
+                  </Text>
+                  <IconSymbol name="calendar" size={20} color="#325F3F" />
+                </Pressable>
+              )}
+            </View>
+
+            {/* SAVE BUTTON */}
+            <Pressable
+              onPress={handleSave}
+              disabled={isSaving}
+              className="w-full flex-row items-center justify-center mt-6"
+              style={{
+                backgroundColor: '#325F3F',
+                borderRadius: 14,
+                paddingVertical: 16,
+                gap: 10,
+                opacity: isSaving ? 0.5 : 1,
+              }}
+            >
+              {isSaving ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <>
+                  <IconSymbol name="checkmark" size={20} color="#FFFFFF" />
+                  <Text className="text-white font-headline font-bold text-base">Guardar Cambios</Text>
+                </>
+              )}
+            </Pressable>
+
+            {/* CANCEL */}
+            <Pressable
+              onPress={onClose}
+              disabled={isSaving}
+              className="w-full items-center mt-3"
+              style={{ opacity: isSaving ? 0.4 : 1, paddingVertical: 8 }}
+            >
+              <Text className="text-sm font-headline font-semibold text-raices-text-muted">Cancelar</Text>
+            </Pressable>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
