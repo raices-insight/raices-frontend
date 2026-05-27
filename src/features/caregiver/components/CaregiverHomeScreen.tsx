@@ -1,80 +1,100 @@
+import React, { useCallback } from 'react';
 import { ActivityIndicator } from 'react-native';
-import { router } from 'expo-router';
-import { View, ScrollView, Text, Pressable } from '@/core/ui/tw';
-import { IconSymbol } from '@/core/ui/icon-symbol';
+import { router, useFocusEffect } from 'expo-router';
+import { View, ScrollView, Text } from '@/core/ui/tw';
 import { CaregiverHeader } from './CaregiverHeader';
 import { EmptyFamilyState } from './EmptyFamilyState';
+import { OlderAdultChipSelector } from './OlderAdultChipSelector';
+import { HomeHealthSummaryGrid } from './HomeHealthSummaryGrid';
+import { HomeUpcomingEvents } from './HomeUpcomingEvents';
+import { HomeVoiceRecordings } from './HomeVoiceRecordings';
 import { useAuth } from '@/features/auth/context/auth-context';
 import { useFamily } from '@/features/family/hooks/use-family';
 import { useFamilyOlderAdults } from '@/features/family/hooks/use-family-older-adults';
+import { useSelectedOlderAdult } from '../hooks/use-selected-older-adult';
+import { useDashboardSocket } from '@/features/dashboard/hooks/useDashboardSocket';
+import { useAssistantCalendarEvents } from '@/features/calendar/hooks/useAssistantCalendarEvents';
+import { useVoiceRecordings } from '../hooks/use-voice-recordings';
 
-function FamilyDashboard() {
-  const { family } = useFamily();
+function HomeContent() {
   const { olderAdults, loading } = useFamilyOlderAdults();
+  const { selected, selectOlderAdult } = useSelectedOlderAdult(olderAdults);
+
+  // Dashboard data for the selected older adult
+  const { dailyScore, refresh } = useDashboardSocket(selected?.profileId);
+
+  // Upcoming calendar events for the selected older adult (today → +7 days)
+  const today = new Date();
+  const startDate = today.toISOString();
+  const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { events, isLoading: eventsLoading } = useAssistantCalendarEvents({
+    startDate,
+    endDate,
+    profileId: selected?.profileId,
+    skip: !selected,
+  });
+
+  // Recent voice recordings for the selected older adult
+  const { recordings, isLoading: recordingsLoading } = useVoiceRecordings(
+    selected?.profileId ?? null,
+  );
+
+  // Refresh dashboard when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
+
+  if (loading) {
+    return (
+      <View className="flex-1 items-center justify-center py-20">
+        <ActivityIndicator color="#325F3F" size="large" />
+      </View>
+    );
+  }
+
+  if (olderAdults.length === 0) {
+    return (
+      <View className="px-6 pt-6">
+        <EmptyFamilyState />
+      </View>
+    );
+  }
 
   return (
-    <View className="px-6 pt-4 gap-5">
-      {/* Family summary card */}
-      <Pressable
-        onPress={() => router.push('/(tabs)/family')}
-        className="rounded-3xl p-5 flex-row items-center gap-4"
-        style={{ backgroundColor: 'rgba(188, 239, 197, 0.4)' }}
+    <View className="flex-1">
+      {/* Older adult chip selector — only shown when family has 2+ adults */}
+      <OlderAdultChipSelector
+        olderAdults={olderAdults}
+        selected={selected}
+        onSelect={selectOlderAdult}
+      />
+
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40, paddingTop: 8 }}
       >
-        <View className="w-12 h-12 rounded-full items-center justify-center bg-raices-primary/15">
-          <IconSymbol name="person.2.fill" size={24} color="#325F3F" />
-        </View>
-        <View className="flex-1">
-          <Text className="font-headline font-bold text-raices-text text-lg">{family?.name}</Text>
-          <Text className="font-body text-sm text-raices-text-muted">Tu familia activa</Text>
-        </View>
-        <IconSymbol name="chevron.right" size={18} color="#325F3F" />
-      </Pressable>
+        {/* Health summary: Actividad, Salud, Estado, Medicina */}
+        <HomeHealthSummaryGrid
+          dailyScore={dailyScore}
+          loading={loading}
+        />
 
-      {/* Older adults */}
-      <Text className="font-label font-bold text-xs uppercase tracking-widest text-raices-text-muted">
-        Adultos mayores
-      </Text>
+        {/* Upcoming events horizontal strip */}
+        <HomeUpcomingEvents
+          events={events}
+          loading={eventsLoading}
+        />
 
-      {loading ? (
-        <View className="items-center py-8">
-          <ActivityIndicator color="#325F3F" />
-        </View>
-      ) : olderAdults.length === 0 ? (
-        <View className="rounded-3xl bg-white border border-raices-secondary/15 p-6 items-center gap-3">
-          <IconSymbol name="person.2.fill" size={32} color="#A0A0A0" />
-          <Text className="font-body text-raices-text-muted text-center text-sm">
-            Aún no hay adultos mayores en la familia.{'\n'}Invítalos desde la sección Familia.
-          </Text>
-          <Pressable
-            onPress={() => router.push('/(tabs)/family')}
-            className="bg-raices-primary rounded-full px-5 py-2 mt-1"
-          >
-            <Text className="text-white font-headline font-bold text-sm">Invitar</Text>
-          </Pressable>
-        </View>
-      ) : (
-        olderAdults.map((adult) => (
-          <Pressable
-            key={adult.id}
-            onPress={() => router.push('/(tabs)/calendario')}
-            className="rounded-3xl bg-white border border-raices-secondary/10 p-4 flex-row items-center gap-4"
-          >
-            <View className="w-11 h-11 rounded-full items-center justify-center bg-raices-primary/10">
-              <Text className="font-headline font-bold text-raices-primary">
-                {adult.name.slice(0, 2).toUpperCase()}
-              </Text>
-            </View>
-            <View className="flex-1">
-              <Text className="font-body font-bold text-raices-text">{adult.name}</Text>
-              <Text className="font-body text-xs text-raices-text-muted">Adulto mayor</Text>
-            </View>
-            <View className="flex-row items-center gap-1">
-              <IconSymbol name="calendar" size={16} color="#325F3F" />
-              <Text className="font-body text-xs text-raices-primary">Ver calendario</Text>
-            </View>
-          </Pressable>
-        ))
-      )}
+        {/* Recent voice recordings */}
+        <HomeVoiceRecordings
+          recordings={recordings}
+          loading={recordingsLoading}
+        />
+      </ScrollView>
     </View>
   );
 }
@@ -85,22 +105,20 @@ export function CaregiverHomeScreen() {
 
   return (
     <View className="flex-1 bg-raices-bg">
-      <CaregiverHeader user={user} onProfilePress={() => router.push('/(tabs)/settings')} />
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
-      >
-        {familyLoading ? (
-          <View className="flex-1 items-center justify-center py-20">
-            <ActivityIndicator color="#325F3F" size="large" />
-          </View>
-        ) : isFamily ? (
-          <FamilyDashboard />
-        ) : (
-          <EmptyFamilyState />
-        )}
-      </ScrollView>
+      <CaregiverHeader
+        user={user}
+        onProfilePress={() => router.push('/(tabs)/settings')}
+      />
+
+      {familyLoading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color="#325F3F" size="large" />
+        </View>
+      ) : isFamily ? (
+        <HomeContent />
+      ) : (
+        <EmptyFamilyState />
+      )}
     </View>
   );
 }
