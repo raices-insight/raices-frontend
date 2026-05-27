@@ -1,83 +1,7 @@
-import { View, Text, Pressable } from '@/core/ui/tw';
+import { View, Text } from '@/core/ui/tw';
 import { IconSymbol } from '@/core/ui/icon-symbol';
-import { useAudioPlayer } from 'expo-audio';
-import { logger } from '@/core/logger';
-import { CONFIG } from '@/core/config';
-
-import { useState, useEffect } from 'react';
-
-import { CalendarEvent } from '../../calendar/api/schemas';
-
-function AudioPlayButton({ source }: { source: any }) {
-  // Fix localhost URIs for physical devices/emulators
-  let finalSource = source;
-  if (source?.uri && source.uri.includes('localhost')) {
-    const apiUrl = CONFIG.API_URL || '';
-    // Extract IP like 192.168.1.7 from http://192.168.1.7:3000
-    const ipMatch = apiUrl.match(/:\/\/([^\/:]+)/);
-    if (ipMatch && ipMatch[1] && ipMatch[1] !== 'localhost') {
-      finalSource = { ...source, uri: source.uri.replace('localhost', ipMatch[1]) };
-    }
-  }
-
-  const player = useAudioPlayer(finalSource);
-  const [hasError, setHasError] = useState(false);
-  
-  if (hasError) {
-    return (
-      <View className="flex-row items-center gap-2 bg-red-100 px-5 py-3 rounded-full self-start border border-red-300">
-        <IconSymbol name="exclamationmark.triangle.fill" size={20} color="#EF4444" />
-        <Text className="text-sm font-label font-semibold text-red-600">
-          Audio expirado
-        </Text>
-      </View>
-    );
-  }
-
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  // Sync state if audio finishes naturally
-  useEffect(() => {
-    // If the player object supports listening to playback status (optional enhancement)
-    // For now, we rely on the manual toggle.
-    if (!player.playing && isPlaying) {
-        setIsPlaying(false);
-    }
-  }, [player.playing]);
-
-  return (
-    <View className="self-start rounded-full">
-      <Pressable 
-        onPress={() => {
-          logger.debug("[AudioPlayButton] Pressed. Source:", source);
-          logger.debug("[AudioPlayButton] Player state before:", { playing: player.playing, isPlayingState: isPlaying });
-          try {
-            if (isPlaying) {
-              logger.debug("[AudioPlayButton] Pausing audio...");
-              player.pause();
-              setIsPlaying(false);
-            } else {
-              logger.debug("[AudioPlayButton] Playing audio...");
-              player.play();
-              setIsPlaying(true);
-            }
-            logger.debug("[AudioPlayButton] Player state after action:", { playing: player.playing });
-          } catch (e) {
-            logger.error("[AudioPlayButton] Error caught during playback:", e);
-            setHasError(true);
-          }
-        }}
-        className={`flex-row items-center justify-center gap-2 px-5 py-3 rounded-full border ${isPlaying ? 'bg-[#E8F3EB] border-[#325F3F]' : 'bg-raices-bg border-raices-secondary'}`}
-        style={{ minWidth: 220 }}
-      >
-        <IconSymbol name={isPlaying ? "pause.fill" : "play.fill"} size={20} color="#325F3F" />
-        <Text className="text-sm font-label font-semibold text-raices-primary">
-          {isPlaying ? "Pausar mensaje" : "Tocar para escuchar"}
-        </Text>
-      </Pressable>
-    </View>
-  );
-}
+import { AudioPlayButton } from '@/core/ui/audio-play-button';
+import type { CalendarEvent } from '../../calendar/api/schemas';
 
 export function EventCard({ event }: { event: CalendarEvent }) {
   const date = new Date(event.due_date);
@@ -95,9 +19,9 @@ export function EventCard({ event }: { event: CalendarEvent }) {
       <Text className="text-xl font-headline font-bold text-raices-text mb-4">
         {event.title}
       </Text>
-      
+
       {event.audio_url ? (
-        <AudioPlayButton source={{ uri: event.audio_url }} />
+        <AudioPlayButton audioUrl={event.audio_url} variant="pill-lg" />
       ) : (
         <View className="flex-row items-center gap-2 bg-gray-100 px-5 py-3 rounded-full self-start border border-gray-300 opacity-60">
           <IconSymbol name="mic.slash.fill" size={20} color="#9CA3AF" />
