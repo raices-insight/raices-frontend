@@ -11,6 +11,10 @@ import { CaregiverHomeScreen } from '../CaregiverHomeScreen';
 
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 jest.mock('expo-symbols', () => ({ SymbolView: () => null }));
+jest.mock('expo-audio', () => ({
+  useAudioPlayer: () => ({ play: jest.fn(), pause: jest.fn(), seekTo: jest.fn().mockResolvedValue(undefined) }),
+  useAudioPlayerStatus: () => ({ playing: false, didJustFinish: false }),
+}));
 jest.mock('expo-router', () => {
   const MockLink = () => null;
   MockLink.Trigger = () => null;
@@ -58,6 +62,18 @@ const mockDailyScore = {
   description: 'Buen día',
 };
 
+const mockYesterdayScore = {
+  profile_id: 'profile-adult-1',
+  date: '2026-05-26',
+  score: 70,
+  interaction_count: 1,
+  overall_status: 'yellow' as const,
+  health: 'estable',
+  mood: 'tranquilo',
+  activity: ['reading'],
+  description: 'Día anterior tranquilo',
+};
+
 jest.mock('@/features/auth/context/auth-context', () => ({
   useAuth: () => ({
     user: { id: 'caregiver-1', name: 'Ana Cuidadora', email: 'ana@test.com', role: 'caregiver', photo: null },
@@ -81,7 +97,7 @@ jest.mock('@/features/family/hooks/use-family-older-adults', () => ({
 jest.mock('@/features/dashboard/hooks/useDashboardSocket', () => ({
   useDashboardSocket: () => ({
     dailyScore: mockDailyScore,
-    yesterdayScore: null,
+    yesterdayScore: mockYesterdayScore,
     isConnected: true,
     refresh: jest.fn(),
   }),
@@ -148,8 +164,20 @@ describe('CaregiverHomeScreen', () => {
   it('shows the health summary section', () => {
     render(<CaregiverHomeScreen />);
     expect(screen.getByText('Resumen del Día')).toBeOnTheScreen();
-    expect(screen.getByText('Salud')).toBeOnTheScreen();
-    expect(screen.getByText('Estado')).toBeOnTheScreen();
+    expect(screen.getByText('Actividad')).toBeOnTheScreen();
+    expect(screen.getByText('Medicina')).toBeOnTheScreen();
+  });
+
+  it('shows the semantic status card (today) below the daily summary', () => {
+    render(<CaregiverHomeScreen />);
+    expect(screen.getByText('Índice de Bienestar')).toBeOnTheScreen();
+    expect(screen.getByText('Salud Estable')).toBeOnTheScreen();
+  });
+
+  it('shows the previous day history accordion below the daily summary', () => {
+    render(<CaregiverHomeScreen />);
+    expect(screen.getByText('Día Anterior')).toBeOnTheScreen();
+    expect(screen.getByText('2026-05-26')).toBeOnTheScreen();
   });
 
   it('shows upcoming events section', () => {

@@ -8,6 +8,8 @@ import { OlderAdultChipSelector } from './OlderAdultChipSelector';
 import { HomeHealthSummaryGrid } from './HomeHealthSummaryGrid';
 import { HomeUpcomingEvents } from './HomeUpcomingEvents';
 import { HomeVoiceRecordings } from './HomeVoiceRecordings';
+import { SemanticStatusCard } from '@/features/dashboard/components/SemanticStatusCard';
+import { HistoryAccordionCard } from '@/features/dashboard/components/HistoryAccordionCard';
 import { useAuth } from '@/features/auth/context/auth-context';
 import { useFamily } from '@/features/family/hooks/use-family';
 import { useFamilyOlderAdults } from '@/features/family/hooks/use-family-older-adults';
@@ -21,7 +23,7 @@ function HomeContent() {
   const { selected, selectOlderAdult } = useSelectedOlderAdult(olderAdults);
 
   // Dashboard data for the selected older adult
-  const { dailyScore, refresh } = useDashboardSocket(selected?.profileId);
+  const { dailyScore, yesterdayScore, refresh } = useDashboardSocket(selected?.profileId);
 
   // Upcoming calendar events for the selected older adult (today → +7 days)
   const today = new Date();
@@ -82,6 +84,13 @@ function HomeContent() {
           dailyScore={dailyScore}
           loading={loading}
         />
+
+        {/* Today's semantic status + previous day history (moved from Dashboard tab) */}
+        <View className="px-5 mb-6">
+          <SemanticStatusCard dailyScore={dailyScore} />
+          <View className="h-4" />
+          <HistoryAccordionCard data={yesterdayScore} />
+        </View>
 
         {/* Upcoming events horizontal strip */}
         <HomeUpcomingEvents

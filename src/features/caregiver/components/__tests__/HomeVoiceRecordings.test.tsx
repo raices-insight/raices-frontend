@@ -10,7 +10,14 @@ import type { VoiceRecording } from '@/features/caregiver/api/schemas';
 
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 jest.mock('expo-symbols', () => ({ SymbolView: () => null }));
-jest.mock('expo-audio', () => ({ useAudioPlayer: () => ({ play: jest.fn(), pause: jest.fn(), playing: false }) }));
+
+const mockPlay = jest.fn();
+const mockPause = jest.fn();
+const mockSeekTo = jest.fn().mockResolvedValue(undefined);
+jest.mock('expo-audio', () => ({
+  useAudioPlayer: jest.fn(() => ({ play: mockPlay, pause: mockPause, seekTo: mockSeekTo })),
+  useAudioPlayerStatus: jest.fn(() => ({ playing: false, didJustFinish: false })),
+}));
 
 const makeRecording = (id: string, description: string, mood: string | null, hoursAgo = 2): VoiceRecording => ({
   id,
@@ -21,6 +28,12 @@ const makeRecording = (id: string, description: string, mood: string | null, hou
 });
 
 describe('HomeVoiceRecordings', () => {
+  beforeEach(() => {
+    mockPlay.mockClear();
+    mockPause.mockClear();
+    mockSeekTo.mockClear();
+  });
+
   it('renders the section title', () => {
     const recordings = [makeRecording('r1', 'Me siento bien hoy', 'happy')];
     render(<HomeVoiceRecordings recordings={recordings} loading={false} />);
@@ -65,6 +78,22 @@ describe('HomeVoiceRecordings', () => {
     expect(button).toBeOnTheScreen();
     fireEvent.press(button);
     expect(onViewAll).toHaveBeenCalled();
+  });
+
+  it('plays the recording when the play button is pressed', () => {
+    const recordings = [makeRecording('r1', 'Audio de prueba', 'happy')];
+    render(<HomeVoiceRecordings recordings={recordings} loading={false} />);
+
+    fireEvent.press(screen.getByTestId('play-recording-r1'));
+
+    expect(mockPlay).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not render a play button when audio_url is missing', () => {
+    const recording = { ...makeRecording('r1', 'Sin audio', 'happy'), audio_url: null };
+    render(<HomeVoiceRecordings recordings={[recording]} loading={false} />);
+
+    expect(screen.queryByTestId('play-recording-r1')).toBeNull();
   });
 
   it('returns null when recordings list is empty and not loading', () => {

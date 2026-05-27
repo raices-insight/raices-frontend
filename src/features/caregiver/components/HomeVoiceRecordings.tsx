@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable } from '@/core/ui/tw';
 import { IconSymbol } from '@/core/ui/icon-symbol';
+import { AudioPlayButton } from '@/core/ui/audio-play-button';
 import type { VoiceRecording } from '../api/schemas';
 
 interface HomeVoiceRecordingsProps {
@@ -59,10 +60,17 @@ function RecordingItem({ recording }: { recording: VoiceRecording }) {
 
   return (
     <View className="flex-row items-center gap-3 bg-white rounded-2xl p-4 mb-3 border border-black/5 shadow-sm">
-      {/* Play button */}
-      <View className="w-11 h-11 rounded-full items-center justify-center bg-[#FFF3E0]">
-        <IconSymbol name="play.fill" size={18} color="#FF9800" />
-      </View>
+      {/* Play button — only interactive when we have a presigned URL */}
+      {recording.audio_url ? (
+        <AudioPlayButton
+          audioUrl={recording.audio_url}
+          testID={`play-recording-${recording.id}`}
+        />
+      ) : (
+        <View className="w-11 h-11 rounded-full items-center justify-center bg-black/5">
+          <IconSymbol name="mic.slash.fill" size={18} color="#9CA3AF" />
+        </View>
+      )}
 
       {/* Info */}
       <View className="flex-1">
