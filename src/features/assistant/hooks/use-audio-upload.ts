@@ -52,7 +52,7 @@ export function useAudioUpload() {
     }
   }, [audioRecorder]);
 
-  const uploadAudio = useCallback(async (uri: string) => {
+  const uploadAudio = useCallback(async (uri: string, eventId?: string) => {
     try {
       setError(null);
       setStatus('uploading');
@@ -102,6 +102,7 @@ export function useAudioUpload() {
       const notifyResponse = await apiClient.post('/assistant/audio/notify', {
         audioProfileId: ticket.audioProfileId,
         objectKey: ticket.objectKey,
+        eventId,
       });
 
       // Validate the notification response (parse-use-safeparse)
@@ -130,7 +131,7 @@ export function useAudioUpload() {
     }
   }, []);
 
-  const stopAndUpload = useCallback(async (mockUri?: string) => {
+  const stopAndUpload = useCallback(async (eventId?: string, mockUri?: string) => {
     try {
       setStatus('processing');
       await audioRecorder.stop();
@@ -140,7 +141,7 @@ export function useAudioUpload() {
         throw new Error('No se pudo obtener el archivo de audio.');
       }
 
-      return await uploadAudio(uri);
+      return await uploadAudio(uri, eventId);
     } catch (err) {
       logger.error('Upload flow failed', err);
       const message = err instanceof Error ? err.message : 'Error inesperado durante la subida.';

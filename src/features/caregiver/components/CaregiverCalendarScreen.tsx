@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView as RNScrollView, ActivityIndicator } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { View, Text, Pressable } from '@/core/ui/tw';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { UserAvatar } from '@/core/ui/UserAvatar';
@@ -87,6 +87,8 @@ export function CaregiverCalendarScreen() {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [selectedAdultId, setSelectedAdultId] = useState<string | null>(null);
+  
+  const { editEventId } = useLocalSearchParams<{ editEventId?: string }>();
 
   const { olderAdults, loading: adultsLoading, familyId } = useFamilyOlderAdults();
 
@@ -107,6 +109,17 @@ export function CaregiverCalendarScreen() {
     profileId: selectedAdultId,
     skip: !eventsEnabled,
   });
+
+  useEffect(() => {
+    if (editEventId && events.length > 0 && !eventsLoading) {
+      const eventToEdit = events.find((e) => e.id === editEventId);
+      if (eventToEdit) {
+        setEditingEvent(eventToEdit);
+        // Clear param so it doesn't re-open if the component remounts
+        router.setParams({ editEventId: '' });
+      }
+    }
+  }, [editEventId, events, eventsLoading]);
 
   const prevMonth = () => {
     if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear((y) => y - 1); }

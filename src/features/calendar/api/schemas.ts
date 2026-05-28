@@ -7,6 +7,7 @@ export const CalendarEventSchema = z.object({
   due_date: z.string(),
   creator_audio_profile_id: z.string().uuid().nullish(),
   adult_profile_id: z.string().uuid().nullable().optional(),
+  caretaker_profile_id: z.string().uuid().nullable().optional(),
   audio_url: z.string().nullable().optional(),
   status: z.string(),
 });

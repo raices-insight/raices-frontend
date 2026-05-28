@@ -11,9 +11,9 @@ export type WebSocketEventMap = {
   /** Fired when the assistant finishes processing an audio recording */
   'assistant:analysis_complete': {
     profile_id: string;
-    audio_profile_id?: string;
-    transcript?: string;
-    summary?: string;
+    audio_profile_id: string;
+    status: 'completed' | 'skipped' | 'failed';
+    description: string | null;
   };
 };
 

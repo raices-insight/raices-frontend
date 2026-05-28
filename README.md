@@ -1,50 +1,62 @@
-# Welcome to your Expo app 👋
+# Raíces Frontend (Expo)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is the frontend application for the Raíces project, built with [Expo](https://expo.dev) and React Native.
 
-## Get started
+## Getting Started
 
-1. Install dependencies
-
+1. Install dependencies:
    ```bash
    npm install
    ```
-
-2. Start the app
-
+2. Set up your `.env` file (copy from `.env.example`).
+3. Start the app:
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Setting up Push Notifications (Firebase FCM V1)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Because this app uses custom development builds (`expo-dev-client`) and requires reliable background push notifications on physical Android devices, you must configure Firebase Cloud Messaging (FCM V1) if you are cloning this repository.
 
-## Get a fresh project
+### 1. Create a Firebase Project
+1. Go to the [Firebase Console](https://console.firebase.google.com/).
+2. Click **Add project** (e.g., `Raices App`). Disable Google Analytics if not needed.
+3. Click **Create project**.
 
-When you're ready, run:
+### 2. Register the Android App
+1. On the project overview, click the **Android icon**.
+2. **Android package name:** Enter `com.raicesfrontend.app` (must match the `package` in `app.json`).
+3. Click **Register app**.
 
+### 3. Add `google-services.json`
+1. Click **Download google-services.json**.
+2. Place this file in the root of the `raices-frontend` directory.
+3. Ensure your `app.json` references it:
+   ```json
+   "android": {
+     "googleServicesFile": "./google-services.json",
+     "package": "com.raicesfrontend.app"
+   }
+   ```
+*(Note: Do not manually edit `build.gradle` files. Expo handles all native Firebase plugin injections automatically during the EAS build process).*
+
+### 4. Upload Credentials to Expo (EAS)
+Expo's servers need permission to deliver notifications to your Firebase project.
+1. In Firebase Console > Project settings (Gear Icon) > **Service accounts**.
+2. Click **Generate new private key** to download a `.json` file containing your credentials.
+3. Open your terminal in `raices-frontend` and run:
+   ```bash
+   npx eas-cli credentials
+   ```
+4. Choose **Android** -> **development** (or production).
+5. Choose **Manage your Google Service Account Key for Push Notifications (FCM V1)**.
+6. Choose **Set up a Google Service Account Key** and provide the path to the `.json` file you downloaded.
+
+### 5. Rebuild the Dev Client
+Adding Firebase modifies native Android code. You must rebuild the app:
 ```bash
-npm run reset-project
+npx eas-cli build --profile development --platform android
 ```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Once installed on your device, `expo-notifications` will successfully generate Push Tokens.

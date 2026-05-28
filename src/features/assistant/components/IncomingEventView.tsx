@@ -13,16 +13,15 @@ import { Asset } from 'expo-asset';
 import { useAuth } from '@/features/auth/context/auth-context';
 import { useLocalSearchParams } from 'expo-router';
 import { useAssistantCalendarEvents } from '@/features/calendar/hooks/useAssistantCalendarEvents';
-import { useAudioPlayer } from 'expo-audio';
+import { useFamily, useFamilyDetails } from '@/features/family/hooks/use-family';
+import { AudioPlayButton } from '@/core/ui/audio-play-button';
 import { logger } from '@/core/logger';
 import { CONFIG } from '@/core/config';
 import { useWebSocket } from '@/core/websocket/websocket-provider';
 
 // ---------------------------------------------------------------------------
-// Mock data — replace with event props once backend is wired
+// Mock data for development testing
 // ---------------------------------------------------------------------------
-const MOCK_EVENT_TITLE = 'Toma de pastillas';
-const MOCK_TRANSCRIPT  = '"Hola, ¿cómo te sientes hoy? Recuerda tomar tus pastillas después del almuerzo."';
 const MOCK_AUDIO_FILE  = require('@/../assets/audio/adulto-mayor-animo-positivo.mp3');
 
 // ---------------------------------------------------------------------------
@@ -36,9 +35,12 @@ export function IncomingEventView() {
   
   const { events, isLoading } = useAssistantCalendarEvents();
   const currentEvent = events.find(e => e.id === eventId);
-  const eventTitle = currentEvent?.title || MOCK_EVENT_TITLE;
+  const eventTitle = currentEvent?.title || 'Evento Entrante';
   
-  const senderName = user?.name || 'Usuario';
+  const { family } = useFamily();
+  const { members } = useFamilyDetails(family?.id);
+  const creatorMember = members.find(m => m.profileId === currentEvent?.caretaker_profile_id);
+  const senderName = creatorMember?.name || 'Tu familia';
 
   // Responsive sizing: avatar ~25% (inside card), button ~72% of screen
   const avatarSize = Math.min(screenWidth * 0.25, 96);
@@ -58,6 +60,9 @@ export function IncomingEventView() {
     description: string | null;
     analysisStatus: 'completed' | 'skipped' | 'failed' | null;
   }>({ waiting: false, description: null, analysisStatus: null });
+  
+  // Track the audio profile ID of the currently uploading/processing recording
+  const [uploadAudioProfileId, setUploadAudioProfileId] = useState<string | null>(null);
 
   const { subscribe } = useWebSocket();
 
@@ -65,13 +70,20 @@ export function IncomingEventView() {
   useEffect(() => {
     return subscribe('assistant:analysis_complete', (data) => {
       logger.info('Received assistant:analysis_complete', data);
+      
+      // Only process the analysis if it belongs to the audio we just uploaded
+      if (!uploadAudioProfileId || data.audio_profile_id !== uploadAudioProfileId) {
+        logger.debug(`Ignoring analysis for different or null audio profile: ${data.audio_profile_id}`);
+        return;
+      }
+      
       setAnalysisResult({
         waiting: false,
         description: data.description ?? null,
-        analysisStatus: data.status as 'completed' | 'skipped' | 'failed',
+        analysisStatus: data.status,
       });
     });
-  }, [subscribe]);
+  }, [subscribe, uploadAudioProfileId]);
 
   // When upload is acknowledged by the server, start waiting for the async analysis
   useEffect(() => {
@@ -82,30 +94,15 @@ export function IncomingEventView() {
     }
   }, [status]);
   
-  // Audio playback setup
-  let audioSource = null;
-  if (currentEvent?.audio_url) {
-    let finalUri = currentEvent.audio_url;
-    if (finalUri.includes('localhost')) {
-      const apiUrl = CONFIG.API_URL;
-      const ipMatch = apiUrl.match(/:\/\/([^\/:]+)/);
-      if (ipMatch && ipMatch[1] && ipMatch[1] !== 'localhost') {
-        finalUri = finalUri.replace('localhost', ipMatch[1]);
-      }
+  // Get final audio url
+  let finalAudioUrl = currentEvent?.audio_url || null;
+  if (finalAudioUrl && finalAudioUrl.includes('localhost')) {
+    const apiUrl = CONFIG.API_URL;
+    const ipMatch = apiUrl.match(/:\/\/([^\/:]+)/);
+    if (ipMatch && ipMatch[1] && ipMatch[1] !== 'localhost') {
+      finalAudioUrl = finalAudioUrl.replace('localhost', ipMatch[1]);
     }
-    audioSource = { uri: finalUri };
-  } else {
-    audioSource = MOCK_AUDIO_FILE;
   }
-  
-  const player = useAudioPlayer(audioSource);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  useEffect(() => {
-    if (!player.playing && isPlaying) {
-        setIsPlaying(false);
-    }
-  }, [player.playing]);
 
   // --- Pulse ring ---
   const pulseScale   = useSharedValue(1);
@@ -145,17 +142,25 @@ export function IncomingEventView() {
     if (isCooldown) return;
 
     if (isRecording) {
-      // Real recording flow
-      // await stopAndUpload('b02bd0cc-fb75-4295-9328-afd8c1281de8', 'adulto_mayor');
-
-      // For simulation: Resolve the asset URI before uploading
-      const asset = Asset.fromModule(MOCK_AUDIO_FILE);
-      await asset.downloadAsync();
-
-      if (user?.id) {
-        stopAndUpload(asset.localUri || asset.uri);
+      let returnedId: string | undefined;
+      
+      if (CONFIG.IS_PROD) {
+        // Real recording flow
+        returnedId = await stopAndUpload(eventId);
       } else {
-        console.warn('No user session available to upload audio');
+        // Simulation for development
+        const asset = Asset.fromModule(MOCK_AUDIO_FILE);
+        await asset.downloadAsync();
+        
+        if (user?.id) {
+          returnedId = await stopAndUpload(eventId, asset.localUri || asset.uri);
+        } else {
+          console.warn('No user session available to upload audio');
+        }
+      }
+      
+      if (returnedId) {
+        setUploadAudioProfileId(returnedId);
       }
     } else {
       // Reset previous analysis when starting a new recording
@@ -228,26 +233,11 @@ export function IncomingEventView() {
         </View>
 
         {/* Escuchar mensaje button */}
-        <Button
-          label={isPlaying ? "Pausar mensaje" : "Escuchar mensaje"}
-          variant="secondary"
-          size="sm"
-          fullWidth
-          iconLeft={<IconSymbol name={isPlaying ? "pause.fill" : "play.fill"} size={14} color="#FFFFFF" />}
-          onPress={() => {
-            try {
-              if (isPlaying) {
-                player.pause();
-                setIsPlaying(false);
-              } else {
-                player.play();
-                setIsPlaying(true);
-              }
-            } catch (e) {
-              logger.error("Error playing event audio:", e);
-            }
-          }}
-        />
+        {finalAudioUrl && (
+          <View className="w-full">
+            <AudioPlayButton audioUrl={finalAudioUrl} variant="pill-lg" fullWidth />
+          </View>
+        )}
       </View>
 
       {/* ── Button area: flex-1 centers the button vertically ─── */}
@@ -316,7 +306,7 @@ export function IncomingEventView() {
       {/* ── Transcription card — always anchored to the bottom ─── */}
       <View className="mb-6 w-full bg-raices-surface rounded-3xl p-5 shadow-sm elevation-2">
         <Text className="font-headline font-semibold text-xs text-raices-tertiary uppercase tracking-widest mb-2">
-          {analysisResult.description
+          {analysisResult.analysisStatus === 'completed' || analysisResult.analysisStatus === 'skipped'
             ? `Tu respuesta`
             : `Mensaje de ${senderName}`}
         </Text>
@@ -336,21 +326,29 @@ export function IncomingEventView() {
           >
             No se pudo procesar tu respuesta. Intenta de nuevo.
           </Text>
-        ) : analysisResult.description ? (
+        ) : analysisResult.analysisStatus === 'completed' || analysisResult.analysisStatus === 'skipped' ? (
           // Analysis complete — show real transcript
           <Text
             className="font-body text-raices-text text-center text-lg leading-7"
             style={{ fontStyle: 'italic' }}
           >
-            {`"${analysisResult.description}"`}
+            {analysisResult.description ? `"${analysisResult.description}"` : '(Audio inaudible o vacío)'}
           </Text>
-        ) : (
-          // Default / before first recording
+        ) : currentEvent?.description ? (
+          // Default / before first recording: show caretaker's message/transcription
           <Text
             className="font-body text-raices-text text-center text-lg leading-7"
             style={{ fontStyle: 'italic' }}
           >
-            {MOCK_TRANSCRIPT}
+            {`"${currentEvent.description}"`}
+          </Text>
+        ) : (
+          // Default fallback if no incoming description exists
+          <Text
+            className="font-body text-raices-text-muted text-center text-lg leading-7"
+            style={{ fontStyle: 'italic' }}
+          >
+            Presiona el botón para grabar una respuesta...
           </Text>
         )}
       </View>

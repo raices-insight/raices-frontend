@@ -26,6 +26,7 @@ export interface AudioPlayButtonProps {
   audioUrl: string;
   variant?: AudioPlayButtonVariant;
   testID?: string;
+  fullWidth?: boolean;
   // 'icon' variant customisation
   iconSize?: number;
   iconColor?: string;
@@ -182,6 +183,7 @@ export function AudioPlayButton({
   audioUrl,
   variant = 'icon',
   testID,
+  fullWidth,
   iconSize = 18,
   iconColor = '#FF9800',
   className = 'w-11 h-11 rounded-full items-center justify-center bg-[#FFF3E0]',
@@ -245,7 +247,9 @@ export function AudioPlayButton({
       <Pressable
         testID={testID}
         onPress={onPress}
-        className="flex-row items-center gap-1.5 mt-2 self-start bg-raices-secondary/10 rounded-full px-3 py-1.5"
+        className={`flex-row items-center justify-center gap-1.5 mt-2 bg-raices-secondary/10 rounded-full px-3 py-1.5 ${
+          fullWidth ? 'w-full' : 'self-start'
+        }`}
       >
         {status.playing ? (
           <SoundWaveBars playing color="#53815F" barHeight={13} />
@@ -263,7 +267,7 @@ export function AudioPlayButton({
 
   if (variant === 'pill-lg') {
     return (
-      <View className="self-start rounded-full">
+      <View className={`rounded-full ${fullWidth ? 'w-full' : 'self-start'}`}>
         <Pressable
           testID={testID}
           onPress={onPress}
@@ -271,7 +275,7 @@ export function AudioPlayButton({
             status.playing
               ? 'bg-[#E8F3EB] border-[#325F3F]'
               : 'bg-raices-bg border-raices-secondary'
-          }`}
+          } ${fullWidth ? 'w-full' : ''}`}
           style={{ minWidth: 220 }}
         >
           {status.playing ? (
