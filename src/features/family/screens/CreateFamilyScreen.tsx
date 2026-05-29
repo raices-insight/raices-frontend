@@ -4,6 +4,7 @@ import { Stack, useRouter } from 'expo-router';
 import { Button } from '@/core/ui/button';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { useCreateFamily } from '../hooks/use-family';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const heroImage = require('../../../../assets/images/create-family-hero.png');
 
@@ -11,6 +12,7 @@ export default function CreateFamilyScreen() {
   const [familyName, setFamilyName] = useState('');
   const { createFamily, loading } = useCreateFamily();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const trimmedName = familyName.trim();
 
@@ -101,7 +103,7 @@ export default function CreateFamilyScreen() {
       </ScrollView>
 
       {/* STICKY BOTTOM BUTTON */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(24, insets.bottom + 12) }]}>
         <Button
           label="Crear Familia"
           onPress={handleCreate}
