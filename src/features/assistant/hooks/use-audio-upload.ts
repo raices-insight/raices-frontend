@@ -112,7 +112,6 @@ export function useAudioUpload() {
       }
 
       logger.info('Audio response submitted successfully', { audioProfileId: ticket.audioProfileId });
-      toast.success('¡Respuesta enviada con éxito!');
       setStatus('success');
       
       // Reset back to idle after a moment
