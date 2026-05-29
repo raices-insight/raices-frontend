@@ -11,6 +11,7 @@ import { useToast } from '@/src/core/toast/use-toast';
 import { logger } from '@/src/core/logger';
 import { apiClient } from '@/src/core/api/client';
 import { ToastRenderer } from '@/src/core/toast/toast-renderer';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface CreateEventModalProps {
     selectedDate: Date;
@@ -105,6 +106,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
     const [isSaving, setIsSaving] = useState(false);
     const [category, setCategory] = useState<CategoryKey>('MED');
 
+    const insets = useSafeAreaInsets();
     const toast = useToast();
     const { startRecording, stopRecording, uploadAudio, cancelRecording, isRecording } = useAudioUpload();
 
@@ -321,7 +323,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
             onRequestClose={onClose}
             animationType="fade"
         >
-            <View className="flex-1 justify-center items-center px-4 bg-black/50">
+            <View className="flex-1 justify-center items-center px-4 bg-black/50" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
                 <View
                     className="w-full bg-raices-surface rounded-3xl overflow-hidden shadow-lg elevation-5"
                     style={{ maxHeight: '92%' }}

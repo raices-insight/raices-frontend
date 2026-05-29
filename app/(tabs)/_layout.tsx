@@ -9,6 +9,21 @@ import { CONFIG } from '@/core/config';
 import { OlderAdultCalendarEventsProvider } from '@/features/calendar/context/OlderAdultCalendarEventsContext';
 import { ToastRenderer } from '@/core/toast/toast-renderer';
 
+import { View } from 'react-native';
+
+const TabIcon = ({ name, color, focused }: { name: any, color: string, focused: boolean }) => (
+  <View style={{
+    backgroundColor: focused ? '#E8EFE5' : 'transparent',
+    borderRadius: 16,
+    width: 56,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  }}>
+    <IconSymbol size={24} name={name} color={color} />
+  </View>
+);
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
@@ -16,22 +31,27 @@ export default function TabLayout() {
     <OlderAdultCalendarEventsProvider>
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: Colors.light.tabIconSelected,
         headerShown: false,
         tabBarButton: HapticTab,
+        tabBarStyle: {
+          backgroundColor: Colors.light.navBg,
+          borderTopWidth: 1,
+          borderTopColor: Colors.light.border,
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => <TabIcon name="house.fill" color={color} focused={focused} />,
         }}
       />
 			<Tabs.Screen
         name="family"
         options={{
           title: 'Familia',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.3.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => <TabIcon name="person.3.fill" color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -39,21 +59,21 @@ export default function TabLayout() {
         options={{
           title: 'Evento',
           href: CONFIG.IS_PROD ? null : undefined,
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
+          tabBarIcon: ({ color, focused }) => <TabIcon name="calendar" color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="calendario"
         options={{
           title: 'Calendario',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
+          tabBarIcon: ({ color, focused }) => <TabIcon name="calendar" color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => <TabIcon name="person.fill" color={color} focused={focused} />,
         }}
       />
       </Tabs>
