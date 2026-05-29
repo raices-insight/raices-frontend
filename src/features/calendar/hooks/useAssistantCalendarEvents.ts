@@ -96,7 +96,7 @@ export function useAssistantCalendarEvents(
    * Only fires the network request when the event actually exists in the current list.
    * On error, triggers a refetch to restore server state.
    */
-  const editEvent = useCallback(async (id: string, updates: { title?: string; due_date?: string }) => {
+  const editEvent = useCallback(async (id: string, updates: { title?: string; due_date?: string; category_id?: string }) => {
     const existsInServer = events.some(e => e.id === id);
     const existsInOptimistic = optimisticEvents.some(e => e.id === id);
 

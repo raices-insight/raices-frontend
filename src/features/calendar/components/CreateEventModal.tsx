@@ -23,13 +23,11 @@ const STATIC_CALENDAR_ID = "primary";
 
 const heroImage = require('@/../assets/images/Gradient.png');
 
-type CategoryKey = 'MED' | 'CITA' | 'ACT' | 'VIS';
-
-const CATEGORIES: { key: CategoryKey; label: string; icon: any; longLabel: string }[] = [
-    { key: 'MED',  label: 'MED',  icon: 'pill.fill',      longLabel: 'Medicación' },
-    { key: 'CITA', label: 'CITA', icon: 'stethoscope',    longLabel: 'Cita' },
-    { key: 'ACT',  label: 'ACT',  icon: 'figure.walk',    longLabel: 'Actividad' },
-    { key: 'VIS',  label: 'VIS',  icon: 'person.2.fill',  longLabel: 'Visita' },
+const CATEGORIES: { id: string; label: string; icon: any; longLabel: string }[] = [
+    { id: '73f481a5-f672-4584-bb23-46004192e567', label: 'MED',  icon: 'pill.fill',      longLabel: 'Medicación' },
+    { id: '3585fd3c-9e31-4569-8678-fafb68880380', label: 'CITA', icon: 'stethoscope',    longLabel: 'Cita' },
+    { id: '7355fc6b-29eb-4781-8523-ea73741f6a4b', label: 'ACT',  icon: 'figure.walk',    longLabel: 'Actividad' },
+    { id: '2f0a0ff3-fc94-46ce-8807-9eb879c2bbec', label: 'VIS',  icon: 'person.2.fill',  longLabel: 'Visita' },
 ];
 
 const formatDate = (date: Date) => {
@@ -102,7 +100,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
     const [endDate, setEndDate] = useState<Date>(selectedDate);
     const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
-    const [category, setCategory] = useState<CategoryKey>('MED');
+    const [category, setCategory] = useState<string>(CATEGORIES[0].id);
 
     const toast = useToast();
     const { startRecording, stopRecording, uploadAudio, cancelRecording, isRecording } = useAudioUpload();
@@ -148,7 +146,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
         setEndDate(selectedDate);
         setName("");
         setRecordedAudioUri(null);
-        setCategory('MED');
+        setCategory(CATEGORIES[0].id);
     }, [selectedDate, visible]);
 
     const startOfToday = (() => {
@@ -271,6 +269,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
                 startDatetime: startDate.toISOString(),
                 endDatetime: endDate.toISOString(),
                 audioProfileId: finalAudioProfileId,
+                category_id: category,
             };
             if (targetProfileId) {
                 jsonBody.targetProfileId = targetProfileId;
@@ -304,7 +303,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
     const buttonSize = 80;
     const iconSize = 28;
     const micButtonColor = isRecording ? '#C0392B' : recordedAudioUri ? '#53815F' : '#325F3F';
-    const selectedCategoryLong = CATEGORIES.find(c => c.key === category)?.longLabel ?? 'Medicación';
+    const selectedCategoryLong = CATEGORIES.find(c => c.id === category)?.longLabel ?? 'Medicación';
 
     const fieldBoxStyle = {
         backgroundColor: '#E5E5E5',
@@ -421,11 +420,11 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
                         {/* CATEGORY CHIPS */}
                         <View className="w-full flex-row mt-4" style={{ gap: 10 }}>
                             {CATEGORIES.map(cat => {
-                                const isActive = cat.key === category;
+                                const isActive = cat.id === category;
                                 return (
                                     <Pressable
-                                        key={cat.key}
-                                        onPress={() => setCategory(cat.key)}
+                                        key={cat.id}
+                                        onPress={() => setCategory(cat.id)}
                                         className="flex-1 items-center justify-center"
                                         style={{
                                             backgroundColor: isActive ? '#E8EFE5' : '#E5E5E5',

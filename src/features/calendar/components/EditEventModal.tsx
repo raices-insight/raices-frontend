@@ -9,11 +9,18 @@ import type { CalendarEvent } from '../api/schemas';
 
 const heroImage = require('@/../assets/images/Gradient.png');
 
+const CATEGORIES: { id: string; label: string; icon: any; longLabel: string }[] = [
+  { id: '73f481a5-f672-4584-bb23-46004192e567', label: 'MED',  icon: 'pill.fill',      longLabel: 'Medicación' },
+  { id: '3585fd3c-9e31-4569-8678-fafb68880380', label: 'CITA', icon: 'stethoscope',    longLabel: 'Cita' },
+  { id: '7355fc6b-29eb-4781-8523-ea73741f6a4b', label: 'ACT',  icon: 'figure.walk',    longLabel: 'Actividad' },
+  { id: '2f0a0ff3-fc94-46ce-8807-9eb879c2bbec', label: 'VIS',  icon: 'person.2.fill',  longLabel: 'Visita' },
+];
+
 interface EditEventModalProps {
   event: CalendarEvent | null;
   visible: boolean;
   onClose: () => void;
-  onSave: (id: string, updates: { title?: string; due_date?: string }) => Promise<void>;
+  onSave: (id: string, updates: { title?: string; due_date?: string; category_id?: string }) => Promise<void>;
 }
 
 const formatDate = (date: Date) => {
@@ -82,6 +89,7 @@ const WebTimeInput = ({ value, onChange }: { value: string; onChange: (val: stri
 export function EditEventModal({ event, visible, onClose, onSave }: EditEventModalProps) {
   const [title, setTitle] = useState('');
   const [eventDate, setEventDate] = useState(new Date());
+  const [category, setCategory] = useState<string>(CATEGORIES[0].id);
   const [isSaving, setIsSaving] = useState(false);
   const toast = useToast();
 
@@ -90,6 +98,7 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
     if (event && visible) {
       setTitle(event.title ?? '');
       setEventDate(new Date(event.due_date));
+      setCategory(event.category_id ?? CATEGORIES[0].id);
     }
   }, [event, visible]);
 
@@ -132,6 +141,7 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
       await onSave(event.id, {
         title: title.trim(),
         due_date: eventDate.toISOString(),
+        category_id: category,
       });
       toast.success('¡Evento actualizado con éxito!');
       onClose();
@@ -239,6 +249,43 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
                   <IconSymbol name="calendar" size={20} color="#325F3F" />
                 </Pressable>
               )}
+            </View>
+
+            {/* CATEGORY */}
+            <View className="w-full mt-4" style={{ gap: 8 }}>
+              <Text className="text-base font-headline font-bold text-raices-text">Categoría</Text>
+              <View className="w-full flex-row" style={{ gap: 10 }}>
+                {CATEGORIES.map(cat => {
+                  const isActive = cat.id === category;
+                  return (
+                    <Pressable
+                      key={cat.id}
+                      onPress={() => setCategory(cat.id)}
+                      className="flex-1 items-center justify-center"
+                      style={{
+                        backgroundColor: isActive ? '#E8EFE5' : '#E5E5E5',
+                        borderRadius: 10,
+                        borderWidth: isActive ? 2 : 0,
+                        borderColor: isActive ? '#325F3F' : 'transparent',
+                        paddingVertical: 12,
+                        gap: 4,
+                      }}
+                    >
+                      <IconSymbol
+                        name={cat.icon}
+                        size={22}
+                        color={isActive ? '#325F3F' : '#1F1B15'}
+                      />
+                      <Text
+                        className="font-headline font-semibold"
+                        style={{ fontSize: 11, color: isActive ? '#325F3F' : '#1F1B15' }}
+                      >
+                        {cat.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
 
             {/* SAVE BUTTON */}

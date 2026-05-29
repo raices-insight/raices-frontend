@@ -9,6 +9,7 @@ export const CalendarEventSchema = z.object({
   adult_profile_id: z.string().uuid().nullable().optional(),
   audio_url: z.string().nullable().optional(),
   status: z.string(),
+  category_id: z.string().uuid().nullable().optional(),
 });
 
 export type CalendarEvent = z.infer<typeof CalendarEventSchema>;
