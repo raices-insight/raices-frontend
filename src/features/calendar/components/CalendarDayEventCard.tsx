@@ -46,6 +46,8 @@ export function CalendarDayEventCard({ event, onDelete, onEdit }: CalendarDayEve
               hitSlop={8}
               onPress={() => onEdit?.(event)}
               testID={`edit-event-${event.id}`}
+              disabled={event.id.startsWith('optimistic')}
+              className={event.id.startsWith('optimistic') ? 'opacity-30' : ''}
             >
               <IconSymbol name="pencil" size={18} color="#325F3F" />
             </Pressable>
@@ -53,6 +55,8 @@ export function CalendarDayEventCard({ event, onDelete, onEdit }: CalendarDayEve
               hitSlop={8}
               onPress={() => onDelete?.(event.id)}
               testID={`delete-event-${event.id}`}
+              disabled={event.id.startsWith('optimistic')}
+              className={event.id.startsWith('optimistic') ? 'opacity-30' : ''}
             >
               <IconSymbol name="trash.fill" size={18} color="#EF4444" />
             </Pressable>
