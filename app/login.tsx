@@ -2,6 +2,7 @@ import { View } from '@/core/ui/tw';
 import { LoginScreen } from '@/features/auth/components/LoginScreen';
 import { LocalLoginScreen } from '@/features/auth/components/LocalLoginScreen';
 import { useAuth } from '@/features/auth/context/auth-context';
+import { ToastRenderer } from '@/core/toast/toast-renderer';
 
 const LOGIN_MODE = process.env.EXPO_PUBLIC_LOGIN_MODE;
 
@@ -37,6 +38,7 @@ export default function LoginRoute() {
           onSignIn={signIn}
         />
       )}
+      <ToastRenderer />
     </View>
   );
 }

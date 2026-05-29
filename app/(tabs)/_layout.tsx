@@ -7,6 +7,7 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/core/hooks/use-color-scheme';
 import { CONFIG } from '@/core/config';
 import { OlderAdultCalendarEventsProvider } from '@/features/calendar/context/OlderAdultCalendarEventsContext';
+import { ToastRenderer } from '@/core/toast/toast-renderer';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -55,7 +56,8 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
         }}
       />
-    </Tabs>
+      </Tabs>
+      <ToastRenderer />
     </OlderAdultCalendarEventsProvider>
   );
 }

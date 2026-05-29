@@ -10,6 +10,7 @@ import { IconSymbol } from '@/src/core/ui/icon-symbol';
 import { useToast } from '@/src/core/toast/use-toast';
 import { logger } from '@/src/core/logger';
 import { apiClient } from '@/src/core/api/client';
+import { ToastRenderer } from '@/src/core/toast/toast-renderer';
 
 interface CreateEventModalProps {
     selectedDate: Date;
@@ -562,6 +563,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
                     </ScrollView>
                 </View>
             </View>
+            <ToastRenderer />
         </Modal>
     );
 }
