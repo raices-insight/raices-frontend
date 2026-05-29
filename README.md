@@ -60,3 +60,36 @@ Adding Firebase modifies native Android code. You must rebuild the app:
 npx eas-cli build --profile development --platform android
 ```
 Once installed on your device, `expo-notifications` will successfully generate Push Tokens.
+
+---
+
+## E2E Testing with Maestro
+
+We use [Maestro](https://maestro.mobile.dev/) for End-to-End (E2E) UI testing. Tests run locally against your physical Android device or emulator. For full command line options, refer to the [Maestro CLI Documentation](https://docs.maestro.dev/maestro-cli).
+
+### Setup (Windows)
+
+1. Ensure your physical Android device is connected via USB with **Developer Options** and **USB Debugging** enabled.
+2. Ensure you have the `adb` (Android Debug Bridge) command line tool installed (or the Android SDK).
+3. Download the Maestro release from their [GitHub Releases page](https://github.com/mobile-dev-inc/maestro/releases) and extract it to `~/.maestro`.
+4. Add `~/.maestro/maestro/bin` to your system `PATH`.
+
+### Running Tests
+
+Ensure your app is running (via Expo Go or a dev build) and visible on your device screen.
+
+**Run an individual granular test:**
+```bash
+maestro test e2e/01-auth/login-success.yaml
+```
+
+**Run the broad "Golden Path" test (Smoke Test):**
+```bash
+maestro test e2e/broad-smoke-test.yaml
+```
+
+**Run Maestro Studio (Interactive Mode):**
+```bash
+maestro studio
+```
+*(This opens a browser UI where you can click on elements on your phone's screen and it automatically writes the YAML code for you!)*

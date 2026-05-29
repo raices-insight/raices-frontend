@@ -50,3 +50,5 @@ app-example
 google-services.json
 GoogleService-Info.plist
 raices-*-firebase-adminsdk-*.json
+
+app.config.js

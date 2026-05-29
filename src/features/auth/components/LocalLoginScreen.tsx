@@ -1,5 +1,6 @@
 import { router, type Href } from 'expo-router';
-import { ActivityIndicator, TextInput as RNTextInput } from 'react-native';
+import { ActivityIndicator, TextInput as RNTextInput, Platform } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Image } from '@/core/ui/image';
 import { Pressable, Text, View } from '@/core/ui/tw';
 import { useState } from 'react';
@@ -36,10 +37,18 @@ export function LocalLoginScreen({
   const isButtonDisabled = loading || !isFormValid;
 
   return (
-    <View className="flex-1 px-6 py-8 justify-center items-center overflow-hidden bg-raices-bg">
-      {/* Decorative Blobs */}
-      <View className="absolute -top-[120px] -right-[110px] w-[300px] h-[300px] rounded-full bg-raices-secondary/10" />
-      <View className="absolute -bottom-[120px] -left-[120px] w-[280px] h-[280px] rounded-full bg-raices-secondary/5" />
+    <KeyboardAwareScrollView 
+      style={{ flex: 1, backgroundColor: '#FFF6EB' }}
+      contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 32, overflow: 'hidden' }}
+      keyboardShouldPersistTaps="handled"
+      bounces={false}
+      showsVerticalScrollIndicator={false}
+      enableOnAndroid={true}
+      extraScrollHeight={100}
+    >
+        {/* Decorative Blobs */}
+        <View className="absolute -top-[120px] -right-[110px] w-[300px] h-[300px] rounded-full bg-raices-secondary/10" />
+        <View className="absolute -bottom-[120px] -left-[120px] w-[280px] h-[280px] rounded-full bg-raices-secondary/5" />
 
       {/* Logo */}
       <View className="w-[195px] h-[195px] rounded-full bg-raices-bg items-center justify-center border border-raices-secondary/10 shadow-sm elevation-2">
@@ -189,6 +198,6 @@ export function LocalLoginScreen({
           .
         </Text>
       </View>
-    </View>
+    </KeyboardAwareScrollView>
   );
 }
