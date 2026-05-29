@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { apiClient } from '@/src/core/api/client';
 import { CalendarEvent, CalendarEventSchema } from '../api/schemas';
 import { z } from 'zod';
@@ -74,9 +75,12 @@ export function useAssistantCalendarEvents(
     }
   }, [startDate, end, profileId, skip]);
 
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+  useFocusEffect(
+    useCallback(() => {
+      logger.debug('[useAssistantCalendarEvents] Focus gained: fetching events');
+      fetchEvents();
+    }, [fetchEvents])
+  );
 
   /**
    * Optimistically add an event to the visible list immediately after creation.

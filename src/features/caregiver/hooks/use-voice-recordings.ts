@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { z } from 'zod';
 import { apiClient } from '@/core/api/client';
 import { VoiceRecordingSchema, type VoiceRecording } from '../api/schemas';
@@ -73,11 +74,14 @@ export function useVoiceRecordings(
     [profileId, limit],
   );
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchRecordings(controller.signal);
-    return () => controller.abort();
-  }, [fetchRecordings]);
+  useFocusEffect(
+    useCallback(() => {
+      logger.debug(`[useVoiceRecordings] Focus gained: fetching recordings for profile ${profileId}`);
+      const controller = new AbortController();
+      fetchRecordings(controller.signal);
+      return () => controller.abort();
+    }, [fetchRecordings])
+  );
 
   return { recordings, isLoading, error, refetch: fetchRecordings };
 }

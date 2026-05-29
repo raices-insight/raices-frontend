@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { apiClient } from '@/core/api/client';
 import { logger } from '@/core/logger';
 import { useToast } from '@/core/toast/use-toast';
@@ -34,8 +35,10 @@ export function useFamily(): UseFamily {
   );
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  useFocusEffect(
+    useCallback(() => {
+      logger.debug('[useFamily] Focus gained: checking family state');
+      let cancelled = false;
 
     if (getFamilyState() !== null) {
       setFamily(getFamilyState());
@@ -89,7 +92,8 @@ export function useFamily(): UseFamily {
       cancelled = true;
       unsubscribe();
     };
-  }, []);
+    }, [])
+  );
 
   return {
     family,
@@ -205,9 +209,12 @@ export function useFamilyDetails(familyId: string | undefined) {
     }
   }, [familyId]);
 
-  useEffect(() => {
-    void fetchDetails();
-  }, [fetchDetails]);
+  useFocusEffect(
+    useCallback(() => {
+      logger.debug(`[useFamilyDetails] Focus gained: fetching details for ${familyId}`);
+      void fetchDetails();
+    }, [fetchDetails])
+  );
 
   return {
     details,

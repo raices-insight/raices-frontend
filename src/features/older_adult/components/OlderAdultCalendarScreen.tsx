@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { ScrollView as RNScrollView } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { View, Text, Pressable } from '@/core/ui/tw';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { UserAvatar } from '@/core/ui/UserAvatar';
@@ -23,6 +23,12 @@ export function OlderAdultCalendarScreen() {
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
 
   const { events, isLoading, refetch, addEventOptimistically, deleteEvent, editEvent } = useOlderAdultCalendarEvents();
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
   const prevMonth = () => {
     if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear((y) => y - 1); }
