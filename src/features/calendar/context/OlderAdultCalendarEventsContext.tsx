@@ -12,7 +12,7 @@ interface OlderAdultCalendarEventsContextValue {
   refetch: () => void;
   addEventOptimistically: (event: CalendarEvent) => void;
   deleteEvent: (id: string) => Promise<void>;
-  editEvent: (id: string, updates: { title?: string; due_date?: string }) => Promise<void>;
+  editEvent: (id: string, updates: { title?: string; due_date?: string; category_id?: number }) => Promise<void>;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
