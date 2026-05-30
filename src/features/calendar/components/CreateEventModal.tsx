@@ -145,11 +145,22 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
     }));
 
     useEffect(() => {
-        setStartDate(selectedDate);
-        setEndDate(selectedDate);
-        setName("");
-        setRecordedAudioUri(null);
-        setCategory(CATEGORIES[0].id);
+        if (visible) {
+            const now = new Date();
+            const initialDate = new Date(selectedDate);
+
+            // Set time to current time + 5 minutes
+            initialDate.setHours(now.getHours());
+            initialDate.setMinutes(now.getMinutes() + 5);
+            initialDate.setSeconds(0);
+            initialDate.setMilliseconds(0);
+
+            setStartDate(initialDate);
+            setEndDate(initialDate);
+            setName("");
+            setRecordedAudioUri(null);
+            setCategory(CATEGORIES[0].id);
+        }
     }, [selectedDate, visible]);
 
     const startOfToday = (() => {

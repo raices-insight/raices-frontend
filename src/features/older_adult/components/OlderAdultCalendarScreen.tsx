@@ -72,7 +72,7 @@ export function OlderAdultCalendarScreen() {
             className="w-11 h-11 rounded-full overflow-hidden"
             hitSlop={8}
           >
-            <UserAvatar name={user?.name ?? null} photo={user?.photo ?? null} size={44} />
+            <UserAvatar name={user?.name ?? null} photo={user?.photo ?? null} size={38} />
           </Pressable>
           <Text className="text-2xl font-headline font-bold text-raices-primary">
             {firstName}

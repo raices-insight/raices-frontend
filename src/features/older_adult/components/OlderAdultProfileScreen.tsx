@@ -7,7 +7,7 @@ import { useAuth } from '@/features/auth/context/auth-context';
 import { usePrivacy } from '../hooks/use-privacy';
 
 export function OlderAdultProfileScreen() {
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const {
     isMoodShared, setIsMoodShared,
     isActivityShared, setIsActivityShared,
@@ -37,7 +37,7 @@ export function OlderAdultProfileScreen() {
 
   return (
     <View className="flex-1 bg-raices-bg">
-      <OlderAdultHeader onProfilePress={handleSignOut} />
+      <OlderAdultHeader user={user} onProfilePress={handleSignOut} />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 pt-6 pb-10 gap-5">

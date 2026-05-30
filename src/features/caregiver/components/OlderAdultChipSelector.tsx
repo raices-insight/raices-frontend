@@ -1,6 +1,5 @@
 import React from 'react';
-import { ScrollView, Pressable } from 'react-native';
-import { View, Text } from '@/core/ui/tw';
+import { View, Text, Pressable, ScrollView } from '@/core/ui/tw';
 import type { FamilyMember } from '@/features/family/api/schemas';
 
 interface OlderAdultChipSelectorProps {
@@ -36,7 +35,7 @@ export function OlderAdultChipSelector({
               className={`flex-row items-center gap-2 px-4 py-2 rounded-full border ${
                 isSelected
                   ? 'bg-raices-primary border-raices-primary'
-                  : 'bg-white border-raices-secondary/30'
+                  : 'bg-dark border-raices-secondary/30'
               }`}
             >
               {/* Avatar initials */}

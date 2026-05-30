@@ -9,7 +9,7 @@ interface CaregiverHeaderProps {
 
 export function CaregiverHeader({ user, onProfilePress }: CaregiverHeaderProps) {
   return (
-    <View className="px-6 pt-12 pb-6 bg-raices-bg border-b border-raices-tertiary/20">
+    <View className="px-6 pt-12 pb-6 bg-raices-bg">
       <View className="flex-row items-center justify-between mb-2">
         <View className="bg-raices-primary/10 px-3 py-1 rounded-full">
           <Text className="text-xs font-label font-bold text-raices-primary uppercase tracking-widest">

@@ -44,6 +44,9 @@ const MAPPING = {
   'heart.fill':                               'heart',
   'figure.walk':                              'walk',
   'face.smiling':                             'emoticon-happy-outline',
+  'face.smiling.inverse':                     'emoticon-happy',
+  'sun.max.fill':                             'weather-sunny',
+  'pills.fill':                               'pill',
 
   // --- People & Social ---
   'person.fill':                              'account',

@@ -23,7 +23,7 @@ export function OlderAdultHeader({ user, onProfilePress }: OlderAdultHeaderProps
         className="w-10 h-10 rounded-full overflow-hidden bg-raices-surface items-center justify-center shadow-sm"
         onPress={onProfilePress}
       >
-        <UserAvatar name={user?.name ?? null} photo={user?.photo ?? null} size={40} />
+        <UserAvatar name={user?.name ?? null} photo={user?.photo ?? null} size={38} />
       </Pressable>
     </View>
   );

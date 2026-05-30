@@ -64,7 +64,7 @@ export function HomeHealthSummaryGrid({ dailyScore, loading }: HomeHealthSummary
   const dateLabel = today.toLocaleDateString('es-ES', {
     weekday: undefined,
     day: 'numeric',
-    month: 'short',
+    month: 'long',
   });
 
   return (
