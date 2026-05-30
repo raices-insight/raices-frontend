@@ -70,7 +70,7 @@ module.exports = {
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.854043985624-n4708ke1qtuaokbu7ckvt3p1msoov4v4"
+          "iosUrlScheme": "com.googleusercontent.apps.358066150498-1tep87jf8pbslu1c02pgnj8ljqiacv3k"
         }
       ],
       "expo-web-browser",
@@ -108,9 +108,13 @@ module.exports = {
       "eas_cucha":{
         "projectId": "336fae6e-145f-448d-bbbf-e7f6449e0c9b"
       },
+
       "eas": {
         "projectId": "2c8c1641-d09a-416f-9c50-5b48a39a9bf4"
       }
+      // "eas": {
+      //   "projectId": "336fae6e-145f-448d-bbbf-e7f6449e0c9b"
+      // }
     }
   }
 };

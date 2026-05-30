@@ -1,5 +1,6 @@
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
+import { CONFIG } from '@/src/core/config';
 
+const API_URL = CONFIG.API_URL;
 export interface SessionUser {
   id: string;
   email: string;
@@ -42,6 +43,25 @@ export async function verifyGoogleToken(idToken: string): Promise<SessionRespons
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ idToken }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`Error del servidor (${res.status}): ${text}`);
+  }
+
+  return res.json() as Promise<SessionResponse>;
+}
+
+export async function exchangeGoogleToken(serverAuthCode: string): Promise<SessionResponse> {
+  if (!API_URL) {
+    throw new Error('Falta EXPO_PUBLIC_API_URL en .env');
+  }
+
+  const res = await fetch(`${API_URL}/auth/google/code`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ serverAuthCode }),
   });
 
   if (!res.ok) {

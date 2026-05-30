@@ -5,7 +5,7 @@ import {
   isErrorWithCode,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
-import { verifyGoogleToken, updateProfileRole, type SessionResponse } from '@/services/auth-api';
+import { verifyGoogleToken, updateProfileRole, exchangeGoogleToken, type SessionResponse } from '@/services/auth-api';
 import { useGoogleAuth } from '../hooks/use-google-auth';
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
@@ -29,6 +29,7 @@ jest.mock('@react-native-google-signin/google-signin', () => ({
 jest.mock('@/services/auth-api', () => ({
   verifyGoogleToken: jest.fn(),
   updateProfileRole: jest.fn(),
+  exchangeGoogleToken: jest.fn(),
 }));
 
 // ─── Typed mock accessors ─────────────────────────────────────────────────────
@@ -38,6 +39,7 @@ const mockIsSuccessResponse = jest.mocked(isSuccessResponse);
 const mockIsErrorWithCode = jest.mocked(isErrorWithCode);
 const mockVerifyGoogleToken = jest.mocked(verifyGoogleToken);
 const mockUpdateProfileRole = jest.mocked(updateProfileRole);
+const mockExchangeGoogleToken = jest.mocked(exchangeGoogleToken);
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -63,8 +65,9 @@ async function performSignIn(
     ...sessionOverride,
     user: { ...MOCK_SESSION.user, ...sessionOverride.user },
   };
-  mockGoogleSignin.signIn.mockResolvedValue({ data: { idToken: 'google-id-token' } });
+  mockGoogleSignin.signIn.mockResolvedValue({ data: { idToken: 'google-id-token', serverAuthCode: 'server-code-123' } });
   mockIsSuccessResponse.mockReturnValue(true);
+  mockExchangeGoogleToken.mockResolvedValue(session);
   mockVerifyGoogleToken.mockResolvedValue(session);
 
   await act(() => { result.current.signIn(); });
@@ -79,6 +82,7 @@ describe('useGoogleAuth', () => {
     mockGoogleSignin.hasPlayServices.mockResolvedValue(undefined);
     mockGoogleSignin.signOut.mockResolvedValue(undefined);
     mockVerifyGoogleToken.mockResolvedValue(MOCK_SESSION);
+    mockExchangeGoogleToken.mockResolvedValue(MOCK_SESSION);
     mockUpdateProfileRole.mockResolvedValue(MOCK_SESSION);
   });
 
@@ -95,9 +99,20 @@ describe('useGoogleAuth', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    it('sends the Google idToken to verifyGoogleToken', async () => {
+    it('sends the serverAuthCode to exchangeGoogleToken when available', async () => {
       const { result } = await renderHook(() => useGoogleAuth());
-      mockGoogleSignin.signIn.mockResolvedValue({ data: { idToken: 'google-id-token-123' } });
+      mockGoogleSignin.signIn.mockResolvedValue({ data: { idToken: 'google-id-token-123', serverAuthCode: 'server-code-123' } });
+      mockIsSuccessResponse.mockReturnValue(true);
+
+      await act(() => { result.current.signIn(); });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      expect(mockExchangeGoogleToken).toHaveBeenCalledWith('server-code-123');
+    });
+
+    it('falls back to verifyGoogleToken when serverAuthCode is not available', async () => {
+      const { result } = await renderHook(() => useGoogleAuth());
+      mockGoogleSignin.signIn.mockResolvedValue({ data: { idToken: 'google-id-token-123', serverAuthCode: null } });
       mockIsSuccessResponse.mockReturnValue(true);
 
       await act(() => { result.current.signIn(); });
@@ -138,12 +153,12 @@ describe('useGoogleAuth', () => {
   // ─── TC-001-E-001 — Service / network error ────────────────────────────────
 
   describe('TC-001-E-001: network or service error during sign-in', () => {
-    it('sets error state when verifyGoogleToken throws a network error', async () => {
+    it('sets error state when exchangeGoogleToken throws a network error', async () => {
       const { result } = await renderHook(() => useGoogleAuth());
-      mockGoogleSignin.signIn.mockResolvedValue({ data: { idToken: 'token' } });
+      mockGoogleSignin.signIn.mockResolvedValue({ data: { idToken: 'token', serverAuthCode: 'server-code' } });
       mockIsSuccessResponse.mockReturnValue(true);
       mockIsErrorWithCode.mockReturnValue(false);
-      mockVerifyGoogleToken.mockRejectedValue(new Error('Network request failed'));
+      mockExchangeGoogleToken.mockRejectedValue(new Error('Network request failed'));
 
       await act(() => { result.current.signIn(); });
       await waitFor(() => expect(result.current.loading).toBe(false));
@@ -201,12 +216,12 @@ describe('useGoogleAuth', () => {
       expect(result.current.isNewUser).toBe(false);
     });
 
-    it('calls verifyGoogleToken exactly once (no duplicate create)', async () => {
+    it('calls exchangeGoogleToken exactly once (no duplicate create)', async () => {
       const { result } = await renderHook(() => useGoogleAuth());
 
       await performSignIn(result, { isNewUser: false });
 
-      expect(mockVerifyGoogleToken).toHaveBeenCalledTimes(1);
+      expect(mockExchangeGoogleToken).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -6,15 +6,19 @@ import {
 } from '@react-native-google-signin/google-signin';
 import { useCallback, useState } from 'react';
 import { Platform } from 'react-native';
-import { verifyGoogleToken, updateProfileRole } from '@/services/auth-api';
+import { verifyGoogleToken, updateProfileRole, exchangeGoogleToken } from '@/services/auth-api';
+import { CONFIG } from '@/src/core/config';
+import { logger } from '@/src/core/logger';
 
-const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+const googleWebClientId = CONFIG.GOOGLE_WEB_CLIENT_ID;
+const googleIosClientId = CONFIG.GOOGLE_IOS_CLIENT_ID;
 
 GoogleSignin.configure({
   ...(googleWebClientId ? { webClientId: googleWebClientId } : {}),
   ...(googleIosClientId ? { iosClientId: googleIosClientId } : {}),
-  offlineAccess: false,
+  offlineAccess: true,
+  forceCodeForRefreshToken: CONFIG.GOOGLE_FORCE_REFRESH_TOKEN,
+  scopes: ['https://www.googleapis.com/auth/calendar'],
   profileImageSize: 150,
 });
 
@@ -63,14 +67,20 @@ export function useGoogleAuth(): GoogleAuthState {
       const response = await GoogleSignin.signIn();
 
       if (isSuccessResponse(response)) {
-        const { idToken } = response.data;
+        const { idToken, serverAuthCode } = response.data;
 
-        if (!idToken) {
-          setError('Google no retornó un id_token. Verifica que webClientId esté configurado.');
+        let session;
+        if (serverAuthCode) {
+          logger.debug("Google: serverAuthCode Found")
+          session = await exchangeGoogleToken(serverAuthCode);
+        } else if (idToken) {
+          logger.debug("Google: idToken Found")
+          session = await verifyGoogleToken(idToken);
+        } else {
+          logger.debug("Google: No id_token or server_auth_code found. Please check webClientId configuration.")
+          setError('Google no retornó un id_token ni un server_auth_code. Verifica que webClientId esté configurado.');
           return;
         }
-
-        const session = await verifyGoogleToken(idToken);
 
         setSessionToken(session.accessToken);
         setIsNewUser(session.isNewUser);
