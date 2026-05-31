@@ -5,6 +5,10 @@ import { Modal, TextInput as RNTextInput, ActivityIndicator, Platform, Image } f
 import { IconSymbol } from '@/src/core/ui/icon-symbol';
 import { useToast } from '@/src/core/toast/use-toast';
 import { logger } from '@/src/core/logger';
+import { apiClient } from '@/src/core/api/client';
+import { useAudioUpload } from '@/src/features/assistant/hooks/use-audio-upload';
+import { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence, Easing, cancelAnimation } from 'react-native-reanimated';
+import { Animated } from '@/src/core/ui/animated';
 import type { CalendarEvent } from '../api/schemas';
 
 const heroImage = require('@/../assets/images/Gradient.png');
@@ -91,7 +95,46 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
   const [eventDate, setEventDate] = useState(new Date());
   const [category, setCategory] = useState<string>(CATEGORIES[0].id);
   const [isSaving, setIsSaving] = useState(false);
+  const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null);
   const toast = useToast();
+
+  const { startRecording, stopRecording, uploadAudio, cancelRecording, isRecording } = useAudioUpload();
+
+  const pulseScale = useSharedValue(1);
+  const pulseOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (isRecording) {
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.22, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1,    { duration: 1000, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1, true
+      );
+      pulseOpacity.value = withRepeat(
+        withSequence(
+          withTiming(0.45, { duration: 1000 }),
+          withTiming(0.15, { duration: 1000 })
+        ),
+        -1, true
+      );
+    } else {
+      cancelAnimation(pulseScale);
+      cancelAnimation(pulseOpacity);
+      pulseScale.value = withTiming(1, { duration: 300 });
+      pulseOpacity.value = withTiming(0, { duration: 300 });
+    }
+    return () => {
+      cancelAnimation(pulseScale);
+      cancelAnimation(pulseOpacity);
+    };
+  }, [isRecording]);
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+    opacity: pulseOpacity.value,
+  }));
 
   // Pre-fill when event changes or modal opens
   useEffect(() => {
@@ -99,6 +142,7 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
       setTitle(event.title ?? '');
       setEventDate(new Date(event.due_date));
       setCategory(event.category_id ?? CATEGORIES[0].id);
+      setRecordedAudioUri(null); // Reset audio uri on open
     }
   }, [event, visible]);
 
@@ -129,6 +173,33 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
     setEventDate(next);
   };
 
+  const handleMicPress = async () => {
+    try {
+      const { Asset } = require('expo-asset');
+      const mockAudio = require('@/../assets/audio/adulto-mayor-animo-positivo.mp3');
+      const asset = Asset.fromModule(mockAudio);
+      await asset.downloadAsync();
+      const uri = asset.localUri || asset.uri;
+      if (uri) {
+        setRecordedAudioUri(uri);
+        toast.success('Audio simulado cargado.');
+      } else {
+        throw new Error('No local URI');
+      }
+    } catch (err) {
+      logger.error('Failed to load mock audio', err);
+      toast.error('Error al cargar audio simulado.');
+    }
+  };
+
+  const handleCancelRecording = async () => {
+    await cancelRecording();
+  };
+
+  const handleDeleteAudio = () => {
+    setRecordedAudioUri(null);
+  };
+
   const handleSave = async () => {
     if (!title.trim()) {
       toast.error('Por favor, ingresa el nombre del evento.');
@@ -138,6 +209,13 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
 
     try {
       setIsSaving(true);
+
+      // If new audio was recorded, upload it and link to the existing event
+      if (recordedAudioUri) {
+        logger.info('Uploading audio for existing event', { eventId: event.id });
+        await uploadAudio(recordedAudioUri, event.id);
+      }
+
       await onSave(event.id, {
         title: title.trim(),
         due_date: eventDate.toISOString(),
@@ -159,6 +237,10 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
     paddingHorizontal: 16,
     paddingVertical: 14,
   } as const;
+
+  const buttonSize = 80;
+  const iconSize = 28;
+  const micButtonColor = isRecording ? '#C0392B' : recordedAudioUri ? '#53815F' : '#325F3F';
 
   return (
     <Modal
@@ -288,17 +370,91 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
               </View>
             </View>
 
+            {/* AUDIO RECORDING (Only shown if event doesn't already have audio, or if we want to allow replacing) */}
+            {!event?.audio_url && (
+              <View
+                className="w-full items-center mt-5"
+                style={{
+                  backgroundColor: '#E8EFE5',
+                  borderRadius: 16,
+                  paddingVertical: 22,
+                  paddingHorizontal: 16,
+                  gap: 12,
+                }}
+              >
+                <View className="items-center justify-center" style={{ width: buttonSize * 1.3, height: buttonSize * 1.3 }}>
+                  {isRecording ? (
+                    <Animated.View
+                      className="absolute rounded-full bg-raices-error/30"
+                      style={[{ width: buttonSize, height: buttonSize }, pulseStyle]}
+                    />
+                  ) : null}
+
+                  <Pressable
+                    onPress={handleMicPress}
+                    disabled={isSaving}
+                    className="rounded-full items-center justify-center"
+                    style={{
+                      width: buttonSize,
+                      height: buttonSize,
+                      backgroundColor: micButtonColor,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 6 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 10,
+                      elevation: 6,
+                      opacity: isSaving ? 0.6 : 1,
+                    }}
+                  >
+                    <IconSymbol
+                      name={isRecording ? 'stop.fill' : recordedAudioUri ? 'checkmark' : 'mic.fill'}
+                      size={iconSize}
+                      color="#FFFFFF"
+                    />
+                  </Pressable>
+                </View>
+
+                <Text
+                  className="font-headline font-bold text-center"
+                  style={{ color: '#325F3F', fontSize: 18 }}
+                >
+                  Graba un recordatorio
+                </Text>
+                <Text
+                  className="font-body text-center"
+                  style={{ color: 'rgba(50, 95, 63, 0.6)', fontSize: 13, lineHeight: 18 }}
+                >
+                  Puedes dejar un mensaje de voz o instrucciones detalladas sobre el evento.
+                </Text>
+
+                <View className="items-center" style={{ minHeight: 18 }}>
+                  {isRecording ? (
+                    <Pressable onPress={handleCancelRecording}>
+                      <Text className="text-sm font-headline font-semibold text-raices-error">Cancelar grabación</Text>
+                    </Pressable>
+                  ) : recordedAudioUri ? (
+                    <View className="flex-row items-center" style={{ gap: 10 }}>
+                      <Text className="text-xs font-body text-raices-secondary font-semibold">Audio grabado</Text>
+                      <Pressable onPress={handleDeleteAudio}>
+                        <Text className="text-xs font-headline font-semibold text-raices-error">Eliminar</Text>
+                      </Pressable>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+            )}
+
             {/* SAVE BUTTON */}
             <Pressable
               onPress={handleSave}
-              disabled={isSaving}
+              disabled={isSaving || isRecording}
               className="w-full flex-row items-center justify-center mt-6"
               style={{
                 backgroundColor: '#325F3F',
                 borderRadius: 14,
                 paddingVertical: 16,
                 gap: 10,
-                opacity: isSaving ? 0.5 : 1,
+                opacity: (isSaving || isRecording) ? 0.5 : 1,
               }}
             >
               {isSaving ? (
@@ -314,9 +470,9 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
             {/* CANCEL */}
             <Pressable
               onPress={onClose}
-              disabled={isSaving}
+              disabled={isSaving || isRecording}
               className="w-full items-center mt-3"
-              style={{ opacity: isSaving ? 0.4 : 1, paddingVertical: 8 }}
+              style={{ opacity: (isSaving || isRecording) ? 0.4 : 1, paddingVertical: 8 }}
             >
               <Text className="text-sm font-headline font-semibold text-raices-text-muted">Cancelar</Text>
             </Pressable>

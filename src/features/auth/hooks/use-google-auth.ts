@@ -186,6 +186,8 @@ export function useGoogleAuth(): GoogleAuthState {
           photo: session.user.avatar ?? null,
           role: session.user.roles?.[0] ?? 'user',
         });
+      } else {
+        logger.debug(`[GoogleAuth Restore] Silent sign in failed: ${JSON.stringify(response)}`);
       }
     } catch (e) {
       // It's expected for signInSilently to fail if the user is completely logged out
