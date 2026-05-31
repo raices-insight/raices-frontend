@@ -17,8 +17,8 @@ module.exports = {
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#F0F5EC",
-        "foregroundImage": "./assets/images/RAICES.png",
-        "monochromeImage": "./assets/images/RAICES.png"
+        "foregroundImage": "./assets/images/RAICES-foreground-small-logo.png",
+        "monochromeImage": "./assets/images/RAICES-foreground-small-logo.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -94,7 +94,8 @@ module.exports = {
           "icon": "./assets/images/RAICES.png",
           "color": "#ffffff"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

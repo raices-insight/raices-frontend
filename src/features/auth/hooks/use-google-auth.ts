@@ -39,6 +39,7 @@ interface GoogleAuthState {
   signIn: () => void;
   signOut: () => void;
   completeOnboarding: (role: 'caregiver' | 'older_adult') => Promise<void>;
+  restoreSession: () => Promise<void>;
 }
 
 export function useGoogleAuth(): GoogleAuthState {
@@ -71,13 +72,13 @@ export function useGoogleAuth(): GoogleAuthState {
 
         let session;
         if (serverAuthCode) {
-          logger.debug("Google: serverAuthCode Found")
+          logger.debug("[GoogleAuth]: serverAuthCode Found")
           session = await exchangeGoogleToken(serverAuthCode);
         } else if (idToken) {
-          logger.debug("Google: idToken Found")
+          logger.debug("[GoogleAuth]: idToken Found")
           session = await verifyGoogleToken(idToken);
         } else {
-          logger.debug("Google: No id_token or server_auth_code found. Please check webClientId configuration.")
+          logger.debug("[GoogleAuth]: No id_token or server_auth_code found. Please check webClientId configuration.")
           setError('Google no retornó un id_token ni un server_auth_code. Verifica que webClientId esté configurado.');
           return;
         }
@@ -155,6 +156,44 @@ export function useGoogleAuth(): GoogleAuthState {
     }
   }, []);
 
+  const restoreSession = useCallback(async () => {
+    logger.debug("[GoogleAuth Restore] Starting silent sign in...");
+    try {
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signInSilently();
+      
+      if (response.type === 'success') {
+        const { idToken, serverAuthCode } = response.data;
+        
+        let session;
+        if (serverAuthCode) {
+          logger.debug("[GoogleAuth Restore] serverAuthCode Found");
+          session = await exchangeGoogleToken(serverAuthCode);
+        } else if (idToken) {
+          logger.debug("[GoogleAuth Restore] idToken Found");
+          session = await verifyGoogleToken(idToken);
+        } else {
+          logger.debug("[GoogleAuth Restore] No id_token or server_auth_code found. Please check webClientId configuration.");
+          return; // Neither found, silent sign in failed conceptually
+        }
+
+        setSessionToken(session.accessToken);
+        setIsNewUser(session.isNewUser);
+        setUser({
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.name ?? null,
+          photo: session.user.avatar ?? null,
+          role: session.user.roles?.[0] ?? 'user',
+        });
+      }
+    } catch (e) {
+      // It's expected for signInSilently to fail if the user is completely logged out
+      // We don't want to throw an error state that breaks the app launch
+      logger.debug(`[GoogleAuth Restore] Silent sign in failed: ${e}`);
+    }
+  }, []);
+
   return {
     user,
     sessionToken,
@@ -164,5 +203,6 @@ export function useGoogleAuth(): GoogleAuthState {
     signIn: () => { void handleSignIn(); },
     signOut: () => { void handleSignOut(); },
     completeOnboarding,
+    restoreSession,
   };
 }

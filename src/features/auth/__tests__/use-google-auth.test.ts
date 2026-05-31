@@ -155,7 +155,7 @@ describe('useGoogleAuth', () => {
   describe('TC-001-E-001: network or service error during sign-in', () => {
     it('sets error state when exchangeGoogleToken throws a network error', async () => {
       const { result } = await renderHook(() => useGoogleAuth());
-      mockGoogleSignin.signIn.mockResolvedValue({ data: { idToken: 'token', serverAuthCode: 'server-code' } });
+      mockGoogleSignin.signIn.mockResolvedValue({ data: { idToken: 'token', serverAuthCode: 'server-code' } } as any);
       mockIsSuccessResponse.mockReturnValue(true);
       mockIsErrorWithCode.mockReturnValue(false);
       mockExchangeGoogleToken.mockRejectedValue(new Error('Network request failed'));
