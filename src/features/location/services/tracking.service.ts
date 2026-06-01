@@ -77,7 +77,7 @@ export async function getCurrentLocation() {
         {
             accuracy: Location.Accuracy.Highest,
             distanceInterval: 1,
-            timeInterval: 5000,
+            timeInterval: 15000,
             foregroundService: {
                 notificationTitle: 'Location Tracking',
                 notificationBody: 'Tracking location in background',
