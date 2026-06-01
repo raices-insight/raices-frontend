@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
-import { Modal, View as RNView, Platform } from 'react-native';
+import { View as RNView, Platform, Modal } from 'react-native';
 import Reanimated, {
   useSharedValue,
   useAnimatedStyle,
@@ -12,6 +12,8 @@ import Reanimated, {
 import { View, Text } from '@/core/ui/tw';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { type ToastItem, type ToastVariant } from './types';
+import { useToastContext } from './toast-provider';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // --- Variant config -----------------------------------------------------------
 
@@ -77,41 +79,28 @@ function ToastCard({ item, onDismiss }: ToastCardProps) {
 // On web, absolute positioning inside a Stack view is buried by the stacking
 // context — Modal is the only reliable way to guarantee top-layer rendering.
 
-interface ToastRendererProps {
-  toasts: ToastItem[];
-  /** Top offset in px (pass safe-area top inset from the provider) */
-  topInset: number;
-  onDismiss: (id: string) => void;
-}
+export function ToastRenderer() {
+  const { toasts, dismiss } = useToastContext();
+  const { top: topInset } = useSafeAreaInsets();
 
-export function ToastRenderer({ toasts, topInset, onDismiss }: ToastRendererProps) {
   if (toasts.length === 0) return null;
 
   return (
-    <Modal
-      transparent
-      visible
-      animationType="none"
-      statusBarTranslucent
-      onRequestClose={() => {}}
+    <RNView
+      pointerEvents="box-none"
+      style={{
+        position: 'absolute',
+        top: topInset + 8,
+        left: 16,
+        right: 16,
+        gap: 8,
+        zIndex: 9999,
+        elevation: 9999,
+      }}
     >
-      {/* Full-screen pass-through so taps reach the app beneath */}
-      <RNView pointerEvents="box-none" style={{ flex: 1 }}>
-        <RNView
-          pointerEvents="box-none"
-          style={{
-            position: 'absolute',
-            top: topInset + 8,
-            left: 16,
-            right: 16,
-            gap: 8,
-          }}
-        >
-          {toasts.map((item) => (
-            <ToastCard key={item.id} item={item} onDismiss={onDismiss} />
-          ))}
-        </RNView>
-      </RNView>
-    </Modal>
+      {toasts.map((item) => (
+        <ToastCard key={item.id} item={item} onDismiss={dismiss} />
+      ))}
+    </RNView>
   );
 }

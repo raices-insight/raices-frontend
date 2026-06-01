@@ -1,9 +1,10 @@
-import { View, Text, StyleSheet, ScrollView, TextInput, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, Image, Pressable } from 'react-native';
 import { useState } from 'react';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { Button } from '@/core/ui/button';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { useCreateFamily } from '../hooks/use-family';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const heroImage = require('../../../../assets/images/create-family-hero.png');
 
@@ -11,6 +12,7 @@ export default function CreateFamilyScreen() {
   const [familyName, setFamilyName] = useState('');
   const { createFamily, loading } = useCreateFamily();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const trimmedName = familyName.trim();
 
@@ -22,162 +24,220 @@ export default function CreateFamilyScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.headerImageContainer}>
-        <Image
-          source={heroImage}
-          style={styles.headerImage}
-        />
-        <View style={styles.headerImageGradient} />
-        <View style={styles.headerImageOverlay}>
-          <Text style={styles.headerImageText}>NUEVO CÍRCULO</Text>
+    <View style={styles.container}>
+      {/* Hide the default Stack header */}
+      <Stack.Screen options={{ headerShown: false }} />
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* HERO */}
+        <View style={styles.heroContainer}>
+          <Image source={heroImage} style={styles.heroImage} resizeMode="cover" />
+
+          {/* Back button */}
+          <Pressable
+            style={styles.backButton}
+            onPress={() => router.back()}
+            hitSlop={8}
+          >
+            <IconSymbol name="chevron.left" size={20} color="#1F1B15" />
+          </Pressable>
+
+          {/* "NUEVO CÍRCULO" badge */}
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>NUEVO CÍRCULO</Text>
+          </View>
         </View>
-      </View>
 
-      <View style={styles.formContainer}>
-        <Text style={styles.progressText}>PASO 1 DE 3 • CONFIGURACIÓN DE RED</Text>
-        <Text style={styles.title}>Crea tu Círculo Familiar</Text>
-        <Text style={styles.subtitle}>
-          Al crear una familia, te convertirás en el administrador y podrás invitar a otros.
-        </Text>
+        {/* TITLE + SUBTITLE */}
+        <View style={styles.intro}>
+          <Text style={styles.title}>Crea tu Círculo Familiar</Text>
+          <Text style={styles.subtitle}>
+            Al crear una familia, te convertirás en el administrador y podrás invitar a otros.
+          </Text>
+        </View>
 
+        {/* INPUT */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Nombre de la Familia</Text>
-          <TextInput
-            value={familyName}
-            onChangeText={setFamilyName}
-            style={styles.input}
-            placeholder="Ej: Familia García López"
-            placeholderTextColor="rgba(255,255,255,0.8)"
-          />
-        </View>
-
-        <View style={styles.infoCard}>
-          <View style={styles.infoCardIcon}>
-            <IconSymbol name="shield.checkered" size={20} color="#586330" />
-          </View>
-          <View style={styles.infoCardTextContainer}>
-            <Text style={styles.infoCardTitle}>Rol de Administrador</Text>
-            <Text style={styles.infoCardText}>
-              Gestiona permisos, invita miembros y coordina los calendarios de cuidado.
-            </Text>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              value={familyName}
+              onChangeText={setFamilyName}
+              style={styles.input}
+              placeholder="Ej: Familia García López"
+              placeholderTextColor="rgba(255,255,255,0.85)"
+            />
+            <IconSymbol name="person.3.fill" size={20} color="#FFFFFF" />
           </View>
         </View>
 
-        <View style={styles.infoCard}>
-          <View style={styles.infoCardIcon}>
-             <IconSymbol name="envelope.fill" size={20} color="#3E6842" />
+        {/* FEATURE CARDS */}
+        <View style={styles.cardsGroup}>
+          <View style={styles.infoCard}>
+            <View style={styles.infoCardIcon}>
+              <IconSymbol name="shield.checkered" size={20} color="#586330" />
+            </View>
+            <View style={styles.infoCardTextContainer}>
+              <Text style={styles.infoCardTitle}>Rol de Administrador</Text>
+              <Text style={styles.infoCardText}>
+                Gestiona permisos, invita miembros y coordina los calendarios de cuidado.
+              </Text>
+            </View>
           </View>
-          <View style={styles.infoCardTextContainer}>
-            <Text style={styles.infoCardTitle}>Invitaciones</Text>
-            <Text style={styles.infoCardText}>
-              Envía códigos de acceso seguros para que otros se unan a tu red de apoyo.
-            </Text>
+
+          <View style={styles.infoCard}>
+            <View style={styles.infoCardIcon}>
+              <IconSymbol name="person.badge.plus" size={20} color="#325F3F" />
+            </View>
+            <View style={styles.infoCardTextContainer}>
+              <Text style={styles.infoCardTitle}>Invitaciones</Text>
+              <Text style={styles.infoCardText}>
+                Envía códigos de acceso seguros para que otros se unan a tu red de apoyo.
+              </Text>
+            </View>
           </View>
         </View>
+      </ScrollView>
 
+      {/* STICKY BOTTOM BUTTON */}
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(24, insets.bottom + 12) }]}>
         <Button
           label="Crear Familia"
           onPress={handleCreate}
           disabled={!trimmedName}
           loading={loading}
           fullWidth
-          style={{ marginTop: 24 }}
+          pill={false}
         />
       </View>
-    </ScrollView>
+    </View>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFAF3',
+    backgroundColor: '#FBF8EE',
   },
-  headerImageContainer: {
-    height: 256,
-    borderRadius: 32,
-    marginHorizontal: 24,
-    marginTop: 80,
+  scrollContent: {
+    paddingBottom: 32,
+  },
+
+  // HERO
+  heroContainer: {
+    height: 240,
+    borderRadius: 28,
+    marginHorizontal: 16,
+    marginTop: 48,
     overflow: 'hidden',
+    position: 'relative',
   },
-  headerImage: {
+  heroImage: {
     width: '100%',
     height: '100%',
   },
-  headerImageGradient: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 248, 243, 0)',
-  },
-  headerImageOverlay: {
+  backButton: {
     position: 'absolute',
-    bottom: 24,
-    left: 24,
-    backgroundColor: 'rgba(146, 76, 0, 0.1)',
+    top: 16,
+    left: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    backgroundColor: '#F4ECDF',
     borderRadius: 9999,
     paddingHorizontal: 16,
-    paddingVertical: 3,
+    paddingVertical: 8,
   },
-  headerImageText: {
-    fontFamily: 'BeVietnamPro-SemiBold',
-    fontSize: 14,
-    color: '#225031',
-  },
-  formContainer: {
-    padding: 24,
-    gap: 32,
-  },
-  progressText: {
-    textAlign: 'center',
-    fontFamily: 'BeVietnamPro-Medium',
+  badgeText: {
+    fontFamily: 'PlusJakartaSans-Bold',
     fontSize: 12,
-    color: 'rgba(71, 71, 71, 0.6)',
-    letterSpacing: 0.3,
+    color: '#325F3F',
+    letterSpacing: 0.5,
   },
-  title: {
-    fontFamily: 'BeVietnamPro-ExtraBold',
-    fontSize: 30,
-    textAlign: 'center',
-    color: '#1F1B15',
-  },
-  subtitle: {
-    fontFamily: 'PlusJakartaSans-Regular',
-    fontSize: 18,
-    textAlign: 'center',
-    color: '#474747',
-    marginTop: -20,
-  },
-  inputGroup: {
+
+  // INTRO
+  intro: {
+    paddingHorizontal: 24,
+    paddingTop: 32,
     gap: 12,
   },
+  title: {
+    fontFamily: 'PlusJakartaSans-ExtraBold',
+    fontSize: 30,
+    fontWeight: '800',
+    color: '#1F1B15',
+    lineHeight: 36,
+  },
+  subtitle: {
+    fontFamily: 'BeVietnamPro-Regular',
+    fontSize: 16,
+    color: '#474747',
+    lineHeight: 22,
+  },
+
+  // INPUT
+  inputGroup: {
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    gap: 10,
+  },
   label: {
-    fontFamily: 'BeVietnamPro-SemiBold',
+    fontFamily: 'PlusJakartaSans-Bold',
     fontSize: 14,
-    color: '#225031',
+    color: '#325F3F',
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#9BBE9F',
+    borderRadius: 9999,
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    gap: 8,
   },
   input: {
-    backgroundColor: '#7BA87D',
-    borderRadius: 16,
-    padding: 20,
-    fontFamily: 'BeVietnamPro-Regular',
-    fontSize: 18,
+    flex: 1,
+    fontFamily: 'PlusJakartaSans-Medium',
+    fontSize: 16,
     color: '#FFFFFF',
+    padding: 0,
+  },
+
+  // CARDS
+  cardsGroup: {
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    gap: 16,
   },
   infoCard: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
-    padding: 24,
-    gap: 12,
-    alignItems: 'center',
+    padding: 20,
+    gap: 14,
+    alignItems: 'flex-start',
+    shadowColor: 'rgba(28, 28, 23, 0.04)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 20,
+    elevation: 1,
   },
   infoCardIcon: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: 'rgba(88, 99, 48, 0.1)',
+    backgroundColor: 'rgba(50, 95, 63, 0.08)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -194,5 +254,16 @@ const styles = StyleSheet.create({
     fontFamily: 'BeVietnamPro-Regular',
     fontSize: 14,
     color: '#474747',
+    lineHeight: 20,
+  },
+
+  // BOTTOM BAR
+  bottomBar: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 24,
+    backgroundColor: '#FBF8EE',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(28, 28, 23, 0.04)',
   },
 });

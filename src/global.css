@@ -33,6 +33,10 @@
     --color-raices-text-muted: rgba(31, 27, 21, 0.6);
     --color-raices-error: #E53E3E;
     
+    /* Navigation and Borders */
+    --color-raices-nav-bg: #FFFFFF;
+    --color-raices-border: #E5E5E5;
+    
     /* Traffic Light / Status Colors */
     --color-raices-status-green-bg: #e8fde8;
     --color-raices-status-green-text: #325F3F;
@@ -66,9 +70,20 @@
     --color-raices-error: var(--color-raices-error);
 
     /* Traffic Light / Status Colors */
-    --color-raices-status-green: var(--color-raices-status-green);
-    --color-raices-status-yellow: var(--color-raices-status-yellow);
-    --color-raices-status-red: var(--color-raices-status-red);
+    --color-raices-status-green-bg: var(--color-raices-status-green-bg);
+    --color-raices-status-green-text: var(--color-raices-status-green-text);
+    --color-raices-status-green-accent: var(--color-raices-status-green-accent);
+
+    --color-raices-status-yellow-bg: var(--color-raices-status-yellow-bg);
+    --color-raices-status-yellow-text: var(--color-raices-status-yellow-text);
+    --color-raices-status-yellow-accent: var(--color-raices-status-yellow-accent);
+
+    --color-raices-status-red-bg: var(--color-raices-status-red-bg);
+    --color-raices-status-red-text: var(--color-raices-status-red-text);
+    --color-raices-status-red-accent: var(--color-raices-status-red-accent);
+    
+    --color-raices-nav-bg: var(--color-raices-nav-bg);
+    --color-raices-border: var(--color-raices-border);
     
     --font-headline: var(--font-headline);
     --font-body: var(--font-body);

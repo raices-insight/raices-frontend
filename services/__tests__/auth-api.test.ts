@@ -1,4 +1,4 @@
-import { verifyGoogleToken, updateProfileRole, type SessionResponse } from '../auth-api';
+import { verifyGoogleToken, updateProfileRole, exchangeGoogleToken, type SessionResponse } from '../auth-api';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -105,6 +105,40 @@ describe('auth-api', () => {
       const result = await verifyGoogleToken('returning-user-token');
 
       expect(result.isNewUser).toBe(false);
+    });
+  });
+
+  // ─── exchangeGoogleToken ──────────────────────────────────────────────────
+
+  describe('exchangeGoogleToken', () => {
+    it('sends POST /auth/google/code with serverAuthCode in body', async () => {
+      mockFetchOk(MOCK_SESSION);
+
+      await exchangeGoogleToken('server-code-123');
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3000/auth/google/code',
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ serverAuthCode: 'server-code-123' }),
+        }),
+      );
+    });
+
+    it('returns session with accessToken, user and isNewUser on success', async () => {
+      mockFetchOk(MOCK_SESSION);
+
+      const result = await exchangeGoogleToken('server-code-123');
+
+      expect(result.accessToken).toBe('gateway-jwt-token');
+      expect(result.user.id).toBe('profile-uuid');
+    });
+
+    it('throws when server returns a non-ok HTTP status', async () => {
+      mockFetchError(500, 'Server error');
+
+      await expect(exchangeGoogleToken('any-token')).rejects.toThrow('Error del servidor (500)');
     });
   });
 

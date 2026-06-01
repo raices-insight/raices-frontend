@@ -6,15 +6,19 @@ import {
 } from '@react-native-google-signin/google-signin';
 import { useCallback, useState } from 'react';
 import { Platform } from 'react-native';
-import { verifyGoogleToken, updateProfileRole } from '@/services/auth-api';
+import { verifyGoogleToken, updateProfileRole, exchangeGoogleToken } from '@/services/auth-api';
+import { CONFIG } from '@/src/core/config';
+import { logger } from '@/src/core/logger';
 
-const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+const googleWebClientId = CONFIG.GOOGLE_WEB_CLIENT_ID;
+const googleIosClientId = CONFIG.GOOGLE_IOS_CLIENT_ID;
 
 GoogleSignin.configure({
   ...(googleWebClientId ? { webClientId: googleWebClientId } : {}),
   ...(googleIosClientId ? { iosClientId: googleIosClientId } : {}),
-  offlineAccess: false,
+  offlineAccess: true,
+  forceCodeForRefreshToken: CONFIG.GOOGLE_FORCE_REFRESH_TOKEN,
+  scopes: ['https://www.googleapis.com/auth/calendar'],
   profileImageSize: 150,
 });
 
@@ -35,6 +39,7 @@ interface GoogleAuthState {
   signIn: () => void;
   signOut: () => void;
   completeOnboarding: (role: 'caregiver' | 'older_adult') => Promise<void>;
+  restoreSession: () => Promise<void>;
 }
 
 export function useGoogleAuth(): GoogleAuthState {
@@ -63,14 +68,20 @@ export function useGoogleAuth(): GoogleAuthState {
       const response = await GoogleSignin.signIn();
 
       if (isSuccessResponse(response)) {
-        const { idToken } = response.data;
+        const { idToken, serverAuthCode } = response.data;
 
-        if (!idToken) {
-          setError('Google no retornó un id_token. Verifica que webClientId esté configurado.');
+        let session;
+        if (serverAuthCode) {
+          logger.debug("[GoogleAuth]: serverAuthCode Found")
+          session = await exchangeGoogleToken(serverAuthCode);
+        } else if (idToken) {
+          logger.debug("[GoogleAuth]: idToken Found")
+          session = await verifyGoogleToken(idToken);
+        } else {
+          logger.debug("[GoogleAuth]: No id_token or server_auth_code found. Please check webClientId configuration.")
+          setError('Google no retornó un id_token ni un server_auth_code. Verifica que webClientId esté configurado.');
           return;
         }
-
-        const session = await verifyGoogleToken(idToken);
 
         setSessionToken(session.accessToken);
         setIsNewUser(session.isNewUser);
@@ -145,6 +156,46 @@ export function useGoogleAuth(): GoogleAuthState {
     }
   }, []);
 
+  const restoreSession = useCallback(async () => {
+    logger.debug("[GoogleAuth Restore] Starting silent sign in...");
+    try {
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signInSilently();
+      
+      if (response.type === 'success') {
+        const { idToken, serverAuthCode } = response.data;
+        
+        let session;
+        if (serverAuthCode) {
+          logger.debug("[GoogleAuth Restore] serverAuthCode Found");
+          session = await exchangeGoogleToken(serverAuthCode);
+        } else if (idToken) {
+          logger.debug("[GoogleAuth Restore] idToken Found");
+          session = await verifyGoogleToken(idToken);
+        } else {
+          logger.debug("[GoogleAuth Restore] No id_token or server_auth_code found. Please check webClientId configuration.");
+          return; // Neither found, silent sign in failed conceptually
+        }
+
+        setSessionToken(session.accessToken);
+        setIsNewUser(session.isNewUser);
+        setUser({
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.name ?? null,
+          photo: session.user.avatar ?? null,
+          role: session.user.roles?.[0] ?? 'user',
+        });
+      } else {
+        logger.debug(`[GoogleAuth Restore] Silent sign in failed: ${JSON.stringify(response)}`);
+      }
+    } catch (e) {
+      // It's expected for signInSilently to fail if the user is completely logged out
+      // We don't want to throw an error state that breaks the app launch
+      logger.debug(`[GoogleAuth Restore] Silent sign in failed: ${e}`);
+    }
+  }, []);
+
   return {
     user,
     sessionToken,
@@ -154,5 +205,6 @@ export function useGoogleAuth(): GoogleAuthState {
     signIn: () => { void handleSignIn(); },
     signOut: () => { void handleSignOut(); },
     completeOnboarding,
+    restoreSession,
   };
 }

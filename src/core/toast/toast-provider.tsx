@@ -13,6 +13,8 @@ import { ToastRenderer } from './toast-renderer';
 
 interface ToastContextValue {
   show: (options: ToastOptions) => void;
+  toasts: ToastItem[];
+  dismiss: (id: string) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -41,10 +43,8 @@ function ToastProviderInner({ children }: PropsWithChildren) {
   }, []);
 
   return (
-    <ToastContext.Provider value={{ show }}>
+    <ToastContext.Provider value={{ show, toasts, dismiss }}>
       {children}
-      {/* Modal-based renderer — always above the navigation stack */}
-      <ToastRenderer toasts={toasts} topInset={topInset} onDismiss={dismiss} />
     </ToastContext.Provider>
   );
 }

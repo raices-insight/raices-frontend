@@ -4,9 +4,15 @@ import { EventDTO } from "../dto/dto";
 import { CreateEventModal } from "./CreateEventModal";
 import { EventModal } from "./EventModal";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL
+import { CONFIG } from "@/src/core/config";
 
-export function CalendarSelector(){
+const API_URL = CONFIG.API_URL;
+
+interface CalendarSelectorProps {
+    onEventCreated?: () => void;
+}
+
+export function CalendarSelector({ onEventCreated }: CalendarSelectorProps){
     
     const [modalVisible, setModalVisible] = useState(false);
     const [createEventModalVisible, setCreateEventModalVisible] = useState(false);
@@ -22,7 +28,6 @@ export function CalendarSelector(){
 
 
     const monthEvents=events?.filter((event)=>{
-      console.log(event.date.getDate())
       let sameYear=event.date.getFullYear()==currentYear
       let sameMonth=event.date.getMonth()==currentMonth
       return sameYear&&sameMonth
@@ -32,28 +37,20 @@ export function CalendarSelector(){
     const fetchEvents = async () => {
     
     const url=new URL(`${API_URL}/calendar/dates`)
-    url.searchParams.append("calendarId","d34562f3ee0bce99009c1e865fc021447681ef26acc045bdb839bd878099a35d@group.calendar.google.com")
+    url.searchParams.append("calendarId","primary")
     const fetchedEvents = await fetch(url, { method: "GET" })
-    console.log(fetchedEvents.status,null,url)
     const jsonData = await fetchedEvents.json()
-    let tempEvents: Array<EventDTO> = []
-    jsonData.forEach((ev: any) => {
-      
-      
-      tempEvents.push(
-        new EventDTO(
-          ev.eventId,
-          ev.name,
-          new Date(ev.startDatetime),
-          
-          new Date(ev.endDatetime),
-
-        )
+    if (!Array.isArray(jsonData)) {
+      return;
+    }
+    const tempEvents: Array<EventDTO> = jsonData.map((ev: any) =>
+      new EventDTO(
+        ev.eventId,
+        ev.name,
+        new Date(ev.startDatetime),
+        new Date(ev.endDatetime),
       )
-
-      
-      
-    })
+    )
     setEvents(tempEvents);
   }
 
@@ -93,14 +90,9 @@ const nextMonth = () => {
 
 
 function removeThing(eventId:number){
-    console.log("remthing")
-    events?.forEach((e)=>{
-        console.log("di ",e.id)
-    })
     let index=events?.findIndex(e=>{
         return e.id==eventId
     })
-    console.log("index ",index, " remid ", eventId)
     if (index!=undefined && index !== -1) {
         events?.splice(index, 1);
     }
@@ -182,6 +174,9 @@ return (
                   addEvent={(event:EventDTO)=>{
                     
                     setEvents(prevEvents=>[...prevEvents,event])
+                    if (onEventCreated) {
+                        onEventCreated();
+                    }
                   }}
                   />
 
@@ -214,7 +209,6 @@ return (
             EVENTS FOR THIS DAY
           */
           const dayEvents = monthEvents.filter((e) => e.date.getDate() === day);
-          if (dayEvents.length>0)console.log("day ", day, "events ", dayEvents)
           /*
             TODAY STATE
           */
@@ -237,12 +231,10 @@ return (
               >
                 
                 <Pressable onPress={()=>{
-                  console.log("pressed")
                 if (dayEvents.length==0){
                   
                   const dateString=`${currentMonth+1}/${day}/${currentYear}`
                   let date=new Date(currentYear,currentMonth,day,today.getHours(),today.getMinutes())
-                  console.log("using empty date ",dateString," isostring ", date.toISOString())
                   setSelectedDate(date)
                   setCreateEventModalVisible(true)
                   

@@ -17,6 +17,7 @@ export const FamilyMemberSchema = z.object({
   id: z.string().min(1),
   profileId: z.string().min(1),
   role: z.enum(['ADMINISTRATOR', 'MEMBER', 'CAREGIVER']),
+  userRole: z.string().nullable().optional(),
 	name: z.string().min(1),
 });
 
@@ -49,9 +50,7 @@ export const RegenerateCodeResponseSchema = z.object({
 export type RegenerateCodeResponse = z.infer<typeof RegenerateCodeResponseSchema>;
 
 export const JoinFamilyPayloadSchema = z.object({
-  invitationCode: z.string().min(1, 'El código de invitación es requerido'),
-  createdAt: z.string().min(1),
-  imageUrl: z.string().optional(),
+  code: z.string().min(1, 'El código de invitación es requerido'),
 });
 
 export type JoinFamilyPayload = z.infer<typeof JoinFamilyPayloadSchema>;

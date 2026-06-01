@@ -19,6 +19,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/core/hooks/use-color-scheme';
 import { ToastProvider } from '@/core/toast/toast-provider';
 import { AuthProvider, useAuth } from '@/features/auth/context/auth-context';
+import { WebSocketProvider } from '@/core/websocket/websocket-provider';
+import { usePushNotifications } from '@/core/hooks/use-push-notifications';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -28,14 +30,17 @@ export const unstable_settings = {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const { user, loading } = useAuth();
+  const { user, loading, isRestoring } = useAuth();
   const segments = useSegments();
   const router = useRouter();
   const navigationState = useRootNavigationState();
+  
+  // Initialize push notifications
+  usePushNotifications();
 
   useEffect(() => {
-    // Prevent navigation until the navigation state is ready
-    if (loading || !navigationState?.key) return;
+    // Prevent navigation until the navigation state is ready and auth is restored
+    if (loading || isRestoring || !navigationState?.key) return;
 
     // Type assertion because Expo Router hasn't regenerated typed routes for 'login' yet
     const currentSegment = segments[0] as string | undefined;
@@ -52,7 +57,7 @@ function RootLayoutNav() {
     }, 0);
 
     return () => clearTimeout(timeout);
-  }, [user, loading, segments, router, navigationState?.key]);
+  }, [user, loading, isRestoring, segments, router, navigationState?.key]);
 
   return (
     <ToastProvider>
@@ -80,21 +85,31 @@ export default function RootLayout() {
     PlusJakartaSans_800ExtraBold,
   });
 
+  return (
+    <SafeAreaProvider>
+      <AuthProvider>
+        <RootLayoutInner fontsLoaded={fontsLoaded} fontError={fontError} />
+      </AuthProvider>
+    </SafeAreaProvider>
+  );
+}
+
+function RootLayoutInner({ fontsLoaded, fontError }: { fontsLoaded: boolean, fontError: Error | null }) {
+  const { isRestoring } = useAuth();
+
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    if ((fontsLoaded || fontError) && !isRestoring) {
       void SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError, isRestoring]);
 
-  if (!fontsLoaded && !fontError) {
+  if ((!fontsLoaded && !fontError) || isRestoring) {
     return null;
   }
 
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <RootLayoutNav />
-      </AuthProvider>
-    </SafeAreaProvider>
+    <WebSocketProvider>
+      <RootLayoutNav />
+    </WebSocketProvider>
   );
 }

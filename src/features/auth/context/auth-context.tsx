@@ -1,7 +1,9 @@
-import { createContext, useContext, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useGoogleAuth, type GoogleUser } from '@/features/auth/hooks/use-google-auth';
 import { useLocalAuth } from '@/features/auth/hooks/use-local-auth';
 import { setSessionToken as setGlobalSessionToken } from '@/core/session';
+import { setFamilyState } from '@/features/family/state/family-state';
+import { globalEvents } from '@/src/core/events';
 
 const LOGIN_MODE = process.env.EXPO_PUBLIC_LOGIN_MODE;
 
@@ -11,6 +13,7 @@ interface AuthContextValue {
   loading: boolean;
   error: string | null;
   isNewUser: boolean | null;
+  isRestoring: boolean;
   signIn: () => void;
   signOut: () => void;
   completeOnboarding: (role: 'caregiver' | 'older_adult') => Promise<void>;
@@ -26,6 +29,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const googleAuth = useGoogleAuth();
   const localAuth = useLocalAuth();
+  const [isRestoring, setIsRestoring] = useState(true);
 
   const isLocalMode = LOGIN_MODE === 'LOCAL_DEVELOPMENT';
 
@@ -38,9 +42,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [activeToken]);
 
   const handleSignOut = () => {
+    setFamilyState(null);
     googleAuth.signOut();
     localAuth.signOut();
   };
+
+  useEffect(() => {
+    const unsub = globalEvents.on('auth:unauthorized', () => {
+      handleSignOut();
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    async function restore() {
+      if (isLocalMode) {
+        await localAuth.restoreSession();
+      } else {
+        await googleAuth.restoreSession();
+      }
+      setIsRestoring(false);
+    }
+    void restore();
+  }, []);
 
   const value: AuthContextValue = {
     user: activeUser,
@@ -48,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading: googleAuth.loading || (isLocalMode ? localAuth.loading : false),
     error: googleAuth.error ?? (isLocalMode ? localAuth.error : null),
     isNewUser: activeIsNewUser,
+    isRestoring,
     signIn: googleAuth.signIn,
     signOut: handleSignOut,
     completeOnboarding: googleAuth.completeOnboarding,

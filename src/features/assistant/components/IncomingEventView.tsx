@@ -11,12 +11,17 @@ import { IconSymbol } from '@/core/ui/icon-symbol';
 import { Button } from '@/core/ui/button';
 import { Asset } from 'expo-asset';
 import { useAuth } from '@/features/auth/context/auth-context';
+import { useLocalSearchParams } from 'expo-router';
+import { useAssistantCalendarEvents } from '@/features/calendar/hooks/useAssistantCalendarEvents';
+import { useFamily, useFamilyDetails } from '@/features/family/hooks/use-family';
+import { AudioPlayButton } from '@/core/ui/audio-play-button';
+import { logger } from '@/core/logger';
+import { CONFIG } from '@/core/config';
+import { useWebSocket } from '@/core/websocket/websocket-provider';
 
 // ---------------------------------------------------------------------------
-// Mock data — replace with event props once backend is wired
+// Mock data for development testing
 // ---------------------------------------------------------------------------
-const MOCK_EVENT_TITLE = 'Toma de pastillas';
-const MOCK_TRANSCRIPT  = '"Hola, ¿cómo te sientes hoy? Recuerda tomar tus pastillas después del almuerzo."';
 const MOCK_AUDIO_FILE  = require('@/../assets/audio/adulto-mayor-animo-positivo.mp3');
 
 // ---------------------------------------------------------------------------
@@ -26,8 +31,16 @@ const MOCK_AUDIO_FILE  = require('@/../assets/audio/adulto-mayor-animo-positivo.
 export function IncomingEventView() {
   const { width: screenWidth } = useWindowDimensions();
   const { user } = useAuth();
+  const { eventId } = useLocalSearchParams<{ eventId?: string }>();
   
-  const senderName = user?.name || 'Usuario';
+  const { events, isLoading } = useAssistantCalendarEvents();
+  const currentEvent = events.find(e => e.id === eventId);
+  const eventTitle = currentEvent?.title || 'Evento Entrante';
+  
+  const { family } = useFamily();
+  const { members } = useFamilyDetails(family?.id);
+  const creatorMember = members.find(m => m.profileId === currentEvent?.caretaker_profile_id);
+  const senderName = creatorMember?.name || 'Tu familia';
 
   // Responsive sizing: avatar ~25% (inside card), button ~72% of screen
   const avatarSize = Math.min(screenWidth * 0.25, 96);
@@ -38,6 +51,58 @@ export function IncomingEventView() {
   const [isCooldown, setIsCooldown] = useState(false);
   const isBusy    = status === 'uploading' || status === 'processing';
   const isSuccess = status === 'success';
+
+  // ── Analysis result from WebSocket ──────────────────────────────────────────
+  // Tracks what the assistant service returns after processing the audio.
+  const [analysisResult, setAnalysisResult] = useState<{
+    /** True between a successful upload and the arrival of assistant:analysis_complete */
+    waiting: boolean;
+    description: string | null;
+    analysisStatus: 'completed' | 'skipped' | 'failed' | null;
+  }>({ waiting: false, description: null, analysisStatus: null });
+  
+  // Track the audio profile ID of the currently uploading/processing recording
+  const [uploadAudioProfileId, setUploadAudioProfileId] = useState<string | null>(null);
+
+  const { subscribe } = useWebSocket();
+
+  // Subscribe to assistant:analysis_complete — fires when the backend finishes STT + LLM
+  useEffect(() => {
+    return subscribe('assistant:analysis_complete', (data) => {
+      logger.info('Received assistant:analysis_complete', data);
+      
+      // Only process the analysis if it belongs to the audio we just uploaded
+      if (!uploadAudioProfileId || data.audio_profile_id !== uploadAudioProfileId) {
+        logger.debug(`Ignoring analysis for different or null audio profile: ${data.audio_profile_id}`);
+        return;
+      }
+      
+      setAnalysisResult({
+        waiting: false,
+        description: data.description ?? null,
+        analysisStatus: data.status,
+      });
+    });
+  }, [subscribe, uploadAudioProfileId]);
+
+  // When upload is acknowledged by the server, start waiting for the async analysis
+  useEffect(() => {
+    if (status === 'success') {
+      setAnalysisResult({ waiting: true, description: null, analysisStatus: null });
+    } else if (status === 'error') {
+      setAnalysisResult({ waiting: false, description: null, analysisStatus: null });
+    }
+  }, [status]);
+  
+  // Get final audio url
+  let finalAudioUrl = currentEvent?.audio_url || null;
+  if (finalAudioUrl && finalAudioUrl.includes('localhost')) {
+    const apiUrl = CONFIG.API_URL;
+    const ipMatch = apiUrl.match(/:\/\/([^\/:]+)/);
+    if (ipMatch && ipMatch[1] && ipMatch[1] !== 'localhost') {
+      finalAudioUrl = finalAudioUrl.replace('localhost', ipMatch[1]);
+    }
+  }
 
   // --- Pulse ring ---
   const pulseScale   = useSharedValue(1);
@@ -77,20 +142,29 @@ export function IncomingEventView() {
     if (isCooldown) return;
 
     if (isRecording) {
-      // Real recording flow
-      // await stopAndUpload('b02bd0cc-fb75-4295-9328-afd8c1281de8', 'adulto_mayor');
-
+      let returnedId: string | undefined;
       
-      // For simulation: Resolve the asset URI before uploading
-      const asset = Asset.fromModule(MOCK_AUDIO_FILE);
-      await asset.downloadAsync();
-      
-      if (user?.id) {
-        stopAndUpload(asset.localUri || asset.uri);
+      if (CONFIG.IS_PROD) {
+        // Real recording flow
+        returnedId = await stopAndUpload(eventId);
       } else {
-        console.warn('No user session available to upload audio');
+        // Simulation for development
+        const asset = Asset.fromModule(MOCK_AUDIO_FILE);
+        await asset.downloadAsync();
+        
+        if (user?.id) {
+          returnedId = await stopAndUpload(eventId, asset.localUri || asset.uri);
+        } else {
+          console.warn('No user session available to upload audio');
+        }
+      }
+      
+      if (returnedId) {
+        setUploadAudioProfileId(returnedId);
       }
     } else {
+      // Reset previous analysis when starting a new recording
+      setAnalysisResult({ waiting: false, description: null, analysisStatus: null });
       setIsCooldown(true);
       startRecording();
       setTimeout(() => setIsCooldown(false), 1000); // 1 sec cooldown
@@ -149,7 +223,7 @@ export function IncomingEventView() {
               </Text>
             </View>
             <Text className="font-headline font-bold text-xl text-raices-text leading-tight">
-              {MOCK_EVENT_TITLE}
+              {eventTitle}
             </Text>
             <Text className="font-body text-sm text-raices-text-muted">
               Mensaje de{' '}
@@ -159,14 +233,11 @@ export function IncomingEventView() {
         </View>
 
         {/* Escuchar mensaje button */}
-        <Button
-          label="Escuchar mensaje"
-          variant="secondary"
-          size="sm"
-          fullWidth
-          iconLeft={<IconSymbol name="play.fill" size={14} color="#FFFFFF" />}
-          onPress={() => { /* TODO: play caretaker audio */ }}
-        />
+        {finalAudioUrl && (
+          <View className="w-full">
+            <AudioPlayButton audioUrl={finalAudioUrl} variant="pill-lg" fullWidth />
+          </View>
+        )}
       </View>
 
       {/* ── Button area: flex-1 centers the button vertically ─── */}
@@ -235,14 +306,51 @@ export function IncomingEventView() {
       {/* ── Transcription card — always anchored to the bottom ─── */}
       <View className="mb-6 w-full bg-raices-surface rounded-3xl p-5 shadow-sm elevation-2">
         <Text className="font-headline font-semibold text-xs text-raices-tertiary uppercase tracking-widest mb-2">
-          Mensaje de {senderName}
+          {analysisResult.analysisStatus === 'completed' || analysisResult.analysisStatus === 'skipped'
+            ? `Tu respuesta`
+            : `Mensaje de ${senderName}`}
         </Text>
-        <Text
-          className="font-body text-raices-text text-center text-lg leading-7"
-          style={{ fontStyle: 'italic' }}
-        >
-          {MOCK_TRANSCRIPT}
-        </Text>
+
+        {analysisResult.waiting ? (
+          // Backend is processing — show spinner + label
+          <View className="flex-row items-center justify-center gap-3 py-1">
+            <ActivityIndicator size="small" color="#53815F" />
+            <Text className="font-body text-raices-text-muted text-base">
+              Analizando tu respuesta...
+            </Text>
+          </View>
+        ) : analysisResult.analysisStatus === 'failed' ? (
+          // Pipeline failed — show a friendly error
+          <Text
+            className="font-body text-raices-error text-center text-base leading-6"
+          >
+            No se pudo procesar tu respuesta. Intenta de nuevo.
+          </Text>
+        ) : analysisResult.analysisStatus === 'completed' || analysisResult.analysisStatus === 'skipped' ? (
+          // Analysis complete — show real transcript
+          <Text
+            className="font-body text-raices-text text-center text-lg leading-7"
+            style={{ fontStyle: 'italic' }}
+          >
+            {analysisResult.description ? `"${analysisResult.description}"` : '(Audio inaudible o vacío)'}
+          </Text>
+        ) : currentEvent?.description ? (
+          // Default / before first recording: show caretaker's message/transcription
+          <Text
+            className="font-body text-raices-text text-center text-lg leading-7"
+            style={{ fontStyle: 'italic' }}
+          >
+            {`"${currentEvent.description}"`}
+          </Text>
+        ) : (
+          // Default fallback if no incoming description exists
+          <Text
+            className="font-body text-raices-text-muted text-center text-lg leading-7"
+            style={{ fontStyle: 'italic' }}
+          >
+            Presiona el botón para grabar una respuesta...
+          </Text>
+        )}
       </View>
 
     </View>

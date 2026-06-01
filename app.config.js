@@ -1,12 +1,12 @@
-{
+module.exports = {
   "expo": {
-    "name": "raices-frontend",
+    "name": "Raíces",
     "slug": "raices-frontend",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/RAICES-ios.png",
     "scheme": "raicesfrontend",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
@@ -14,14 +14,15 @@
       "bundleIdentifier": "com.raicesfrontend.app"
     },
     "android": {
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#F0F5EC",
+        "foregroundImage": "./assets/images/RAICES-foreground-small-logo.png",
+        "monochromeImage": "./assets/images/RAICES-foreground-small-logo.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
+      "googleServicesFile": process.env.GOOGLE_SERVICES_JSON || "./google-services.json",
       "package": "com.raicesfrontend.app",
       "intentFilters": [
         {
@@ -50,26 +51,26 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/RAICES.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/RAICES.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#F0F5EC",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#F0F5EC"
           }
         }
       ],
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.854043985624-n4708ke1qtuaokbu7ckvt3p1msoov4v4"
+          "iosUrlScheme": "com.googleusercontent.apps.358066150498-1tep87jf8pbslu1c02pgnj8ljqiacv3k"
         }
       ],
       "expo-web-browser",
@@ -86,7 +87,15 @@
           "isAndroidBackgroundLocationEnabled": true
         }
       ],
-      "@maplibre/maplibre-react-native"
+      "@maplibre/maplibre-react-native",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/RAICES.png",
+          "color": "#ffffff"
+        }
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -94,9 +103,19 @@
     },
     "extra": {
       "router": {},
+      "eas_cedric": {
+        "projectId": "2c8c1641-d09a-416f-9c50-5b48a39a9bf4"
+      },
+      "eas_cucha":{
+        "projectId": "336fae6e-145f-448d-bbbf-e7f6449e0c9b"
+      },
+
       "eas": {
         "projectId": "2c8c1641-d09a-416f-9c50-5b48a39a9bf4"
       }
+      // "eas": {
+      //   "projectId": "336fae6e-145f-448d-bbbf-e7f6449e0c9b"
+      // }
     }
   }
-}
+};

@@ -45,3 +45,8 @@ app-example
 
 
 .npmrc
+
+# Firebase config files
+google-services.json
+GoogleService-Info.plist
+raices-*-firebase-adminsdk-*.json

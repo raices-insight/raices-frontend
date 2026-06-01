@@ -53,10 +53,9 @@ export function SemanticStatusCard({ dailyScore }: SemanticStatusCardProps) {
 
   return (
     <View className="w-full bg-white border border-black/5 rounded-3xl shadow-md overflow-hidden flex-row">
-      {/* Indicador Lateral de Estado - Usando style para asegurar persistencia de color */}
+      {/* Indicador Lateral de Estado */}
       <View 
-        className="w-2.5" 
-        style={{ backgroundColor: style.iconColor }} 
+        className={`w-2.5 ${style.accent}`} 
       />
 
       <View className="flex-1 p-6" style={{ gap: 16 }}>
@@ -88,11 +87,8 @@ export function SemanticStatusCard({ dailyScore }: SemanticStatusCardProps) {
           </View>
           <View className="w-full h-3 rounded-full bg-black/5 overflow-hidden border border-black/5">
             <View 
-              className="h-full rounded-full" 
-              style={{ 
-                width: `${dailyScore.score}%`,
-                backgroundColor: style.iconColor
-              }} 
+              className={`h-full rounded-full ${style.bar}`} 
+              style={{ width: `${dailyScore.score}%` }} 
             />
           </View>
         </View>

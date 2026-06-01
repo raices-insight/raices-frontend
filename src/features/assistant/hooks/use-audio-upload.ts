@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAudioRecorder, RecordingPresets, requestRecordingPermissionsAsync } from 'expo-audio';
 import { apiClient } from '@/core/api/client';
+import { CONFIG } from '@/core/config';
 import { UploadTicketSchema, NotifyUploadResponseSchema } from '@/features/assistant/api/schemas';
 import { logger } from '@/core/logger';
 import { useToast } from '@/core/toast/use-toast';
@@ -37,15 +38,24 @@ export function useAudioUpload() {
     }
   }, [audioRecorder]);
 
-  const stopAndUpload = useCallback(async (mockUri?: string) => {
+  const stopRecording = useCallback(async () => {
     try {
-      setStatus('processing');
       await audioRecorder.stop();
-      const uri = mockUri || audioRecorder.uri;
+      setStatus('idle');
+      return audioRecorder.uri;
+    } catch (err) {
+      logger.error('Failed to stop recording', err);
+      toast.error('No se pudo detener la grabación.');
+      setError('No se pudo detener la grabación.');
+      setStatus('idle');
+      return null;
+    }
+  }, [audioRecorder]);
 
-      if (!uri) {
-        throw new Error('No se pudo obtener el archivo de audio.');
-      }
+  const uploadAudio = useCallback(async (uri: string, eventId?: string) => {
+    try {
+      setError(null);
+      setStatus('uploading');
 
       // 1. Get Pre-Signed URL
       logger.info('Fetching upload URL', { mimeType: Platform.OS === 'ios' ? 'audio/m4a' : 'audio/mpeg' });
@@ -67,7 +77,11 @@ export function useAudioUpload() {
       const fileResponse = await fetch(uri);
       const blob = await fileResponse.blob();
 
-      const uploadResult = await fetch(ticket.uploadUrl, {
+      let finalUploadUrl = ticket.uploadUrl;
+
+      logger.debug(`Final upload URL: ${finalUploadUrl}`);
+
+      const uploadResult = await fetch(finalUploadUrl, {
         method: 'PUT',
         body: blob,
         headers: {
@@ -76,6 +90,8 @@ export function useAudioUpload() {
       });
 
       if (!uploadResult.ok) {
+        const errorText = await uploadResult.text();
+        logger.error(`S3 Upload failed with status ${uploadResult.status}: ${errorText}`);
         throw new Error('Error al subir el archivo al servidor de almacenamiento.');
       }
 
@@ -86,6 +102,7 @@ export function useAudioUpload() {
       const notifyResponse = await apiClient.post('/assistant/audio/notify', {
         audioProfileId: ticket.audioProfileId,
         objectKey: ticket.objectKey,
+        eventId,
       });
 
       // Validate the notification response (parse-use-safeparse)
@@ -95,7 +112,6 @@ export function useAudioUpload() {
       }
 
       logger.info('Audio response submitted successfully', { audioProfileId: ticket.audioProfileId });
-      toast.success('¡Respuesta enviada con éxito!');
       setStatus('success');
       
       // Reset back to idle after a moment
@@ -110,8 +126,30 @@ export function useAudioUpload() {
       setError(message);
       setStatus('error');
       setTimeout(() => setStatus('idle'), 5000);
+      throw err;
     }
-  }, [audioRecorder]);
+  }, []);
+
+  const stopAndUpload = useCallback(async (eventId?: string, mockUri?: string) => {
+    try {
+      setStatus('processing');
+      await audioRecorder.stop();
+      const uri = mockUri || audioRecorder.uri;
+
+      if (!uri) {
+        throw new Error('No se pudo obtener el archivo de audio.');
+      }
+
+      return await uploadAudio(uri, eventId);
+    } catch (err) {
+      logger.error('Upload flow failed', err);
+      const message = err instanceof Error ? err.message : 'Error inesperado durante la subida.';
+      toast.error(message);
+      setError(message);
+      setStatus('error');
+      setTimeout(() => setStatus('idle'), 5000);
+    }
+  }, [audioRecorder, uploadAudio]);
 
   const cancelRecording = useCallback(async () => {
     try {
@@ -126,8 +164,11 @@ export function useAudioUpload() {
     status,
     error,
     startRecording,
+    stopRecording,
+    uploadAudio,
     stopAndUpload,
     cancelRecording,
     isRecording: status === 'recording',
   };
+
 }

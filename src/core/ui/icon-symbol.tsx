@@ -27,8 +27,10 @@ const MAPPING = {
   // --- Actions ---
   'paperplane.fill':                          'send',
   'play.fill':                                'play',
+  'pause.fill':                               'pause',
   'stop.fill':                                'stop',
   'mic.fill':                                 'microphone',
+  'mic.slash.fill':                           'microphone-off',
   'checkmark':                                'check',
   'xmark':                                    'close',
   'trash.fill':                               'trash-can',
@@ -42,6 +44,9 @@ const MAPPING = {
   'heart.fill':                               'heart',
   'figure.walk':                              'walk',
   'face.smiling':                             'emoticon-happy-outline',
+  'face.smiling.inverse':                     'emoticon-happy',
+  'sun.max.fill':                             'weather-sunny',
+  'pills.fill':                               'pill',
 
   // --- People & Social ---
   'person.fill':                              'account',
@@ -66,6 +71,7 @@ const MAPPING = {
   'questionmark.circle.fill':                 'help-circle',
   'lock.fill':                                'lock',
   'calendar':                                 'calendar',
+  'calendar.badge.minus':                     'calendar-blank',
   'pill.fill':                                'pill',
   'stethoscope':                              'stethoscope',
   
@@ -79,6 +85,11 @@ const MAPPING = {
 	'envelope.fill':                           'email',
 	'camera.fill':																	'camera',
 	"qrcode.viewfinder":																	'qrcode-scan',
+	'keyboard':                                'keyboard-outline',
+	'house.badge.plus':                        'home-plus',
+	'person.badge.plus':                       'account-plus',
+	'doc.on.doc':                              'content-copy',
+	'arrow.clockwise':                         'refresh',
 } as IconMapping;
 
 /**
