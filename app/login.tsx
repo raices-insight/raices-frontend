@@ -1,8 +1,10 @@
-import { View } from '@/core/ui/tw';
-import { LoginScreen } from '@/features/auth/components/LoginScreen';
-import { LocalLoginScreen } from '@/features/auth/components/LocalLoginScreen';
-import { useAuth } from '@/features/auth/context/auth-context';
 import { ToastRenderer } from '@/core/toast/toast-renderer';
+import { View } from '@/core/ui/tw';
+import { LocalLoginScreen } from '@/features/auth/components/LocalLoginScreen';
+import { LoginScreen } from '@/features/auth/components/LoginScreen';
+import { useAuth } from '@/features/auth/context/auth-context';
+import { stopTrackingLocation } from '@/src/features/location/services/tracking.service';
+import { useEffect } from 'react';
 
 const LOGIN_MODE = process.env.EXPO_PUBLIC_LOGIN_MODE;
 
@@ -18,6 +20,12 @@ export default function LoginRoute() {
     localSignIn,
   } = useAuth();
 
+  useEffect(()=>{
+    async function preventTokenlessTracking(){
+      await stopTrackingLocation()
+    }
+    preventTokenlessTracking()
+  },[])
   return (
     <View className="flex-1 bg-raices-bg">
       {LOGIN_MODE === 'LOCAL_DEVELOPMENT' ? (

@@ -3,7 +3,8 @@ import { ProfileScreen } from '@/features/auth/components/ProfileScreen';
 import { useAuth } from '@/features/auth/context/auth-context';
 import { CaregiverHomeScreen } from '@/features/caregiver/components/CaregiverHomeScreen';
 import { OlderAdultHomeScreen } from '@/features/older_adult/components/OlderAdultHomeScreen';
-import { getCurrentLocation } from '@/src/features/location/services/tracking.service';
+import { useWebSocket } from '@/src/core/websocket/websocket-provider';
+import { getCurrentLocation, usePsychoLocationTracking, useRelaxLocationTracking } from '@/src/features/location/services/tracking.service';
 import { useEffect, useRef } from 'react';
 
 
@@ -41,6 +42,14 @@ export default function HomeScreen() {
   if (isOlderAdult){
     
     getCurrentLocation()
+    let socket=useWebSocket()
+    socket.subscribe("location.track.psycho",async ()=>{
+      await usePsychoLocationTracking()
+    })
+
+    socket.subscribe("location.track.relax",async ()=>{
+      await useRelaxLocationTracking()
+    })
 
   }
 

@@ -6,6 +6,10 @@ import * as TaskManager from 'expo-task-manager';
 const API_URL = CONFIG.API_URL
 export const LOCATION_TASK_NAME = 'background-location-task';
 
+const PSYCHO_TRACK_INTERVAL = 3 * 60 * 1000;
+
+const RELAX_TRACK_INTERVAL = 30 * 60 * 1000;
+
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
             if (error) {
                 // Error occurred - check `error.message` for more details.
@@ -73,21 +77,50 @@ export async function getCurrentLocation() {
 
 
     // TODO: IT THROWS TaskManager: Task "background-location-task" failed: [TypeError: Network request failed]
-    await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME,
-        {
-            accuracy: Location.Accuracy.Highest,
-            distanceInterval: 1,
-            timeInterval: 15000,
-            foregroundService: {
-                notificationTitle: 'Location Tracking',
-                notificationBody: 'Tracking location in background',
-            },
-        })
+    await useRelaxLocationTracking()
 
     console.log("are updates actually running",
         await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
     );
 
+}
+
+export async function usePsychoLocationTracking(){
+    await stopTrackingLocation()
+    console.log("using psycho tracking")
+    await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME,
+        {
+            accuracy: Location.Accuracy.Highest,
+            distanceInterval: 20,
+            timeInterval: 5000,
+            foregroundService: {
+                notificationTitle: 'Location Tracking',
+                notificationBody: 'Tracking location in background',
+            },
+        })
+}
+
+export async function useRelaxLocationTracking(){
+    await stopTrackingLocation()
+    console.log("using relax tracking")
+    await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME,
+        {
+            accuracy: Location.Accuracy.Balanced,
+            distanceInterval: 20,
+            timeInterval: RELAX_TRACK_INTERVAL,
+            foregroundService: {
+                notificationTitle: 'Location Tracking',
+                notificationBody: 'Tracking location in background',
+            },
+        })
+}
+
+export async function stopTrackingLocation(){
+    if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)){
+        console.log("stopping location tracking")
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+    }
+    
 }
 
 export class LocationTrackingService{
