@@ -17,10 +17,10 @@ jest.mock('expo-audio', () => ({
 }));
 jest.mock('expo-router', () => {
   const MockLink = () => null;
-  MockLink.Trigger = () => null;
-  MockLink.Menu = () => null;
-  MockLink.MenuAction = () => null;
-  MockLink.Preview = () => null;
+  MockLink.Trigger = function MockLinkTrigger() { return null; };
+  MockLink.Menu = function MockLinkMenu() { return null; };
+  MockLink.MenuAction = function MockLinkMenuAction() { return null; };
+  MockLink.Preview = function MockLinkPreview() { return null; };
   return {
     router: { push: jest.fn() },
     Link: MockLink,
