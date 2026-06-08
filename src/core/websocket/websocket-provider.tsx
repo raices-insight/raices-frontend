@@ -1,3 +1,5 @@
+import { CONFIG } from '@/core/config';
+import { useAuth } from '@/features/auth/context/auth-context';
 import React, {
   createContext,
   useCallback,
@@ -8,8 +10,6 @@ import React, {
   type ReactNode,
 } from 'react';
 import { io } from 'socket.io-client';
-import { useAuth } from '@/features/auth/context/auth-context';
-import { CONFIG } from '@/core/config';
 import type {
   WebSocketContextValue,
   WebSocketEventMap,

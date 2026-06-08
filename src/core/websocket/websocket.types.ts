@@ -15,6 +15,15 @@ export type WebSocketEventMap = {
     status: 'completed' | 'skipped' | 'failed';
     description: string | null;
   };
+
+  "location.track.update":{
+    latitude:number,
+    longitude:number
+  }
+
+  "location.track.psycho":void
+
+  "location.track.relax":void
 };
 
 export type WebSocketEventType = keyof WebSocketEventMap;
