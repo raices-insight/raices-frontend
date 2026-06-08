@@ -19,7 +19,7 @@ export function CalendarSelector({ onEventCreated }: CalendarSelectorProps){
     const today = new Date();
     const [currentMonth, setCurrentMonth] = useState(today.getMonth());
     const [currentYear,setCurrentYear] = useState(today.getFullYear());
-    const [events,setEvents] = useState<Array<EventDTO>>([]);
+    const [events,setEvents] = useState<EventDTO[]>([]);
     const [selectedDay,setSelectedDay]=useState(today.getDate())
     
     const [selectedDate,setSelectedDate]=useState(new Date())
@@ -43,7 +43,7 @@ export function CalendarSelector({ onEventCreated }: CalendarSelectorProps){
     if (!Array.isArray(jsonData)) {
       return;
     }
-    const tempEvents: Array<EventDTO> = jsonData.map((ev: any) =>
+    const tempEvents: EventDTO[] = jsonData.map((ev: any) =>
       new EventDTO(
         ev.eventId,
         ev.name,

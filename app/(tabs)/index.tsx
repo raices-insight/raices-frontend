@@ -4,7 +4,7 @@ import { useAuth } from '@/features/auth/context/auth-context';
 import { CaregiverHomeScreen } from '@/features/caregiver/components/CaregiverHomeScreen';
 import { OlderAdultHomeScreen } from '@/features/older_adult/components/OlderAdultHomeScreen';
 import { useWebSocket } from '@/src/core/websocket/websocket-provider';
-import { getCurrentLocation, usePsychoLocationTracking, useRelaxLocationTracking } from '@/src/features/location/services/tracking.service';
+import { getCurrentLocation, startPsychoLocationTracking, startRelaxLocationTracking } from '@/src/features/location/services/tracking.service';
 import { useEffect, useRef } from 'react';
 
 
@@ -19,6 +19,7 @@ export default function HomeScreen() {
   } = useAuth();
 
   const isLoggingOut = useRef(false);
+  const socket = useWebSocket();
 
   useEffect(() => {
     if (isLoggingOut.current) {
@@ -35,23 +36,23 @@ export default function HomeScreen() {
   const isCaregiver = user?.role === 'caregiver';
   const needsOnboarding = !isOlderAdult && !isCaregiver;
 
+  useEffect(() => {
+    if (isOlderAdult) {
+      getCurrentLocation();
+      
+      socket.subscribe("location.track.psycho", async () => {
+        await startPsychoLocationTracking();
+      });
+
+      socket.subscribe("location.track.relax", async () => {
+        await startRelaxLocationTracking();
+      });
+    }
+  }, [isOlderAdult, socket]);
+
   // If there's no user, we return null to prevent a flash of the profile screen
   // before the root layout guard redirects the user to the login screen.
   if (!user) return null;
-  
-  if (isOlderAdult){
-    
-    getCurrentLocation()
-    let socket=useWebSocket()
-    socket.subscribe("location.track.psycho",async ()=>{
-      await usePsychoLocationTracking()
-    })
-
-    socket.subscribe("location.track.relax",async ()=>{
-      await useRelaxLocationTracking()
-    })
-
-  }
 
   return (
     <View className="flex-1 bg-raices-bg">

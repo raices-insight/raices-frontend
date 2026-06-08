@@ -77,7 +77,7 @@ export async function getCurrentLocation() {
 
 
     // TODO: IT THROWS TaskManager: Task "background-location-task" failed: [TypeError: Network request failed]
-    await useRelaxLocationTracking()
+    await startRelaxLocationTracking()
 
     console.log("are updates actually running",
         await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
@@ -85,7 +85,7 @@ export async function getCurrentLocation() {
 
 }
 
-export async function usePsychoLocationTracking(){
+export async function startPsychoLocationTracking(){
     await stopTrackingLocation()
     console.log("using psycho tracking")
     await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME,
@@ -100,7 +100,7 @@ export async function usePsychoLocationTracking(){
         })
 }
 
-export async function useRelaxLocationTracking(){
+export async function startRelaxLocationTracking(){
     await stopTrackingLocation()
     console.log("using relax tracking")
     await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME,

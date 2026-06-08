@@ -1,5 +1,4 @@
-import { ActivityIndicator } from 'react-native';
-import { Alert } from 'react-native';
+import { ActivityIndicator , Alert } from 'react-native';
 import { View, ScrollView, Text, Pressable } from '@/core/ui/tw';
 import { OlderAdultHeader } from './OlderAdultHeader';
 import { PrivacyToggleCard } from './PrivacyToggleCard';

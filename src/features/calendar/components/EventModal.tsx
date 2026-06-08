@@ -3,7 +3,7 @@ import { Modal, TouchableOpacity, ViewStyle } from "react-native";
 import { EventDTO } from "../dto/dto";
 
 interface EventModalProps{
-    events:Array<EventDTO>,
+    events:EventDTO[],
     visible:boolean,
     onClose:()=>void
 

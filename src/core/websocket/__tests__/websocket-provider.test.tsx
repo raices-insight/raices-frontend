@@ -13,14 +13,6 @@
 
 // ─── Module mocks (must come before any imports) ─────────────────────────────
 
-jest.mock('socket.io-client');
-jest.mock('@/features/auth/context/auth-context', () => ({
-  useAuth: jest.fn(),
-}));
-jest.mock('@/core/config', () => ({
-  CONFIG: { API_URL: 'http://test-server:3000', IS_PROD: false, ENV: 'test' },
-}));
-
 // ─── Imports ─────────────────────────────────────────────────────────────────
 
 import React from 'react';
@@ -29,6 +21,14 @@ import { renderHook, act, render } from '@testing-library/react-native';
 import { io } from 'socket.io-client';
 import { useAuth } from '@/features/auth/context/auth-context';
 import { WebSocketProvider, useWebSocket } from '../websocket-provider';
+
+jest.mock('socket.io-client');
+jest.mock('@/features/auth/context/auth-context', () => ({
+  useAuth: jest.fn(),
+}));
+jest.mock('@/core/config', () => ({
+  CONFIG: { API_URL: 'http://test-server:3000', IS_PROD: false, ENV: 'test' },
+}));
 
 // ─── Typed mock accessors ─────────────────────────────────────────────────────
 

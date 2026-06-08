@@ -6,14 +6,14 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
 import { useVoiceRecordings } from '../use-voice-recordings';
 
+import { apiClient } from '@/core/api/client';
+
 // Mock apiClient
 jest.mock('@/core/api/client', () => ({
   apiClient: {
     get: jest.fn(),
   },
 }));
-
-import { apiClient } from '@/core/api/client';
 const mockGet = apiClient.get as jest.Mock;
 
 const MOCK_RECORDINGS = [

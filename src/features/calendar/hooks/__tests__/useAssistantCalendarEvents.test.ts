@@ -9,6 +9,8 @@ import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useAssistantCalendarEvents } from '../useAssistantCalendarEvents';
 import type { CalendarEvent } from '../../api/schemas';
 
+import { apiClient } from '@/src/core/api/client';
+
 // ─── Mock the network boundary ────────────────────────────────────────────────
 
 jest.mock('@/src/core/api/client', () => ({
@@ -18,8 +20,6 @@ jest.mock('@/src/core/api/client', () => ({
     patch: jest.fn(),
   },
 }));
-
-import { apiClient } from '@/src/core/api/client';
 
 const mockGet = jest.mocked(apiClient.get);
 const mockDelete = jest.mocked(apiClient.delete);
