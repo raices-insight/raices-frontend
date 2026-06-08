@@ -1,26 +1,28 @@
-import React, { useCallback } from 'react';
-import { ActivityIndicator } from 'react-native';
+import { ScrollView, View } from '@/core/ui/tw';
+import { useAuth } from '@/features/auth/context/auth-context';
+import { useAssistantCalendarEvents } from '@/features/calendar/hooks/useAssistantCalendarEvents';
+import { HistoryAccordionCard } from '@/features/dashboard/components/HistoryAccordionCard';
+import { SemanticStatusCard } from '@/features/dashboard/components/SemanticStatusCard';
+import { useDashboardSocket } from '@/features/dashboard/hooks/useDashboardSocket';
+import { useFamily } from '@/features/family/hooks/use-family';
+import { useFamilyOlderAdults } from '@/features/family/hooks/use-family-older-adults';
 import { router, useFocusEffect } from 'expo-router';
-import { View, ScrollView, Text } from '@/core/ui/tw';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator } from 'react-native';
+import { LocationIndicator } from '../../location/components/LocationIndicator';
+import { useSelectedOlderAdult } from '../hooks/use-selected-older-adult';
+import { useVoiceRecordings } from '../hooks/use-voice-recordings';
 import { CaregiverHeader } from './CaregiverHeader';
 import { EmptyFamilyState } from './EmptyFamilyState';
-import { OlderAdultChipSelector } from './OlderAdultChipSelector';
 import { HomeHealthSummaryGrid } from './HomeHealthSummaryGrid';
 import { HomeUpcomingEvents } from './HomeUpcomingEvents';
 import { HomeVoiceRecordings } from './HomeVoiceRecordings';
-import { SemanticStatusCard } from '@/features/dashboard/components/SemanticStatusCard';
-import { HistoryAccordionCard } from '@/features/dashboard/components/HistoryAccordionCard';
-import { useAuth } from '@/features/auth/context/auth-context';
-import { useFamily } from '@/features/family/hooks/use-family';
-import { useFamilyOlderAdults } from '@/features/family/hooks/use-family-older-adults';
-import { useSelectedOlderAdult } from '../hooks/use-selected-older-adult';
-import { useDashboardSocket } from '@/features/dashboard/hooks/useDashboardSocket';
-import { useAssistantCalendarEvents } from '@/features/calendar/hooks/useAssistantCalendarEvents';
-import { useVoiceRecordings } from '../hooks/use-voice-recordings';
+import { OlderAdultChipSelector } from './OlderAdultChipSelector';
 
 function HomeContent() {
   const { olderAdults, loading } = useFamilyOlderAdults();
   const { selected, selectOlderAdult } = useSelectedOlderAdult(olderAdults);
+  const [scrollEnabled,setScrollEnabled]=useState(true)
 
   // Dashboard data for the selected older adult
   const { dailyScore, yesterdayScore, refresh } = useDashboardSocket(selected?.profileId);
@@ -65,6 +67,10 @@ function HomeContent() {
     );
   }
 
+  //hack para ux del mapa
+
+  
+
   return (
     <View className="flex-1">
       {/* Older adult chip selector — only shown when family has 2+ adults */}
@@ -78,6 +84,7 @@ function HomeContent() {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40, paddingTop: 8 }}
+        scrollEnabled={scrollEnabled}
       >
         {/* Health summary: Actividad, Salud, Estado, Medicina */}
         <HomeHealthSummaryGrid
@@ -103,6 +110,12 @@ function HomeContent() {
           recordings={recordings}
           loading={recordingsLoading}
         />
+
+        <View className='w-full max-w-[360px] items-center gap-3 bg-raices-surface rounded-[24px] border border-raices-secondary/15 py-7 px-5 shadow-sm elevation-2' onTouchStart={()=>setScrollEnabled(false)} onTouchEnd={()=>setScrollEnabled(true)}>
+          <LocationIndicator></LocationIndicator>
+        </View>
+
+        
       </ScrollView>
     </View>
   );
@@ -128,6 +141,8 @@ export function CaregiverHomeScreen() {
       ) : (
         <EmptyFamilyState />
       )}
+
+      
     </View>
   );
 }
