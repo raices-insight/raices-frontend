@@ -9,6 +9,9 @@ import { CaregiverHomeScreen } from '../CaregiverHomeScreen';
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
 
+jest.mock('@/features/location/components/LocationIndicator', () => ({
+  LocationIndicator: () => null,
+}));
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 jest.mock('expo-symbols', () => ({ SymbolView: () => null }));
 jest.mock('expo-audio', () => ({
