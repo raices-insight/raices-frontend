@@ -95,7 +95,8 @@ module.exports = {
           "color": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "./plugins/with-local-build-id"
     ],
     "experiments": {
       "typedRoutes": true,
