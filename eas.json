@@ -6,16 +6,29 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_LOGIN_MODE": "GOOGLE_ONLY",
+        "EXPO_PUBLIC_IS_PROD": "false"
+      }
     },
     "preview": {
       "distribution": "internal",
+      "autoIncrement": true,
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_LOGIN_MODE": "GOOGLE_ONLY",
+        "EXPO_PUBLIC_IS_PROD": "true"
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_LOGIN_MODE": "GOOGLE_ONLY",
+        "EXPO_PUBLIC_IS_PROD": "true"
+      }
     }
   },
   "submit": {
