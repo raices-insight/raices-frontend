@@ -118,39 +118,41 @@ jobs:
             exit 1
           fi
 
-          ENVIRONMENT=$(echo "$PROFILE" | tr '[:lower:]' '[:upper:]')
+          # EAS environment names are lowercase: production / preview / development
+          ENVIRONMENT="$PROFILE"
 
-          push_env() {
-            local name="$1" value="$2" visibility="$3"
-            eas env:create \
-              --environment "$ENVIRONMENT" \
-              --name "$name" \
-              --value "$value" \
-              --visibility "$visibility" \
-              --scope project \
-              --non-interactive \
-              --force
-          }
+          # Write a temporary .env file outside the repo (so it doesn't leak
+          # into the build context) and push it to EAS in one shot. `eas env:push`
+          # with --force upserts: creates new vars and overwrites existing ones,
+          # skipping the interactive confirmation prompt.
+          ENV_FILE="$(mktemp)"
+          trap 'rm -f "$ENV_FILE"' EXIT
+          {
+            echo "EXPO_PUBLIC_API_URL=$API_URL"
+            echo "EXPO_PUBLIC_LOGIN_MODE=$LOGIN_MODE"
+            echo "EXPO_PUBLIC_IS_PROD=true"
+            echo "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=$WEB_ID"
+            echo "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=$IOS_ID"
+            echo "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=$ANDROID_ID"
+          } > "$ENV_FILE"
 
-          push_env EXPO_PUBLIC_API_URL                  "$API_URL"     plaintext
-          push_env EXPO_PUBLIC_LOGIN_MODE               "$LOGIN_MODE"  plaintext
-          push_env EXPO_PUBLIC_IS_PROD                  "true"         plaintext
-          push_env EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID     "$WEB_ID"      sensitive
-          push_env EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID     "$IOS_ID"      sensitive
-          push_env EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID "$ANDROID_ID"  sensitive
+          eas env:push "$ENVIRONMENT" \
+            --path "$ENV_FILE" \
+            --force
+
+          echo "::group::Vars now registered in EAS for $ENVIRONMENT"
+          eas env:list "$ENVIRONMENT" || true
+          echo "::endgroup::"
 
       - name: Build APK via EAS Cloud
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          EAS_LOCAL_BUILD_SKIP_CLEANUP: '1'
-          EXPO_DEBUG: '1'
         run: |
           set -uo pipefail
           PROFILE="${{ github.event.inputs.profile || 'preview' }}"
-          ENVIRONMENT=$(echo "$PROFILE" | tr '[:lower:]' '[:upper:]')
 
-          echo "::group::EAS environment variables for $ENVIRONMENT"
-          eas env:list --environment "$ENVIRONMENT" || true
+          echo "::group::EAS environment variables for $PROFILE"
+          eas env:list "$PROFILE" || true
           echo "::endgroup::"
 
           echo "::group::eas build invocation"
@@ -158,7 +160,6 @@ jobs:
           eas build \
             --platform android \
             --profile "$PROFILE" \
-            --environment "$ENVIRONMENT" \
             --non-interactive \
             --json > build-result.json 2> build-error.log
           BUILD_EXIT=$?

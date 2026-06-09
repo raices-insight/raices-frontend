@@ -15,20 +15,14 @@
     "preview": {
       "distribution": "internal",
       "autoIncrement": true,
+      "environment": "preview",
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_LOGIN_MODE": "GOOGLE_ONLY",
-        "EXPO_PUBLIC_IS_PROD": "true"
       }
     },
     "production": {
       "autoIncrement": true,
-      "env": {
-        "EXPO_PUBLIC_LOGIN_MODE": "GOOGLE_ONLY",
-        "EXPO_PUBLIC_IS_PROD": "true"
-      }
+      "environment": "production"
     }
   },
   "submit": {
