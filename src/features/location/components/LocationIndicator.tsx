@@ -1,4 +1,5 @@
 import { CONFIG } from '@/core/config';
+import { apiClient } from '@/src/core/api/client';
 import { Text, View } from "@/src/core/ui/tw";
 import { useWebSocket } from '@/src/core/websocket/websocket-provider';
 import { Camera, Map, Marker } from "@maplibre/maplibre-react-native";
@@ -22,17 +23,26 @@ export function LocationIndicator(){
         setLocation(data) 
       } 
     })
+    
+
+    
 
     
     useEffect(()=>{
-        async function getCurrentLocation(){
-            
+        async function getLatestLocation(){
+            const response=await apiClient.get("/location")
+            const data = response.data
+            console.log("first fetch data ",response.status)
+            setLocation({
+                longitude: data.longitude,
+                latitude: data.latitude
+            })
             
         }
 
        
 
-        getCurrentLocation();
+        getLatestLocation();
     
 
 
@@ -45,6 +55,13 @@ export function LocationIndicator(){
     }
 
     if (location) {
+        if (location.latitude==0&&location.longitude==0){
+            return (<View>
+                <Text>
+                No hay ubicación reportada recientemente
+            </Text>
+            </View>)
+        }
         return (
             //enginer
             <View style={{height:300,width:300,overflow:"hidden"}} className="flex">
