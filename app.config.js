@@ -2,7 +2,7 @@ module.exports = {
   "expo": {
     "name": "Raíces",
     "slug": "raices-frontend",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/RAICES-ios.png",
     "scheme": "raicesfrontend",
