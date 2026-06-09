@@ -92,7 +92,7 @@ export async function startPsychoLocationTracking(){
         {
             accuracy: Location.Accuracy.Highest,
             distanceInterval: 20,
-            timeInterval: 5000,
+            timeInterval: PSYCHO_TRACK_INTERVAL,
             foregroundService: {
                 notificationTitle: 'Location Tracking',
                 notificationBody: 'Tracking location in background',
