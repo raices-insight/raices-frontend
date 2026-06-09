@@ -142,16 +142,38 @@ jobs:
       - name: Build APK via EAS Cloud
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_LOCAL_BUILD_SKIP_CLEANUP: '1'
+          EXPO_DEBUG: '1'
         run: |
-          set -euo pipefail
+          set -uo pipefail
           PROFILE="${{ github.event.inputs.profile || 'preview' }}"
           ENVIRONMENT=$(echo "$PROFILE" | tr '[:lower:]' '[:upper:]')
+
+          echo "::group::EAS environment variables for $ENVIRONMENT"
+          eas env:list --environment "$ENVIRONMENT" || true
+          echo "::endgroup::"
+
+          echo "::group::eas build invocation"
+          set +e
           eas build \
             --platform android \
             --profile "$PROFILE" \
             --environment "$ENVIRONMENT" \
             --non-interactive \
-            --json > build-result.json
+            --json > build-result.json 2> build-error.log
+          BUILD_EXIT=$?
+          set -e
+          echo "::endgroup::"
+
+          if [ "$BUILD_EXIT" -ne 0 ]; then
+            echo "::error::eas build exited with $BUILD_EXIT"
+            echo "----- stderr -----"
+            cat build-error.log || true
+            echo "----- stdout (build-result.json) -----"
+            cat build-result.json || echo "(empty)"
+            exit "$BUILD_EXIT"
+          fi
+
           ARTIFACT_URL=$(jq -r '.[0].artifacts.buildUrl' build-result.json)
           if [ -z "$ARTIFACT_URL" ] || [ "$ARTIFACT_URL" = "null" ]; then
             echo "::error::No artifact URL found in EAS build result"
