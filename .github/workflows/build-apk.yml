@@ -29,6 +29,13 @@ on:
           - preview
           - production
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
 jobs:
   lint-and-test:
     name: Lint & Tests
@@ -56,6 +63,8 @@ jobs:
     name: Build Android APK via EAS
     runs-on: ubuntu-latest
     needs: lint-and-test
+    # Only build on tags or manual dispatch — branch pushes only run lint+test
+    if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -118,13 +127,8 @@ jobs:
             exit 1
           fi
 
-          # EAS environment names are lowercase: production / preview / development
           ENVIRONMENT="$PROFILE"
 
-          # Write a temporary .env file outside the repo (so it doesn't leak
-          # into the build context) and push it to EAS in one shot. `eas env:push`
-          # with --force upserts: creates new vars and overwrites existing ones,
-          # skipping the interactive confirmation prompt.
           ENV_FILE="$(mktemp)"
           trap 'rm -f "$ENV_FILE"' EXIT
           {
@@ -193,12 +197,10 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Attach APK to GitHub Release (tags only)
+      - name: Create GitHub Release with APK
         if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.meta.outputs.apk_name }}
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
