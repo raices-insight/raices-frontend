@@ -96,6 +96,14 @@ module.exports = {
         }
       ],
       "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Raíces necesita acceso a la cámara para escanear códigos QR de invitación.",
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
+      ],
       "./plugins/with-local-build-id"
     ],
     "experiments": {

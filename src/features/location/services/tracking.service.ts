@@ -92,10 +92,10 @@ export async function startPsychoLocationTracking(){
         {
             accuracy: Location.Accuracy.Highest,
             distanceInterval: 20,
-            timeInterval: 5000,
+            timeInterval: PSYCHO_TRACK_INTERVAL,
             foregroundService: {
-                notificationTitle: 'Location Tracking',
-                notificationBody: 'Tracking location in background',
+                notificationTitle: 'Compartiendo ubicación',
+                notificationBody: 'Tu ubicación se está compartiendo con tu familia',
             },
         })
 }
@@ -109,8 +109,8 @@ export async function startRelaxLocationTracking(){
             distanceInterval: 20,
             timeInterval: RELAX_TRACK_INTERVAL,
             foregroundService: {
-                notificationTitle: 'Location Tracking',
-                notificationBody: 'Tracking location in background',
+                notificationTitle: 'Compartiendo ubicación',
+                notificationBody: 'Tu ubicación se está compartiendo con tu familia',
             },
         })
 }

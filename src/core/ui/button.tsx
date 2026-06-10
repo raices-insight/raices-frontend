@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, type ViewStyle } from 'react-native';
+import { ActivityIndicator, View, type ViewStyle } from 'react-native';
 import { IconSymbol } from './icon-symbol';
 import { Pressable, Text } from '@/core/ui/tw';
 
@@ -219,24 +219,26 @@ export function Button({
       ].join(' ')}
       style={style}
     >
-      {loading ? (
-        <ActivityIndicator
-          color={VARIANT_SPINNER[variant]}
-          size={SIZE_SPINNER[size]}
-        />
-      ) : (
-        <>
-          {finalIconLeft}
-          {label && (
-            <Text
-              className={`font-headline ${SIZE_TEXT[size]} ${VARIANT_TEXT[variant]}`}
-            >
-              {label}
-            </Text>
-          )}
-          {iconRight}
-        </>
-      )}
+      <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+        {loading ? (
+          <ActivityIndicator
+            color={VARIANT_SPINNER[variant]}
+            size={SIZE_SPINNER[size]}
+          />
+        ) : (
+          <>
+            {finalIconLeft}
+            {label && (
+              <Text
+                className={`font-headline ${SIZE_TEXT[size]} ${VARIANT_TEXT[variant]}`}
+              >
+                {label}
+              </Text>
+            )}
+            {iconRight}
+          </>
+        )}
+      </View>
     </Pressable>
   );
 }

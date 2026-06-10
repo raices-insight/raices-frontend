@@ -144,14 +144,14 @@ export function IncomingEventView() {
     if (isRecording) {
       let returnedId: string | undefined;
       
-      if (CONFIG.IS_PROD) {
+      if (!CONFIG.USE_AUDIO_MOCK) {
         // Real recording flow
         returnedId = await stopAndUpload(eventId);
       } else {
-        // Simulation for development
+        // Simulation: substitute a static MP3 asset (EXPO_PUBLIC_USE_AUDIO_MOCK=true)
         const asset = Asset.fromModule(MOCK_AUDIO_FILE);
         await asset.downloadAsync();
-        
+
         if (user?.id) {
           returnedId = await stopAndUpload(eventId, asset.localUri || asset.uri);
         } else {

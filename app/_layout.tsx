@@ -21,6 +21,7 @@ import { ToastProvider } from '@/core/toast/toast-provider';
 import { AuthProvider, useAuth } from '@/features/auth/context/auth-context';
 import { WebSocketProvider } from '@/core/websocket/websocket-provider';
 import { usePushNotifications } from '@/core/hooks/use-push-notifications';
+import { useFamilyMembershipListener } from '@/features/family/hooks/use-family-membership-listener';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -35,8 +36,8 @@ function RootLayoutNav() {
   const router = useRouter();
   const navigationState = useRootNavigationState();
   
-  // Initialize push notifications
   usePushNotifications();
+  useFamilyMembershipListener();
 
   useEffect(() => {
     // Prevent navigation until the navigation state is ready and auth is restored
@@ -60,18 +61,16 @@ function RootLayoutNav() {
   }, [user, loading, isRestoring, segments, router, navigationState?.key]);
 
   return (
-    <ToastProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-          <Stack.Screen name="terms" options={{ presentation: 'modal', title: 'Términos de Servicio' }} />
-          <Stack.Screen name="privacy" options={{ presentation: 'modal', title: 'Política de Privacidad' }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </ToastProvider>
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen name="terms" options={{ presentation: 'modal', title: 'Términos de Servicio' }} />
+        <Stack.Screen name="privacy" options={{ presentation: 'modal', title: 'Política de Privacidad' }} />
+      </Stack>
+      <StatusBar style="auto" />
+    </ThemeProvider>
   );
 }
 
@@ -108,8 +107,10 @@ function RootLayoutInner({ fontsLoaded, fontError }: { fontsLoaded: boolean, fon
   }
 
   return (
-    <WebSocketProvider>
-      <RootLayoutNav />
-    </WebSocketProvider>
+    <ToastProvider>
+      <WebSocketProvider>
+        <RootLayoutNav />
+      </WebSocketProvider>
+    </ToastProvider>
   );
 }

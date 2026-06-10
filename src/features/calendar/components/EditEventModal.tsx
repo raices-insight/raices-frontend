@@ -5,6 +5,7 @@ import { Modal, TextInput as RNTextInput, ActivityIndicator, Platform, Image } f
 import { IconSymbol } from '@/src/core/ui/icon-symbol';
 import { useToast } from '@/src/core/toast/use-toast';
 import { logger } from '@/src/core/logger';
+import { CONFIG } from '@/src/core/config';
 import { apiClient } from '@/src/core/api/client';
 import { useAudioUpload } from '@/src/features/assistant/hooks/use-audio-upload';
 import { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence, Easing, cancelAnimation } from 'react-native-reanimated';
@@ -174,21 +175,33 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
   };
 
   const handleMicPress = async () => {
-    try {
-      const { Asset } = require('expo-asset');
-      const mockAudio = require('@/../assets/audio/adulto-mayor-animo-positivo.mp3');
-      const asset = Asset.fromModule(mockAudio);
-      await asset.downloadAsync();
-      const uri = asset.localUri || asset.uri;
-      if (uri) {
-        setRecordedAudioUri(uri);
-        toast.success('Audio simulado cargado.');
-      } else {
-        throw new Error('No local URI');
+    if (CONFIG.USE_AUDIO_MOCK) {
+      try {
+        const { Asset } = require('expo-asset');
+        const mockAudio = require('@/../assets/audio/adulto-mayor-animo-positivo.mp3');
+        const asset = Asset.fromModule(mockAudio);
+        await asset.downloadAsync();
+        const uri = asset.localUri || asset.uri;
+        if (uri) {
+          setRecordedAudioUri(uri);
+          toast.success('Audio simulado cargado.');
+        } else {
+          throw new Error('No local URI');
+        }
+      } catch (err) {
+        logger.error('Failed to load mock audio', err);
+        toast.error('Error al cargar audio simulado.');
       }
-    } catch (err) {
-      logger.error('Failed to load mock audio', err);
-      toast.error('Error al cargar audio simulado.');
+    } else {
+      if (isRecording) {
+        const uri = await stopRecording();
+        if (uri) {
+          setRecordedAudioUri(uri);
+        }
+      } else {
+        setRecordedAudioUri(null);
+        await startRecording();
+      }
     }
   };
 

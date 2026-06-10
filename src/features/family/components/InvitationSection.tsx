@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Share } from 'react-native';
 import { Button } from '@/core/ui/button';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { useToast } from '@/core/toast/use-toast';
@@ -10,16 +10,6 @@ interface InvitationSectionProps {
   onShowQr: () => void;
 }
 
-function formatCode(code: string | undefined): string {
-  if (!code) return '--------';
-  // Show as XXX-XXXX style if length allows
-  if (code.length > 4) {
-    const split = Math.ceil(code.length / 2);
-    return `${code.slice(0, split)}-${code.slice(split)}`;
-  }
-  return code;
-}
-
 export function InvitationSection({
   invitationCode,
   onRegenerateCode,
@@ -28,10 +18,14 @@ export function InvitationSection({
 }: InvitationSectionProps) {
   const toast = useToast();
 
-  const handleCopyCode = () => {
+  const handleCopyCode = async () => {
     if (!invitationCode) return;
-    // TODO: integrate expo-clipboard once installed
-    toast.info(`Código: ${invitationCode}`);
+    try {
+      const message = `Únete a mi familia en Raíces con el código:\n${invitationCode}`;
+      await Share.share({ message });
+    } catch {
+      toast.error('No se pudo compartir el código');
+    }
   };
 
   return (
@@ -45,9 +39,9 @@ export function InvitationSection({
       </Text>
 
       <Pressable style={styles.codeContainer} onPress={handleCopyCode}>
-        <Text style={styles.codeText}>{formatCode(invitationCode)}</Text>
+        <Text style={styles.codeText}>{invitationCode ?? '--------'}</Text>
         <View style={styles.copyButton}>
-          <IconSymbol name="doc.on.doc" size={20} color="#6B6B6B" />
+          <IconSymbol name="square.and.arrow.up" size={20} color="#6B6B6B" />
         </View>
       </Pressable>
 

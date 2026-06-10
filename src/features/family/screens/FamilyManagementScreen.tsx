@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Alert, Pressable, Text } from 'react-native';
 import { FamilyHeader } from '../components/FamilyHeader';
 import { MemberList } from '../components/MemberList';
 import { InvitationSection } from '../components/InvitationSection';
 import { MemberActionsModal } from '../components/MemberActionsModal';
+import { TransferAdminModal } from '../components/TransferAdminModal';
 import type { FamilyMember } from '../api/schemas';
 import {
   useFamily,
   useFamilyDetails,
   useRegenerateCode,
   useDeleteFamily,
-  useUpdateMemberRole,
+  useLeaveFamily,
   useExpulseMember,
 } from '../hooks/use-family';
 import { QrCodeModal } from '../components/QrCodeModal';
@@ -23,28 +24,23 @@ export default function FamilyManagementScreen() {
   const { details, members, refetch, isAdmin } = useFamilyDetails(family?.id);
   const { regenerateCode, loading: regenerating } = useRegenerateCode();
   const { deleteFamily, loading: deleting } = useDeleteFamily();
-  const { updateRole, loading: updatingRole } = useUpdateMemberRole();
+  const { leaveFamily, loading: leaving } = useLeaveFamily();
   const { expulse, loading: expulsing } = useExpulseMember();
 
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [isActionsModalVisible, setIsActionsModalVisible] = useState(false);
   const [isQrModalVisible, setIsQrModalVisible] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [invitationCode, setInvitationCode] = useState<string | undefined>(
-    family?.invitationCode,
-  );
+  const [isTransferAdminModalVisible, setIsTransferAdminModalVisible] = useState(false);
+  const [regeneratedCode, setRegeneratedCode] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    if (family?.invitationCode) {
-      setInvitationCode(family.invitationCode);
-    }
-  }, [family?.invitationCode]);
+  const invitationCode = regeneratedCode ?? details?.invitationCode;
 
   const handleRegenerateCode = async () => {
     if (!family?.id) return;
     const newCode = await regenerateCode(family.id);
     if (newCode) {
-      setInvitationCode(newCode);
+      setRegeneratedCode(newCode);
     }
   };
 
@@ -56,18 +52,6 @@ export default function FamilyManagementScreen() {
   const handleCloseActionsModal = () => {
     setIsActionsModalVisible(false);
     setSelectedMember(null);
-  };
-
-  const handleSetRole = async (role: FamilyMember['role']) => {
-    if (!selectedMember || !family?.id) return;
-    const success = await updateRole(family.id, {
-      memberProfileId: selectedMember.profileId,
-      role,
-    });
-    if (success) {
-      handleCloseActionsModal();
-      void refetch();
-    }
   };
 
   const handleRemoveMember = () => {
@@ -92,6 +76,47 @@ export default function FamilyManagementScreen() {
         },
       ],
     );
+  };
+
+  const handleLeaveFamily = () => {
+    if (!family?.id) return;
+
+    if (isAdmin) {
+      const otherMembers = members.filter((m) => m.profileId !== user?.id);
+      if (otherMembers.length === 0) {
+        Alert.alert(
+          'No puedes abandonar la familia',
+          'Eres el único miembro. Elimina la familia si deseas salir.',
+          [{ text: 'Entendido' }],
+        );
+        return;
+      }
+      setIsTransferAdminModalVisible(true);
+      return;
+    }
+
+    Alert.alert(
+      'Abandonar Familia',
+      '¿Estás seguro de que quieres abandonar esta familia?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Abandonar',
+          style: 'destructive',
+          onPress: async () => {
+            await leaveFamily(family.id);
+          },
+        },
+      ],
+    );
+  };
+
+  const handleTransferAndLeave = async (newAdminProfileId: string) => {
+    if (!family?.id) return;
+    const success = await leaveFamily(family.id, newAdminProfileId);
+    if (success) {
+      setIsTransferAdminModalVisible(false);
+    }
   };
 
   const handleDeleteFamily = async () => {
@@ -138,13 +163,23 @@ export default function FamilyManagementScreen() {
         </>
       )}
 
+      {family?.id && (
+        <Pressable
+          onPress={handleLeaveFamily}
+          disabled={leaving}
+          style={styles.deleteFamilyButton}
+          hitSlop={6}
+        >
+          <Text style={styles.deleteFamilyText}>Dejar Familia</Text>
+        </Pressable>
+      )}
+
       <MemberActionsModal
         member={selectedMember}
         visible={isActionsModalVisible}
         onClose={handleCloseActionsModal}
-        onSetRole={handleSetRole}
         onRemove={handleRemoveMember}
-        loading={updatingRole || expulsing}
+        loading={expulsing}
       />
       <QrCodeModal
         visible={isQrModalVisible}
@@ -156,6 +191,14 @@ export default function FamilyManagementScreen() {
         onClose={() => setIsDeleteModalVisible(false)}
         onConfirm={handleDeleteFamily}
         loading={deleting}
+      />
+      <TransferAdminModal
+        visible={isTransferAdminModalVisible}
+        members={members}
+        currentUserId={user?.id ?? ''}
+        onConfirm={handleTransferAndLeave}
+        onClose={() => setIsTransferAdminModalVisible(false)}
+        loading={leaving}
       />
     </ScrollView>
   );

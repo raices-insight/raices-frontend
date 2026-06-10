@@ -9,6 +9,7 @@ import { Animated } from '@/src/core/ui/animated';
 import { IconSymbol } from '@/src/core/ui/icon-symbol';
 import { useToast } from '@/src/core/toast/use-toast';
 import { logger } from '@/src/core/logger';
+import { CONFIG } from '@/src/core/config';
 import { apiClient } from '@/src/core/api/client';
 import { ToastRenderer } from '@/src/core/toast/toast-renderer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -220,34 +221,34 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
     };
 
     const handleMicPress = async () => {
-        try {
-            const { Asset } = require('expo-asset');
-            const mockAudio = require('@/../assets/audio/adulto-mayor-animo-positivo.mp3');
-            const asset = Asset.fromModule(mockAudio);
-            await asset.downloadAsync();
-            const uri = asset.localUri || asset.uri;
-            if (uri) {
-                setRecordedAudioUri(uri);
-                toast.success("Audio simulado cargado.");
-            } else {
-                throw new Error("No local URI");
-            }
-        } catch (err) {
-            logger.error("Failed to load mock audio", err);
-            toast.error("Error al cargar audio simulado.");
-        }
-
-        /*
-        if (isRecording) {
-            const uri = await stopRecording();
-            if (uri) {
-                setRecordedAudioUri(uri);
+        if (CONFIG.USE_AUDIO_MOCK) {
+            try {
+                const { Asset } = require('expo-asset');
+                const mockAudio = require('@/../assets/audio/adulto-mayor-animo-positivo.mp3');
+                const asset = Asset.fromModule(mockAudio);
+                await asset.downloadAsync();
+                const uri = asset.localUri || asset.uri;
+                if (uri) {
+                    setRecordedAudioUri(uri);
+                    toast.success("Audio simulado cargado.");
+                } else {
+                    throw new Error("No local URI");
+                }
+            } catch (err) {
+                logger.error("Failed to load mock audio", err);
+                toast.error("Error al cargar audio simulado.");
             }
         } else {
-            setRecordedAudioUri(null);
-            await startRecording();
+            if (isRecording) {
+                const uri = await stopRecording();
+                if (uri) {
+                    setRecordedAudioUri(uri);
+                }
+            } else {
+                setRecordedAudioUri(null);
+                await startRecording();
+            }
         }
-        */
     };
 
     const handleCancelRecording = async () => {
