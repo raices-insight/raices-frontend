@@ -27,6 +27,7 @@ function pickColor(seed: string): string {
 
 export function MemberListItem({
   member,
+  currentUserId,
   isAdmin,
   onShowActions,
 }: MemberListItemProps) {
@@ -48,7 +49,7 @@ export function MemberListItem({
         </Text>
       </View>
 
-      {isAdmin && (
+      {isAdmin && member.profileId !== currentUserId && (
         <Pressable
           onPress={() => onShowActions(member)}
           hitSlop={8}
