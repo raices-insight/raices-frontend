@@ -4,8 +4,8 @@ import { useLocalAuth } from '@/features/auth/hooks/use-local-auth';
 import { setSessionToken as setGlobalSessionToken } from '@/core/session';
 import { setFamilyState } from '@/features/family/state/family-state';
 import { globalEvents } from '@/src/core/events';
-import { apiClient } from '@/core/api/client';
 import { stopTrackingLocation } from '@/features/location/services/tracking.service';
+import { CONFIG } from '@/core/config';
 import { logger } from '@/core/logger';
 
 const LOGIN_MODE = process.env.EXPO_PUBLIC_LOGIN_MODE;
@@ -34,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const localAuth = useLocalAuth();
   const [isRestoring, setIsRestoring] = useState(true);
   const pendingPushTokenDeleteRef = useRef<AbortController | null>(null);
+  const isSigningOutRef = useRef(false);
 
   const isLocalMode = LOGIN_MODE === 'LOCAL_DEVELOPMENT';
 
@@ -45,26 +46,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setGlobalSessionToken(activeToken ?? null);
   }, [activeToken]);
 
-  // If the user signs in while a push token DELETE is still in-flight (race
-  // condition: sign-out → immediate sign-in before DELETE resolves), cancel
-  // the DELETE so it doesn't wipe the freshly-registered token.
+  // When a new user signs in: cancel any in-flight push token delete (race
+  // condition guard) and reset the signing-out flag so future sign-outs work.
   useEffect(() => {
-    if (activeUser && pendingPushTokenDeleteRef.current) {
-      pendingPushTokenDeleteRef.current.abort();
-      pendingPushTokenDeleteRef.current = null;
+    if (activeUser) {
+      isSigningOutRef.current = false;
+      if (pendingPushTokenDeleteRef.current) {
+        pendingPushTokenDeleteRef.current.abort();
+        pendingPushTokenDeleteRef.current = null;
+      }
     }
   }, [activeUser]);
 
   const handleSignOut = () => {
-    const controller = new AbortController();
-    pendingPushTokenDeleteRef.current = controller;
+    // Prevent re-entrant calls: the push token DELETE below can return 401,
+    // which would fire auth:unauthorized again → infinite loop without this guard.
+    if (isSigningOutRef.current) return;
+    isSigningOutRef.current = true;
 
-    void apiClient
-      .delete('/assistant/push-token', { signal: controller.signal })
-      .catch((e: unknown) => {
-        if (e instanceof Error && e.name === 'CanceledError') return;
-        logger.warn('[SignOut] Could not clear push token', e);
-      });
+    // Use raw fetch instead of apiClient so that a 401 response does NOT
+    // re-trigger the auth:unauthorized interceptor and loop back here.
+    const tokenSnapshot = activeToken;
+    if (tokenSnapshot) {
+      const controller = new AbortController();
+      pendingPushTokenDeleteRef.current = controller;
+      void fetch(`${CONFIG.API_URL}/assistant/push-token`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${tokenSnapshot}` },
+        signal: controller.signal,
+      }).catch(() => {});
+    }
+
     void stopTrackingLocation().catch((e) =>
       logger.warn('[SignOut] Could not stop location tracking', e),
     );

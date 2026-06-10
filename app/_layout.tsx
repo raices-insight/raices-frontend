@@ -61,18 +61,16 @@ function RootLayoutNav() {
   }, [user, loading, isRestoring, segments, router, navigationState?.key]);
 
   return (
-    <ToastProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-          <Stack.Screen name="terms" options={{ presentation: 'modal', title: 'Términos de Servicio' }} />
-          <Stack.Screen name="privacy" options={{ presentation: 'modal', title: 'Política de Privacidad' }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </ToastProvider>
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen name="terms" options={{ presentation: 'modal', title: 'Términos de Servicio' }} />
+        <Stack.Screen name="privacy" options={{ presentation: 'modal', title: 'Política de Privacidad' }} />
+      </Stack>
+      <StatusBar style="auto" />
+    </ThemeProvider>
   );
 }
 
@@ -109,8 +107,10 @@ function RootLayoutInner({ fontsLoaded, fontError }: { fontsLoaded: boolean, fon
   }
 
   return (
-    <WebSocketProvider>
-      <RootLayoutNav />
-    </WebSocketProvider>
+    <ToastProvider>
+      <WebSocketProvider>
+        <RootLayoutNav />
+      </WebSocketProvider>
+    </ToastProvider>
   );
 }

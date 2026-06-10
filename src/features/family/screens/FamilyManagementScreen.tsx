@@ -4,6 +4,7 @@ import { FamilyHeader } from '../components/FamilyHeader';
 import { MemberList } from '../components/MemberList';
 import { InvitationSection } from '../components/InvitationSection';
 import { MemberActionsModal } from '../components/MemberActionsModal';
+import { TransferAdminModal } from '../components/TransferAdminModal';
 import type { FamilyMember } from '../api/schemas';
 import {
   useFamily,
@@ -30,6 +31,7 @@ export default function FamilyManagementScreen() {
   const [isActionsModalVisible, setIsActionsModalVisible] = useState(false);
   const [isQrModalVisible, setIsQrModalVisible] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [isTransferAdminModalVisible, setIsTransferAdminModalVisible] = useState(false);
   const [regeneratedCode, setRegeneratedCode] = useState<string | undefined>(undefined);
 
   const invitationCode = regeneratedCode ?? details?.invitationCode;
@@ -78,6 +80,21 @@ export default function FamilyManagementScreen() {
 
   const handleLeaveFamily = () => {
     if (!family?.id) return;
+
+    if (isAdmin) {
+      const otherMembers = members.filter((m) => m.profileId !== user?.id);
+      if (otherMembers.length === 0) {
+        Alert.alert(
+          'No puedes abandonar la familia',
+          'Eres el único miembro. Elimina la familia si deseas salir.',
+          [{ text: 'Entendido' }],
+        );
+        return;
+      }
+      setIsTransferAdminModalVisible(true);
+      return;
+    }
+
     Alert.alert(
       'Abandonar Familia',
       '¿Estás seguro de que quieres abandonar esta familia?',
@@ -92,6 +109,14 @@ export default function FamilyManagementScreen() {
         },
       ],
     );
+  };
+
+  const handleTransferAndLeave = async (newAdminProfileId: string) => {
+    if (!family?.id) return;
+    const success = await leaveFamily(family.id, newAdminProfileId);
+    if (success) {
+      setIsTransferAdminModalVisible(false);
+    }
   };
 
   const handleDeleteFamily = async () => {
@@ -138,7 +163,7 @@ export default function FamilyManagementScreen() {
         </>
       )}
 
-      {!isAdmin && family?.id && (
+      {family?.id && (
         <Pressable
           onPress={handleLeaveFamily}
           disabled={leaving}
@@ -166,6 +191,14 @@ export default function FamilyManagementScreen() {
         onClose={() => setIsDeleteModalVisible(false)}
         onConfirm={handleDeleteFamily}
         loading={deleting}
+      />
+      <TransferAdminModal
+        visible={isTransferAdminModalVisible}
+        members={members}
+        currentUserId={user?.id ?? ''}
+        onConfirm={handleTransferAndLeave}
+        onClose={() => setIsTransferAdminModalVisible(false)}
+        loading={leaving}
       />
     </ScrollView>
   );

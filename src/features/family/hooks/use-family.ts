@@ -370,12 +370,14 @@ export function useLeaveFamily() {
   const [error, setError] = useState<string | null>(null);
 
   const leaveFamily = useCallback(
-    async (familyId: string): Promise<boolean> => {
+    async (familyId: string, newAdminProfileId?: string): Promise<boolean> => {
       setLoading(true);
       setError(null);
 
       try {
-        await apiClient.delete(`/family/${familyId}/leave`);
+        await apiClient.delete(`/family/${familyId}/leave`, {
+          data: newAdminProfileId ? { newAdminProfileId } : undefined,
+        });
 
         setFamilyState(null);
         void stopTrackingLocation().catch((e) =>
