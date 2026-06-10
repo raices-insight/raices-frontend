@@ -21,9 +21,11 @@ export type WebSocketEventMap = {
     longitude:number
   }
 
-  "location.track.psycho":void
+  "location.track.psycho": void;
 
-  "location.track.relax":void
+  "location.track.relax": void;
+
+  "family.member.expelled": { familyId: string };
 };
 
 export type WebSocketEventType = keyof WebSocketEventMap;

@@ -4,6 +4,7 @@ import { apiClient } from '@/core/api/client';
 import { logger } from '@/core/logger';
 import { useToast } from '@/core/toast/use-toast';
 import { useAuth } from '@/features/auth/context/auth-context';
+import { stopTrackingLocation } from '@/features/location/services/tracking.service';
 import {
   CreateFamilyPayloadSchema,
   type CreateFamilyPayload,
@@ -363,6 +364,47 @@ export function useRegenerateCode() {
   };
 }
 
+export function useLeaveFamily() {
+  const toast = useToast();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const leaveFamily = useCallback(
+    async (familyId: string): Promise<boolean> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        await apiClient.delete(`/family/${familyId}/leave`);
+
+        setFamilyState(null);
+        void stopTrackingLocation().catch((e) =>
+          logger.warn('[LeaveFamily] Could not stop location tracking', e),
+        );
+
+        toast.success('Has abandonado la familia');
+        return true;
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Error al abandonar la familia';
+        logger.error('Error al abandonar la familia', err);
+        setError(message);
+        toast.error(message);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [toast],
+  );
+
+  return {
+    leaveFamily,
+    loading,
+    error,
+  };
+}
+
 export function useDeleteFamily() {
   const toast = useToast();
   const [loading, setLoading] = useState(false);
@@ -377,6 +419,9 @@ export function useDeleteFamily() {
         await apiClient.delete(`/family/${familyId}`);
 
         setFamilyState(null);
+        void stopTrackingLocation().catch((e) =>
+          logger.warn('[DeleteFamily] Could not stop location tracking', e),
+        );
 
         toast.success('Familia eliminada exitosamente');
         return true;

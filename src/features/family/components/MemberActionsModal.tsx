@@ -6,7 +6,6 @@ type MemberActionsModalProps = {
   member: FamilyMember | null;
   visible: boolean;
   onClose: () => void;
-  onSetRole: (role: FamilyMember['role']) => void;
   onRemove: () => void;
   loading?: boolean;
 };
@@ -15,7 +14,6 @@ export function MemberActionsModal({
   member,
   visible,
   onClose,
-  onSetRole,
   onRemove,
   loading,
 }: MemberActionsModalProps) {
@@ -25,25 +23,8 @@ export function MemberActionsModal({
     <Modal visible={visible} transparent={true} animationType="slide">
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.memberName}>{member.profileId}</Text>
-          <View style={styles.roleButtons}>
-            <Button
-              label="Administrador"
-              onPress={() => onSetRole('ADMINISTRATOR')}
-              variant={member.role === 'ADMINISTRATOR' ? 'primary' : 'outline'}
-            />
-            <Button
-              label="Miembro"
-              onPress={() => onSetRole('MEMBER')}
-              variant={member.role === 'MEMBER' ? 'primary' : 'outline'}
-            />
-            <Button
-              label="Cuidador"
-              onPress={() => onSetRole('CAREGIVER')}
-              variant={member.role === 'CAREGIVER' ? 'primary' : 'outline'}
-            />
-          </View>
-          <Button label="Eliminar Miembro" onPress={onRemove} variant="danger" loading={loading} />
+          <Text style={styles.memberName}>{member.name}</Text>
+          <Button label="Expulsar Miembro" onPress={onRemove} variant="danger" loading={loading} />
           <Button label="Cancelar" onPress={onClose} variant="ghost" />
         </View>
       </View>
@@ -69,8 +50,5 @@ const styles = StyleSheet.create({
     fontSize: 24,
     textAlign: 'center',
     marginBottom: 16,
-  },
-  roleButtons: {
-    gap: 8,
   },
 });

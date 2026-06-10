@@ -10,7 +10,7 @@ import {
   useFamilyDetails,
   useRegenerateCode,
   useDeleteFamily,
-  useUpdateMemberRole,
+  useLeaveFamily,
   useExpulseMember,
 } from '../hooks/use-family';
 import { QrCodeModal } from '../components/QrCodeModal';
@@ -23,7 +23,7 @@ export default function FamilyManagementScreen() {
   const { details, members, refetch, isAdmin } = useFamilyDetails(family?.id);
   const { regenerateCode, loading: regenerating } = useRegenerateCode();
   const { deleteFamily, loading: deleting } = useDeleteFamily();
-  const { updateRole, loading: updatingRole } = useUpdateMemberRole();
+  const { leaveFamily, loading: leaving } = useLeaveFamily();
   const { expulse, loading: expulsing } = useExpulseMember();
 
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
@@ -52,18 +52,6 @@ export default function FamilyManagementScreen() {
     setSelectedMember(null);
   };
 
-  const handleSetRole = async (role: FamilyMember['role']) => {
-    if (!selectedMember || !family?.id) return;
-    const success = await updateRole(family.id, {
-      memberProfileId: selectedMember.profileId,
-      role,
-    });
-    if (success) {
-      handleCloseActionsModal();
-      void refetch();
-    }
-  };
-
   const handleRemoveMember = () => {
     if (!selectedMember || !family?.id) return;
     Alert.alert(
@@ -82,6 +70,24 @@ export default function FamilyManagementScreen() {
               handleCloseActionsModal();
               void refetch();
             }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleLeaveFamily = () => {
+    if (!family?.id) return;
+    Alert.alert(
+      'Abandonar Familia',
+      '¿Estás seguro de que quieres abandonar esta familia?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Abandonar',
+          style: 'destructive',
+          onPress: async () => {
+            await leaveFamily(family.id);
           },
         },
       ],
@@ -132,13 +138,23 @@ export default function FamilyManagementScreen() {
         </>
       )}
 
+      {!isAdmin && family?.id && (
+        <Pressable
+          onPress={handleLeaveFamily}
+          disabled={leaving}
+          style={styles.deleteFamilyButton}
+          hitSlop={6}
+        >
+          <Text style={styles.deleteFamilyText}>Dejar Familia</Text>
+        </Pressable>
+      )}
+
       <MemberActionsModal
         member={selectedMember}
         visible={isActionsModalVisible}
         onClose={handleCloseActionsModal}
-        onSetRole={handleSetRole}
         onRemove={handleRemoveMember}
-        loading={updatingRole || expulsing}
+        loading={expulsing}
       />
       <QrCodeModal
         visible={isQrModalVisible}

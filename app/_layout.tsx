@@ -21,6 +21,7 @@ import { ToastProvider } from '@/core/toast/toast-provider';
 import { AuthProvider, useAuth } from '@/features/auth/context/auth-context';
 import { WebSocketProvider } from '@/core/websocket/websocket-provider';
 import { usePushNotifications } from '@/core/hooks/use-push-notifications';
+import { useFamilyMembershipListener } from '@/features/family/hooks/use-family-membership-listener';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -35,8 +36,8 @@ function RootLayoutNav() {
   const router = useRouter();
   const navigationState = useRootNavigationState();
   
-  // Initialize push notifications
   usePushNotifications();
+  useFamilyMembershipListener();
 
   useEffect(() => {
     // Prevent navigation until the navigation state is ready and auth is restored
