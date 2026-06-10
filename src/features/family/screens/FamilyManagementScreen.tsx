@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Alert, Pressable, Text } from 'react-native';
 import { FamilyHeader } from '../components/FamilyHeader';
 import { MemberList } from '../components/MemberList';
@@ -30,21 +30,15 @@ export default function FamilyManagementScreen() {
   const [isActionsModalVisible, setIsActionsModalVisible] = useState(false);
   const [isQrModalVisible, setIsQrModalVisible] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [invitationCode, setInvitationCode] = useState<string | undefined>(
-    family?.invitationCode,
-  );
+  const [regeneratedCode, setRegeneratedCode] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    if (family?.invitationCode) {
-      setInvitationCode(family.invitationCode);
-    }
-  }, [family?.invitationCode]);
+  const invitationCode = regeneratedCode ?? details?.invitationCode;
 
   const handleRegenerateCode = async () => {
     if (!family?.id) return;
     const newCode = await regenerateCode(family.id);
     if (newCode) {
-      setInvitationCode(newCode);
+      setRegeneratedCode(newCode);
     }
   };
 

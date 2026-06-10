@@ -32,7 +32,13 @@ const configSchema = z.object({
   
   // Force Google to issue a refresh token
   GOOGLE_FORCE_REFRESH_TOKEN: z.preprocess(
-    (v) => v === 'true' || v === true, 
+    (v) => v === 'true' || v === true,
+    z.boolean()
+  ).default(false),
+
+  // Use a static MP3 asset instead of the real microphone (development only)
+  USE_AUDIO_MOCK: z.preprocess(
+    (v) => v === 'true' || v === true,
     z.boolean()
   ).default(false),
 });
@@ -45,6 +51,7 @@ const parsed = configSchema.safeParse({
   GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   GOOGLE_IOS_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
   GOOGLE_FORCE_REFRESH_TOKEN: process.env.EXPO_PUBLIC_GOOGLE_FORCE_REFRESH_TOKEN,
+  USE_AUDIO_MOCK: process.env.EXPO_PUBLIC_USE_AUDIO_MOCK,
 });
 
 if (!parsed.success) {

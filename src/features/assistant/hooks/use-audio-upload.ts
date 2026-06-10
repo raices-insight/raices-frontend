@@ -58,9 +58,10 @@ export function useAudioUpload() {
       setStatus('uploading');
 
       // 1. Get Pre-Signed URL
-      logger.info('Fetching upload URL', { mimeType: Platform.OS === 'ios' ? 'audio/m4a' : 'audio/mpeg' });
+      const mimeType = 'audio/m4a';
+      logger.info('Fetching upload URL', { mimeType });
       const ticketResponse = await apiClient.get('/assistant/upload-url', {
-        params: { mimeType: Platform.OS === 'ios' ? 'audio/m4a' : 'audio/mpeg' }
+        params: { mimeType }
       });
       
       // Validate the response with Zod (parse-use-safeparse)
@@ -85,7 +86,7 @@ export function useAudioUpload() {
         method: 'PUT',
         body: blob,
         headers: {
-          'Content-Type': blob.type,
+          'Content-Type': mimeType,
         },
       });
 
