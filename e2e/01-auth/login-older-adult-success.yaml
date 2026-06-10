@@ -1,0 +1,30 @@
+appId: com.raicesfrontend.app
+---
+# Test Case: TC-001-N-001 (Adulto Mayor)
+# Description: Verify successful Authentication via Dev Login for Older Adult role
+
+- launchApp:
+    appId: com.raicesfrontend.app
+
+# Wait for Expo to build the bundle and load the app (up to 45 seconds)
+- extendedWaitUntil:
+    visible: "Raíces"
+    timeout: 45000
+- assertVisible: "Correo electrónico"
+
+# Input Dev Credentials
+- tapOn: "Correo electrónico"
+- inputText: "older-adult@example.com"
+- tapOn: "Contraseña"
+- inputText: "password123"
+
+# Hide keyboard before clicking submit (often needed on smaller Android screens)
+- hideKeyboard
+
+# Submit the form
+- tapOn: "Iniciar sesión"
+
+# Wait for the network request and verify we reached the Older Adult Dashboard
+- extendedWaitUntil:
+    visible: "Próximos Eventos"
+    timeout: 10000

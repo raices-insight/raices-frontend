@@ -78,14 +78,15 @@ We use [Maestro](https://maestro.mobile.dev/) for End-to-End (E2E) UI testing. T
 
 Ensure your app is running (via Expo Go or a dev build) and visible on your device screen.
 
+**Run the Auth Test Suite (Sequential):**
+```bash
+npm run test:e2e:auth
+```
+*(This command runs all the tests inside the `e2e/01-auth/` module sequentially).*
+
 **Run an individual granular test:**
 ```bash
-maestro test e2e/01-auth/login-success.yaml
-```
-
-**Run the broad "Golden Path" test (Smoke Test):**
-```bash
-maestro test e2e/broad-smoke-test.yaml
+maestro test e2e/01-auth/login-caregiver-success.yaml
 ```
 
 **Run Maestro Studio (Interactive Mode):**
