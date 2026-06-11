@@ -1,6 +1,8 @@
 import { useMemo, useState, useCallback } from 'react';
 import { ScrollView as RNScrollView } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
+import { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { Animated } from '@/core/ui/animated';
 import { View, Text, Pressable } from '@/core/ui/tw';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { UserAvatar } from '@/core/ui/UserAvatar';
@@ -24,10 +26,28 @@ export function OlderAdultCalendarScreen() {
 
   const { events, isLoading, refetch, addEventOptimistically, deleteEvent, editEvent } = useOlderAdultCalendarEvents();
 
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(20);
+  const screenStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
   useFocusEffect(
     useCallback(() => {
       refetch();
     }, [refetch])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      opacity.value = withTiming(1, { duration: 350 });
+      translateY.value = withTiming(0, { duration: 350 });
+      return () => {
+        opacity.value = 0;
+        translateY.value = 20;
+      };
+    }, [opacity, translateY])
   );
 
   const prevMonth = () => {
@@ -64,7 +84,7 @@ export function OlderAdultCalendarScreen() {
   const firstName = user?.name?.split(' ')[0] ?? 'Calendario';
 
   return (
-    <View className="flex-1 bg-raices-bg">
+    <Animated.View className="flex-1 bg-raices-bg" style={screenStyle}>
       <View className="flex-row items-center justify-between px-6 pt-12 pb-4 bg-raices-bg">
         <View className="flex-row items-center gap-3">
           <Pressable
@@ -78,9 +98,6 @@ export function OlderAdultCalendarScreen() {
             {firstName}
           </Text>
         </View>
-        <Pressable className="w-10 h-10 items-center justify-center" hitSlop={8}>
-          <IconSymbol name="bell.fill" size={24} color="#325F3F" />
-        </Pressable>
       </View>
 
       <RNScrollView
@@ -169,6 +186,6 @@ export function OlderAdultCalendarScreen() {
           setTimeout(() => { void refetch(); }, 3000);
         }}
       />
-    </View>
+    </Animated.View>
   );
 }

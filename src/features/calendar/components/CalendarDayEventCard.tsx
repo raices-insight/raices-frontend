@@ -1,6 +1,8 @@
+import { Alert } from 'react-native';
 import { View, Text, Pressable } from '@/core/ui/tw';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { AudioPlayButton } from '@/core/ui/audio-play-button';
+import { getRelativeTimeLabel } from '@/core/utils/relative-date';
 import type { CalendarEvent } from '../api/schemas';
 
 interface CalendarDayEventCardProps {
@@ -10,10 +12,18 @@ interface CalendarDayEventCardProps {
 }
 
 export function CalendarDayEventCard({ event, onDelete, onEdit }: CalendarDayEventCardProps) {
-  const time = new Date(event.due_date).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const time = getRelativeTimeLabel(new Date(event.due_date));
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Eliminar evento',
+      `¿Eliminar "${event.title}"? Esta acción no se puede deshacer.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Eliminar', style: 'destructive', onPress: () => onDelete?.(event.id) },
+      ],
+    );
+  };
 
   return (
     <View
@@ -53,7 +63,7 @@ export function CalendarDayEventCard({ event, onDelete, onEdit }: CalendarDayEve
             </Pressable>
             <Pressable
               hitSlop={8}
-              onPress={() => onDelete?.(event.id)}
+              onPress={handleDelete}
               testID={`delete-event-${event.id}`}
               disabled={event.id.startsWith('optimistic')}
               className={event.id.startsWith('optimistic') ? 'opacity-30' : ''}

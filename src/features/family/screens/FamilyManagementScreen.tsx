@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, ScrollView, StyleSheet, Alert, Pressable, Text } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, Pressable, Text, RefreshControl } from 'react-native';
+import { IconSymbol } from '@/core/ui/icon-symbol';
 import { FamilyHeader } from '../components/FamilyHeader';
 import { MemberList } from '../components/MemberList';
 import { InvitationSection } from '../components/InvitationSection';
@@ -21,7 +22,7 @@ import { useAuth } from '@/features/auth/context/auth-context';
 export default function FamilyManagementScreen() {
   const { user } = useAuth();
   const { family } = useFamily();
-  const { details, members, refetch, isAdmin } = useFamilyDetails(family?.id);
+  const { details, members, refetch, isAdmin, loading: membersLoading } = useFamilyDetails(family?.id);
   const { regenerateCode, loading: regenerating } = useRegenerateCode();
   const { deleteFamily, loading: deleting } = useDeleteFamily();
   const { leaveFamily, loading: leaving } = useLeaveFamily();
@@ -33,6 +34,13 @@ export default function FamilyManagementScreen() {
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [isTransferAdminModalVisible, setIsTransferAdminModalVisible] = useState(false);
   const [regeneratedCode, setRegeneratedCode] = useState<string | undefined>(undefined);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
 
   const invitationCode = regeneratedCode ?? details?.invitationCode;
 
@@ -132,6 +140,9 @@ export default function FamilyManagementScreen() {
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#325F3F" colors={['#325F3F']} />
+      }
     >
       <FamilyHeader imageUrl={details?.imageUrl} familyName={family?.name} />
 
@@ -140,6 +151,7 @@ export default function FamilyManagementScreen() {
         currentUserId={user?.id ?? null}
         currentUserName={user?.name ?? null}
         isAdmin={isAdmin}
+        loading={membersLoading}
         onShowActions={handleShowActions}
       />
 
@@ -152,26 +164,39 @@ export default function FamilyManagementScreen() {
             isRegenerating={regenerating}
             onShowQr={() => setIsQrModalVisible(true)}
           />
-
-          <Pressable
-            onPress={() => setIsDeleteModalVisible(true)}
-            style={styles.deleteFamilyButton}
-            hitSlop={6}
-          >
-            <Text style={styles.deleteFamilyText}>Eliminar Familia</Text>
-          </Pressable>
         </>
       )}
 
       {family?.id && (
-        <Pressable
-          onPress={handleLeaveFamily}
-          disabled={leaving}
-          style={styles.deleteFamilyButton}
-          hitSlop={6}
-        >
-          <Text style={styles.deleteFamilyText}>Dejar Familia</Text>
-        </Pressable>
+        <View style={styles.dangerSection}>
+          <Pressable
+            style={({ pressed }) => [styles.dangerRow, pressed && styles.dangerRowPressed]}
+            onPress={handleLeaveFamily}
+            disabled={leaving}
+          >
+            <View style={styles.dangerIconBadge}>
+              <IconSymbol name="rectangle.portrait.and.arrow.right" size={17} color="#C53030" />
+            </View>
+            <Text style={styles.dangerLabel}>Dejar Familia</Text>
+            <IconSymbol name="chevron.right" size={14} color="#C53030" />
+          </Pressable>
+
+          {isAdmin && (
+            <>
+              <View style={styles.dangerDivider} />
+              <Pressable
+                style={({ pressed }) => [styles.dangerRow, pressed && styles.dangerRowPressed]}
+                onPress={() => setIsDeleteModalVisible(true)}
+              >
+                <View style={styles.dangerIconBadge}>
+                  <IconSymbol name="trash" size={17} color="#C53030" />
+                </View>
+                <Text style={styles.dangerLabel}>Eliminar Familia</Text>
+                <IconSymbol name="chevron.right" size={14} color="#C53030" />
+              </Pressable>
+            </>
+          )}
+        </View>
       )}
 
       <MemberActionsModal
@@ -215,16 +240,45 @@ const styles = StyleSheet.create({
   separator: {
     height: 32,
   },
-  deleteFamilyButton: {
-    alignSelf: 'center',
+  dangerSection: {
+    marginHorizontal: 16,
     marginTop: 28,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: 'rgba(28, 28, 23, 0.05)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 24,
+    elevation: 2,
   },
-  deleteFamilyText: {
+  dangerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  dangerRowPressed: {
+    backgroundColor: 'rgba(197, 48, 48, 0.05)',
+  },
+  dangerIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(197, 48, 48, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dangerLabel: {
+    flex: 1,
     fontFamily: 'PlusJakartaSans-Bold',
-    fontSize: 13,
+    fontSize: 15,
     color: '#C53030',
-    textDecorationLine: 'underline',
+  },
+  dangerDivider: {
+    height: 1,
+    backgroundColor: '#F5F5F5',
+    marginLeft: 70,
   },
 });

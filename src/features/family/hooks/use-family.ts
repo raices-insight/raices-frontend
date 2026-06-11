@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
-import { apiClient } from '@/core/api/client';
-import { logger } from '@/core/logger';
-import { useToast } from '@/core/toast/use-toast';
-import { useAuth } from '@/features/auth/context/auth-context';
-import { stopTrackingLocation } from '@/features/location/services/tracking.service';
+import { useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
+import { apiClient } from "@/core/api/client";
+import { logger } from "@/core/logger";
+import { useToast } from "@/core/toast/use-toast";
+import { useAuth } from "@/features/auth/context/auth-context";
+import { stopTrackingLocation } from "@/features/location/services/tracking.service";
 import {
   CreateFamilyPayloadSchema,
   type CreateFamilyPayload,
@@ -19,8 +19,12 @@ import {
   type RegenerateCodeResponse,
   type UpdateMemberRolePayload,
   type ExpulseMemberPayload,
-} from '../api/schemas';
-import { getFamilyState, setFamilyState, subscribe } from '../state/family-state';
+} from "../api/schemas";
+import {
+  getFamilyState,
+  setFamilyState,
+  subscribe,
+} from "../state/family-state";
 
 export interface UseFamily {
   family: GetFamilyResponse | null;
@@ -31,69 +35,66 @@ export interface UseFamily {
 
 export function useFamily(): UseFamily {
   const [family, setFamily] = useState<GetFamilyResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(
-    getFamilyState() === null,
-  );
+  const [loading, setLoading] = useState<boolean>(getFamilyState() === null);
   const [error, setError] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
-      logger.debug('[useFamily] Focus gained: checking family state');
+      logger.debug("[useFamily] Focus gained: checking family state");
       let cancelled = false;
 
-    if (getFamilyState() !== null) {
-      setFamily(getFamilyState());
-      setLoading(false);
-      return;
-    }
+      const unsubscribe = subscribe(() => {
+        const state = getFamilyState();
+        setFamily(state);
+        setError(null);
+      });
 
-    const fetchFamily = async () => {
-      setLoading(true);
-      setError(null);
+      if (getFamilyState() !== null) {
+        setFamily(getFamilyState());
+        setLoading(false);
+      } else {
+        const fetchFamily = async () => {
+          setLoading(true);
+          setError(null);
 
-      try {
-        const { data } = await apiClient.get<GetFamilyResponse>(
-          '/family/my-family',
-        );
+          try {
+            const { data } =
+              await apiClient.get<GetFamilyResponse>("/family/my-family");
 
-        if (cancelled) return;
+            if (cancelled) return;
 
-        const validation = GetFamilyResponseSchema.safeParse(data);
-        if (!validation.success) {
-          logger.error(
-            'Respuesta inesperada al obtener familia',
-            validation.error,
-          );
-          setError('Error al procesar la información de la familia');
-          setLoading(false);
-          return;
-        }
+            const validation = GetFamilyResponseSchema.safeParse(data);
+            if (!validation.success) {
+              logger.error(
+                "Respuesta inesperada al obtener familia",
+                validation.error,
+              );
+              setError("Error al procesar la información de la familia");
+              setLoading(false);
+              return;
+            }
 
-        setFamilyState(validation.data);
-      } catch (err: unknown) {
-        if (cancelled) return;
-        const message =
-          err instanceof Error ? err.message : 'Error al consultar familia';
-        logger.info('No se encontró familia para el usuario', err);
-        setError(message);
-      } finally {
-        if (!cancelled) setLoading(false);
+            setFamilyState(validation.data);
+          } catch (err: unknown) {
+            if (cancelled) return;
+            const message =
+              err instanceof Error ? err.message : "Error al consultar familia";
+            logger.info("No se encontró familia para el usuario", err);
+            setFamily(null);
+            setError(message);
+          } finally {
+            if (!cancelled) setLoading(false);
+          }
+        };
+
+        void fetchFamily();
       }
-    };
 
-    void fetchFamily();
-
-    const unsubscribe = subscribe(() => {
-      const state = getFamilyState();
-      setFamily(state);
-      setError(null);
-    });
-
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-    }, [])
+      return () => {
+        cancelled = true;
+        unsubscribe();
+      };
+    }, []),
   );
 
   return {
@@ -110,38 +111,40 @@ export function useCreateFamily() {
   const [error, setError] = useState<string | null>(null);
 
   const createFamily = useCallback(
-    async (payload: CreateFamilyPayload): Promise<CreateFamilyResponse | null> => {
+    async (
+      payload: CreateFamilyPayload,
+    ): Promise<CreateFamilyResponse | null> => {
       setLoading(true);
       setError(null);
 
       try {
         const validation = CreateFamilyPayloadSchema.safeParse(payload);
         if (!validation.success) {
-          const msg = validation.error.errors[0]?.message || 'Datos inválidos';
+          const msg = validation.error.errors[0]?.message || "Datos inválidos";
           setError(msg);
           toast.error(msg);
           return null;
         }
 
         const { data } = await apiClient.post<CreateFamilyResponse>(
-          '/family',
+          "/family",
           validation.data,
         );
 
         const responseValidation = CreateFamilyResponseSchema.safeParse(data);
         if (!responseValidation.success) {
           logger.error(
-            'Respuesta inesperada del servidor al crear familia',
+            "Respuesta inesperada del servidor al crear familia",
             responseValidation.error,
           );
-          toast.error('Error al procesar la respuesta del servidor');
-          setError('Respuesta inesperada del servidor');
+          toast.error("Error al procesar la respuesta del servidor");
+          setError("Respuesta inesperada del servidor");
           return null;
         }
 
         setFamilyState({
           ...responseValidation.data,
-          invitationCode: '',
+          invitationCode: "",
           imageUrl: null,
           createdAt: new Date().toISOString(),
           members: [],
@@ -153,8 +156,8 @@ export function useCreateFamily() {
         return responseValidation.data;
       } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : 'Error al crear la familia';
-        logger.error('Error al crear familia', err);
+          err instanceof Error ? err.message : "Error al crear la familia";
+        logger.error("Error al crear familia", err);
         setError(message);
         toast.error(message);
         return null;
@@ -178,6 +181,13 @@ export function useFamilyDetails(familyId: string | undefined) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!familyId) {
+      setDetails(null);
+      setError(null);
+    }
+  }, [familyId]);
+
   const fetchDetails = useCallback(async () => {
     if (!familyId) return;
     setLoading(true);
@@ -191,10 +201,10 @@ export function useFamilyDetails(familyId: string | undefined) {
       const validation = FamilyDetailsResponseSchema.safeParse(data);
       if (!validation.success) {
         logger.error(
-          'Respuesta inesperada al obtener detalles de familia',
+          "Respuesta inesperada al obtener detalles de familia",
           validation.error,
         );
-        setError('Error al procesar los detalles de la familia');
+        setError("Error al procesar los detalles de la familia");
         return;
       }
 
@@ -202,8 +212,10 @@ export function useFamilyDetails(familyId: string | undefined) {
       setFamilyState(validation.data);
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : 'Error al obtener detalles de la familia';
-      logger.error('Error al obtener detalles de familia', err);
+        err instanceof Error
+          ? err.message
+          : "Error al obtener detalles de la familia";
+      logger.error("Error al obtener detalles de familia", err);
       setError(message);
     } finally {
       setLoading(false);
@@ -212,9 +224,11 @@ export function useFamilyDetails(familyId: string | undefined) {
 
   useFocusEffect(
     useCallback(() => {
-      logger.debug(`[useFamilyDetails] Focus gained: fetching details for ${familyId}`);
+      logger.debug(
+        `[useFamilyDetails] Focus gained: fetching details for ${familyId}`,
+      );
       void fetchDetails();
-    }, [fetchDetails])
+    }, [fetchDetails]),
   );
 
   return {
@@ -226,11 +240,12 @@ export function useFamilyDetails(familyId: string | undefined) {
     isAdmin: details
       ? details.members.some(
           (m: FamilyMember) =>
-            m.profileId === user?.id && m.role === 'ADMINISTRATOR',
+            m.profileId === user?.id && m.role === "ADMINISTRATOR",
         )
       : false,
     currentMember: details
-      ? details.members.find((m: FamilyMember) => m.profileId === user?.id) ?? null
+      ? (details.members.find((m: FamilyMember) => m.profileId === user?.id) ??
+        null)
       : null,
   };
 }
@@ -251,12 +266,12 @@ export function useUpdateMemberRole() {
       try {
         await apiClient.patch(`/family/${familyId}/member-role`, payload);
 
-        toast.success('Rol actualizado exitosamente');
+        toast.success("Rol actualizado exitosamente");
         return true;
       } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : 'Error al actualizar el rol';
-        logger.error('Error al actualizar rol de miembro', err);
+          err instanceof Error ? err.message : "Error al actualizar el rol";
+        logger.error("Error al actualizar rol de miembro", err);
         setError(message);
         toast.error(message);
         return false;
@@ -290,12 +305,12 @@ export function useExpulseMember() {
       try {
         await apiClient.post(`/family/${familyId}/expulse`, payload);
 
-        toast.success('Miembro expulsado exitosamente');
+        toast.success("Miembro expulsado exitosamente");
         return true;
       } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : 'Error al expulsar al miembro';
-        logger.error('Error al expulsar miembro', err);
+          err instanceof Error ? err.message : "Error al expulsar al miembro";
+        logger.error("Error al expulsar miembro", err);
         setError(message);
         toast.error(message);
         return false;
@@ -331,22 +346,20 @@ export function useRegenerateCode() {
         const validation = RegenerateCodeResponseSchema.safeParse(data);
         if (!validation.success) {
           logger.error(
-            'Respuesta inesperada al regenerar código',
+            "Respuesta inesperada al regenerar código",
             validation.error,
           );
-          toast.error('Error al procesar la respuesta del servidor');
-          setError('Respuesta inesperada del servidor');
+          toast.error("Error al procesar la respuesta del servidor");
+          setError("Respuesta inesperada del servidor");
           return null;
         }
 
-        toast.success('Código de invitación regenerado exitosamente');
+        toast.success("Código de invitación regenerado exitosamente");
         return validation.data.invitationCode;
       } catch (err: unknown) {
         const message =
-          err instanceof Error
-            ? err.message
-            : 'Error al regenerar el código';
-        logger.error('Error al regenerar código de invitación', err);
+          err instanceof Error ? err.message : "Error al regenerar el código";
+        logger.error("Error al regenerar código de invitación", err);
         setError(message);
         toast.error(message);
         return null;
@@ -381,15 +394,15 @@ export function useLeaveFamily() {
 
         setFamilyState(null);
         void stopTrackingLocation().catch((e) =>
-          logger.warn('[LeaveFamily] Could not stop location tracking', e),
+          logger.warn("[LeaveFamily] Could not stop location tracking", e),
         );
 
-        toast.success('Has abandonado la familia');
+        toast.success("Has abandonado la familia");
         return true;
       } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : 'Error al abandonar la familia';
-        logger.error('Error al abandonar la familia', err);
+          err instanceof Error ? err.message : "Error al abandonar la familia";
+        logger.error("Error al abandonar la familia", err);
         setError(message);
         toast.error(message);
         return false;
@@ -422,15 +435,15 @@ export function useDeleteFamily() {
 
         setFamilyState(null);
         void stopTrackingLocation().catch((e) =>
-          logger.warn('[DeleteFamily] Could not stop location tracking', e),
+          logger.warn("[DeleteFamily] Could not stop location tracking", e),
         );
 
-        toast.success('Familia eliminada exitosamente');
+        toast.success("Familia eliminada exitosamente");
         return true;
       } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : 'Error al eliminar la familia';
-        logger.error('Error al eliminar la familia', err);
+          err instanceof Error ? err.message : "Error al eliminar la familia";
+        logger.error("Error al eliminar la familia", err);
         setError(message);
         toast.error(message);
         return false;

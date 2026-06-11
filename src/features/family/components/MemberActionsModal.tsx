@@ -20,7 +20,7 @@ export function MemberActionsModal({
   if (!member) return null;
 
   return (
-    <Modal visible={visible} transparent={true} animationType="slide">
+    <Modal visible={visible} transparent={true} animationType="slide" onRequestClose={onClose}>
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <Text style={styles.memberName}>{member.name}</Text>

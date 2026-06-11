@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { ScrollView as RNScrollView, ActivityIndicator } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { Animated } from '@/core/ui/animated';
 import { View, Text, Pressable } from '@/core/ui/tw';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { UserAvatar } from '@/core/ui/UserAvatar';
@@ -90,6 +92,24 @@ export function CaregiverCalendarScreen() {
   
   const { editEventId } = useLocalSearchParams<{ editEventId?: string }>();
 
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(20);
+  const screenStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  useFocusEffect(
+    useCallback(() => {
+      opacity.value = withTiming(1, { duration: 350 });
+      translateY.value = withTiming(0, { duration: 350 });
+      return () => {
+        opacity.value = 0;
+        translateY.value = 20;
+      };
+    }, [opacity, translateY])
+  );
+
   const { olderAdults, loading: adultsLoading, familyId } = useFamilyOlderAdults();
 
   useEffect(() => {
@@ -160,16 +180,16 @@ export function CaregiverCalendarScreen() {
   const selectedAdult = olderAdults.find((a) => a.profileId === selectedAdultId) ?? null;
 
   return (
-    <View className="flex-1 bg-raices-bg">
+    <Animated.View className="flex-1 bg-raices-bg" style={screenStyle}>
       {/* HEADER */}
       <View className="flex-row items-center justify-between px-6 pt-12 pb-4 bg-raices-bg">
         <View className="flex-row items-center gap-3">
           <Pressable
             onPress={() => router.push('/(tabs)/settings')}
-            className="w-11 h-11 rounded-full overflow-hidden"
+            className="w-11 h-11 rounded-full overflow-hidden items-center justify-center"
             hitSlop={8}
           >
-            <UserAvatar name={user?.name ?? null} photo={user?.photo ?? null} size={44} />
+            <UserAvatar name={user?.name ?? null} photo={user?.photo ?? null} size={40} />
           </Pressable>
           <View>
             <Text className="text-2xl font-headline font-bold text-raices-primary">{firstName}</Text>
@@ -178,9 +198,6 @@ export function CaregiverCalendarScreen() {
             </Text>
           </View>
         </View>
-        <Pressable className="w-10 h-10 items-center justify-center" hitSlop={8}>
-          <IconSymbol name="bell.fill" size={24} color="#325F3F" />
-        </Pressable>
       </View>
 
       {/* ADULT SWITCHER */}
@@ -189,7 +206,7 @@ export function CaregiverCalendarScreen() {
           <ActivityIndicator color="#325F3F" />
         </View>
       ) : olderAdults.length === 0 ? null : (
-        <View className="pb-1">
+        <View className="pb-4">
           <Text className="px-6 mb-2 font-label font-bold text-xs uppercase tracking-widest text-raices-text-muted">
             Mostrando calendario de
           </Text>
@@ -353,6 +370,6 @@ export function CaregiverCalendarScreen() {
         }}
         targetProfileId={selectedAdultId ?? undefined}
       />
-    </View>
+    </Animated.View>
   );
 }

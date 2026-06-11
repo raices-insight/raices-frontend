@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView } from 'react-native';
 import { View, Text } from '@/core/ui/tw';
+import { SkeletonBox } from '@/core/ui/SkeletonBox';
 import type { CalendarEvent } from '@/features/calendar/api/schemas';
 
 interface HomeUpcomingEventsProps {
@@ -40,6 +41,23 @@ function EventChip({ event }: { event: CalendarEvent }) {
  * Returns null when there are no events (avoids rendering an empty section header).
  */
 export function HomeUpcomingEvents({ events, loading }: HomeUpcomingEventsProps) {
+  if (loading) {
+    return (
+      <View className="mb-6">
+        <SkeletonBox height={20} width="45%" borderRadius={8} style={{ marginHorizontal: 20, marginBottom: 12 }} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }}>
+          {[0, 1, 2].map((i) => (
+            <View key={i} className="bg-white border border-raices-secondary/20 rounded-2xl p-4 mr-3" style={{ width: 160 }}>
+              <SkeletonBox height={16} width="60%" borderRadius={6} style={{ marginBottom: 8 }} />
+              <SkeletonBox height={14} width="85%" borderRadius={5} style={{ marginBottom: 6 }} />
+              <SkeletonBox height={11} width="70%" borderRadius={5} />
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  }
+
   if (events.length === 0) return null;
 
   return (

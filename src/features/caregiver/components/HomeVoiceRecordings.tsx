@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Pressable } from '@/core/ui/tw';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { AudioPlayButton } from '@/core/ui/audio-play-button';
+import { SkeletonBox } from '@/core/ui/SkeletonBox';
 import type { VoiceRecording } from '../api/schemas';
 
 interface HomeVoiceRecordingsProps {
@@ -114,7 +115,25 @@ export function HomeVoiceRecordings({
   loading,
   onViewAll,
 }: HomeVoiceRecordingsProps) {
-  if (recordings.length === 0 && !loading) return null;
+  if (loading) {
+    return (
+      <View className="px-5 mb-6">
+        <SkeletonBox height={20} width="55%" borderRadius={8} style={{ marginBottom: 12 }} />
+        {[0, 1].map((i) => (
+          <View key={i} className="flex-row items-center gap-3 bg-white rounded-2xl p-4 mb-3 border border-black/5">
+            <SkeletonBox width={44} height={44} borderRadius={22} />
+            <View className="flex-1 gap-2">
+              <SkeletonBox height={13} width="60%" borderRadius={5} />
+              <SkeletonBox height={11} width="35%" borderRadius={5} />
+            </View>
+            <SkeletonBox width={48} height={22} borderRadius={11} />
+          </View>
+        ))}
+      </View>
+    );
+  }
+
+  if (recordings.length === 0) return null;
 
   return (
     <View className="px-5 mb-6">

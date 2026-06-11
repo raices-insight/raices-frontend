@@ -1,11 +1,10 @@
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { QrScanner } from '../components/QrScanner';
 import { ManualInputCard } from '../components/ManualInputCard';
 import { CreateFamilyCard } from '../components/CreateFamilyCard';
 import { QrScannerCard } from '../components/QrScannerCard';
 import { UserAvatar } from '@/core/ui/UserAvatar';
-import { IconSymbol } from '@/core/ui/icon-symbol';
 import { useAuth } from '@/features/auth/context/auth-context';
 
 export default function JoinFamilyScreen() {
@@ -28,9 +27,6 @@ export default function JoinFamilyScreen() {
           </View>
           <Text style={styles.topBarTitle}>{firstName}</Text>
         </View>
-        <Pressable style={styles.bellButton} hitSlop={8}>
-          <IconSymbol name="bell.fill" size={24} color="#325F3F" />
-        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>

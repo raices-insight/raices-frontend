@@ -50,7 +50,7 @@ export function HistoryAccordionCard({ data }: HistoryAccordionCardProps) {
       text: 'text-raices-status-green-text',
       accent: 'bg-raices-status-green-accent',
       iconBg: 'bg-raices-status-green-accent/10',
-      iconColor: 'var(--color-raices-status-green-accent)'
+      iconColor: '#53815F'
     },
     yellow: {
       bg: 'bg-white',
@@ -58,7 +58,7 @@ export function HistoryAccordionCard({ data }: HistoryAccordionCardProps) {
       text: 'text-raices-status-yellow-text',
       accent: 'bg-raices-status-yellow-accent',
       iconBg: 'bg-raices-status-yellow-accent/10',
-      iconColor: 'var(--color-raices-status-yellow-accent)'
+      iconColor: '#D69E2E'
     },
     red: {
       bg: 'bg-white',
@@ -66,7 +66,7 @@ export function HistoryAccordionCard({ data }: HistoryAccordionCardProps) {
       text: 'text-raices-status-red-text',
       accent: 'bg-raices-status-red-accent',
       iconBg: 'bg-raices-status-red-accent/10',
-      iconColor: 'var(--color-raices-status-red-accent)'
+      iconColor: '#E53E3E'
     }
   };
 

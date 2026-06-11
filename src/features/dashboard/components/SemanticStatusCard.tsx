@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withDelay } from 'react-native-reanimated';
 import { View, Text } from '@/core/ui/tw';
 import { IconSymbol, type IconSymbolName } from '@/core/ui/icon-symbol';
 import type { DashboardDailyScore } from '@/features/dashboard/api/schemas';
@@ -28,7 +29,7 @@ export function SemanticStatusCard({ dailyScore }: SemanticStatusCardProps) {
       bar: 'bg-raices-status-green-accent',
       text: 'text-raices-status-green-text',
       iconName: 'checkmark.seal.fill' as IconSymbolName,
-      iconColor: 'var(--color-raices-status-green-accent)',
+      iconColor: '#53815F',
       statusText: 'Salud Estable'
     },
     yellow: {
@@ -36,7 +37,7 @@ export function SemanticStatusCard({ dailyScore }: SemanticStatusCardProps) {
       bar: 'bg-raices-status-yellow-accent',
       text: 'text-raices-status-yellow-text',
       iconName: 'exclamationmark.triangle.fill' as IconSymbolName,
-      iconColor: 'var(--color-raices-status-yellow-accent)',
+      iconColor: '#D69E2E',
       statusText: 'Atención Preventiva'
     },
     red: {
@@ -44,12 +45,31 @@ export function SemanticStatusCard({ dailyScore }: SemanticStatusCardProps) {
       bar: 'bg-raices-status-red-accent',
       text: 'text-raices-status-red-text',
       iconName: 'exclamationmark.octagon.fill' as IconSymbolName,
-      iconColor: 'var(--color-raices-status-red-accent)',
+      iconColor: '#E53E3E',
       statusText: 'Atención Médica'
     }
   };
 
   const style = statusStyles[dailyScore.overall_status as keyof typeof statusStyles] || statusStyles.green;
+
+  const progressWidth = useSharedValue(0);
+  const barStyle = useAnimatedStyle(() => ({ width: `${progressWidth.value}%` as any }));
+
+  const [displayScore, setDisplayScore] = useState(0);
+
+  useEffect(() => {
+    progressWidth.value = withDelay(200, withSpring(dailyScore.score, { damping: 18, stiffness: 60 }));
+
+    const target = Math.round(dailyScore.score);
+    let current = 0;
+    const step = Math.max(1, Math.ceil(target / 28));
+    const interval = setInterval(() => {
+      current = Math.min(current + step, target);
+      setDisplayScore(current);
+      if (current >= target) clearInterval(interval);
+    }, 38);
+    return () => clearInterval(interval);
+  }, [dailyScore.score]);
 
   return (
     <View className="w-full bg-white border border-black/5 rounded-3xl shadow-md overflow-hidden flex-row">
@@ -82,13 +102,13 @@ export function SemanticStatusCard({ dailyScore }: SemanticStatusCardProps) {
               Índice de Bienestar
             </Text>
             <Text className={`font-headline font-bold text-sm ${style.text}`}>
-              {dailyScore.score.toFixed(0)}/100
+              {displayScore}/100
             </Text>
           </View>
           <View className="w-full h-3 rounded-full bg-black/5 overflow-hidden border border-black/5">
-            <View 
-              className={`h-full rounded-full ${style.bar}`} 
-              style={{ width: `${dailyScore.score}%` }} 
+            <Animated.View
+              className={`h-full rounded-full ${style.bar}`}
+              style={barStyle}
             />
           </View>
         </View>

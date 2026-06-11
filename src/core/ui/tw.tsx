@@ -4,6 +4,7 @@ import {
 } from "react-native-css";
 
 import { Link as RouterLink } from "expo-router";
+import * as Haptics from "expo-haptics";
 import Animated from "react-native-reanimated";
 import React from "react";
 import {
@@ -66,11 +67,16 @@ export const ScrollView = (
 };
 ScrollView.displayName = "CSS(ScrollView)";
 
-// Pressable
-export const Pressable = (
-  props: React.ComponentProps<typeof RNPressable> & { className?: string }
-) => {
-  return useCssElement(RNPressable, props, { className: "style" });
+// Pressable — fires a subtle haptic on every press
+export const Pressable = ({
+  onPressIn,
+  ...props
+}: React.ComponentProps<typeof RNPressable> & { className?: string }) => {
+  const handlePressIn: typeof onPressIn = (ev) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPressIn?.(ev);
+  };
+  return useCssElement(RNPressable, { ...props, onPressIn: handlePressIn }, { className: "style" });
 };
 Pressable.displayName = "CSS(Pressable)";
 

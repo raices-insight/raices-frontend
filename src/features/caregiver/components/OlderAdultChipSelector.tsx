@@ -49,7 +49,7 @@ export function OlderAdultChipSelector({
                     isSelected ? 'text-white' : 'text-raices-primary'
                   }`}
                 >
-                  {adult.name.slice(0, 2).toUpperCase()}
+                  {adult.name.charAt(0).toUpperCase()}
                 </Text>
               </View>
               <Text
