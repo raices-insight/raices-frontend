@@ -1,5 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, View, type ViewStyle } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring } from 'react-native-reanimated';
 import { IconSymbol } from './icon-symbol';
 import { Pressable, Text } from '@/core/ui/tw';
 
@@ -28,7 +29,7 @@ export interface ButtonProps {
   size?:     ButtonSize;
   /** Full width (default: false) */
   fullWidth?: boolean;
-  /** Pill shape (default: true). false → rounded-2xl */
+  /** Pill shape (default: false → rounded-2xl). true → rounded-full */
   pill?: boolean;
   /** Inline style override applied to the Pressable container */
   style?: ViewStyle;
@@ -156,13 +157,25 @@ export function Button({
   variant = 'primary',
   size = 'md',
   fullWidth = false,
-  pill = true,
+  pill = false,
   style,
   onPress,
   disabled = false,
   loading = false,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+
+  const scale = useSharedValue(1);
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+  const handlePressIn = () => {
+    if (isDisabled) return;
+    scale.value = withTiming(0.96, { duration: 80 });
+  };
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 15, stiffness: 300 });
+  };
   const rounded = pill ? 'rounded-full' : 'rounded-2xl';
 
   const finalIconLeft = icon ? (
@@ -181,6 +194,8 @@ export function Button({
     return (
       <Pressable
         onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         disabled={isDisabled}
         className={[
           BASE,
@@ -188,18 +203,18 @@ export function Button({
           rounded,
           isDisabled ? 'opacity-50' : '',
         ].join(' ')}
-        // Use explicit pixel dimensions so Tailwind class conflicts don't
-        // interfere with the fixed button size
         style={[ICON_ONLY_SIZE[size], style]}
       >
-        {loading ? (
-          <ActivityIndicator
-            color={VARIANT_SPINNER[variant]}
-            size={SIZE_SPINNER[size]}
-          />
-        ) : (
-          iconOnly
-        )}
+        <Animated.View style={animStyle}>
+          {loading ? (
+            <ActivityIndicator
+              color={VARIANT_SPINNER[variant]}
+              size={SIZE_SPINNER[size]}
+            />
+          ) : (
+            iconOnly
+          )}
+        </Animated.View>
       </Pressable>
     );
   }
@@ -208,6 +223,8 @@ export function Button({
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       disabled={isDisabled}
       className={[
         BASE,
@@ -219,7 +236,7 @@ export function Button({
       ].join(' ')}
       style={style}
     >
-      <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+      <Animated.View style={[{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }, animStyle]}>
         {loading ? (
           <ActivityIndicator
             color={VARIANT_SPINNER[variant]}
@@ -238,7 +255,7 @@ export function Button({
             {iconRight}
           </>
         )}
-      </View>
+      </Animated.View>
     </Pressable>
   );
 }

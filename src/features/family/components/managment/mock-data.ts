@@ -1,26 +1,30 @@
-import type { FamilyMember } from '../../api/schemas';
+import type { FamilyMember } from "../../api/schemas";
 
 export type { FamilyMember };
 
 export const MOCK_MEMBERS: FamilyMember[] = [
   {
-    id: '1',
-    profileId: 'profile-1',
-    role: 'ADMINISTRATOR',
+    id: "1",
+    profileId: "profile-1",
+    name: "Administrator",
+    role: "ADMINISTRATOR",
   },
   {
-    id: '2',
-    profileId: 'profile-2',
-    role: 'MEMBER',
+    id: "2",
+    profileId: "profile-2",
+    name: "Member",
+    role: "MEMBER",
   },
   {
-    id: '3',
-    profileId: 'profile-3',
-    role: 'MEMBER',
+    id: "3",
+    profileId: "profile-3",
+    name: "Member",
+    role: "MEMBER",
   },
   {
-    id: '4',
-    profileId: 'profile-4',
-    role: 'CAREGIVER',
+    id: "4",
+    profileId: "profile-4",
+    name: "Caregiver",
+    role: "CAREGIVER",
   },
 ];

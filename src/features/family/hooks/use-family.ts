@@ -181,6 +181,13 @@ export function useFamilyDetails(familyId: string | undefined) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!familyId) {
+      setDetails(null);
+      setError(null);
+    }
+  }, [familyId]);
+
   const fetchDetails = useCallback(async () => {
     if (!familyId) return;
     setLoading(true);

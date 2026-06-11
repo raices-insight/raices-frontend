@@ -2,6 +2,7 @@ import { Image } from '@/core/ui/image';
 import { Pressable, Text, View } from '@/core/ui/tw';
 import { router, type Href } from 'expo-router';
 import { ActivityIndicator } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring } from 'react-native-reanimated';
 
 const TERMS_ROUTE = '/terms' as Href;
 const PRIVACY_ROUTE = '/privacy' as Href;
@@ -13,6 +14,10 @@ interface LoginScreenProps {
 }
 
 export function LoginScreen({ loading, error, onSignIn }: LoginScreenProps) {
+  const scale = useSharedValue(1);
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const onPressIn = () => { scale.value = withTiming(0.96, { duration: 80 }); };
+  const onPressOut = () => { scale.value = withSpring(1, { damping: 15, stiffness: 300 }); };
 
   return (
     <View className="flex-1 px-6 py-8 justify-center items-center overflow-hidden bg-raices-bg">
@@ -41,9 +46,12 @@ export function LoginScreen({ loading, error, onSignIn }: LoginScreenProps) {
 
       {/* Action */}
       <View className="mt-16 w-full max-w-[360px]">
+        <Animated.View style={animStyle}>
         <Pressable
           className={`py-4 px-8 rounded-full items-center justify-center flex-row gap-4 w-full bg-raices-surface border-2 border-orange-100/20 shadow-md elevation-3 ${loading ? 'opacity-50' : ''}`}
           onPress={onSignIn}
+          onPressIn={onPressIn}
+          onPressOut={onPressOut}
           disabled={loading}
         >
           {loading ? (
@@ -61,6 +69,7 @@ export function LoginScreen({ loading, error, onSignIn }: LoginScreenProps) {
             </>
           )}
         </Pressable>
+        </Animated.View>
       </View>
 
       {error && (

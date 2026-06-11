@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, withSpring } from 'react-native-reanimated';
 import { View, Text } from '@/core/ui/tw';
 import { IconSymbol, type IconSymbolName } from '@/core/ui/icon-symbol';
+import { SkeletonBox } from '@/core/ui/SkeletonBox';
 import type { DashboardDailyScore } from '@/features/dashboard/api/schemas';
 
 interface HomeHealthSummaryGridProps {
@@ -13,23 +15,40 @@ interface StatusCardProps {
   value: string;
   iconName: IconSymbolName;
   iconColor?: string;
+  index?: number;
 }
 
-function StatusCard({ label, value, iconName, iconColor = '#325F3F' }: StatusCardProps) {
+function StatusCard({ label, value, iconName, iconColor = '#325F3F', index = 0 }: StatusCardProps) {
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(12);
+
+  useEffect(() => {
+    const delay = index * 80;
+    opacity.value = withDelay(delay, withTiming(1, { duration: 260 }));
+    translateY.value = withDelay(delay, withSpring(0, { damping: 20, stiffness: 280 }));
+  }, []);
+
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
   return (
-    <View className="bg-white rounded-2xl p-4 border border-black/5 flex-row items-center gap-3">
-      <View className="w-10 h-10 rounded-full bg-raices-primary/10 items-center justify-center">
-        <IconSymbol name={iconName} size={20} color={iconColor} />
+    <Animated.View style={animStyle}>
+      <View className="bg-white rounded-2xl p-4 border border-black/5 flex-row items-center gap-3">
+        <View className="w-10 h-10 rounded-full bg-raices-primary/10 items-center justify-center">
+          <IconSymbol name={iconName} size={20} color={iconColor} />
+        </View>
+        <View>
+          <Text className="font-label text-xs text-raices-text-muted uppercase tracking-wide">
+            {label}
+          </Text>
+          <Text className="font-headline font-bold text-raices-text text-base capitalize mt-0.5">
+            {value}
+          </Text>
+        </View>
       </View>
-      <View>
-        <Text className="font-label text-xs text-raices-text-muted uppercase tracking-wide">
-          {label}
-        </Text>
-        <Text className="font-headline font-bold text-raices-text text-base capitalize mt-0.5">
-          {value}
-        </Text>
-      </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -67,6 +86,45 @@ export function HomeHealthSummaryGrid({ dailyScore, loading }: HomeHealthSummary
     month: 'long',
   });
 
+  if (loading) {
+    return (
+      <View className="px-5 mb-6">
+        <SkeletonBox height={28} width="55%" borderRadius={8} style={{ marginBottom: 6 }} />
+        <SkeletonBox height={16} width="40%" borderRadius={6} style={{ marginBottom: 16 }} />
+        <View className="flex-row gap-3 mb-3">
+          <View className="flex-1 bg-white rounded-2xl p-4 border border-black/5 flex-row items-center gap-3">
+            <SkeletonBox width={40} height={40} borderRadius={20} />
+            <View className="gap-2 flex-1">
+              <SkeletonBox height={10} width="50%" borderRadius={5} />
+              <SkeletonBox height={14} width="70%" borderRadius={5} />
+            </View>
+          </View>
+          <View className="flex-1 bg-white rounded-2xl p-4 border border-black/5 flex-row items-center gap-3">
+            <SkeletonBox width={40} height={40} borderRadius={20} />
+            <View className="gap-2 flex-1">
+              <SkeletonBox height={10} width="50%" borderRadius={5} />
+              <SkeletonBox height={14} width="70%" borderRadius={5} />
+            </View>
+          </View>
+        </View>
+        <View className="bg-white rounded-2xl p-4 border border-black/5 flex-row items-center gap-3 mb-3">
+          <SkeletonBox width={40} height={40} borderRadius={20} />
+          <View className="gap-2 flex-1">
+            <SkeletonBox height={10} width="30%" borderRadius={5} />
+            <SkeletonBox height={14} width="50%" borderRadius={5} />
+          </View>
+        </View>
+        <View className="bg-white rounded-2xl p-4 border border-black/5 flex-row items-center gap-3">
+          <SkeletonBox width={40} height={40} borderRadius={20} />
+          <View className="gap-2 flex-1">
+            <SkeletonBox height={10} width="35%" borderRadius={5} />
+            <SkeletonBox height={14} width="45%" borderRadius={5} />
+          </View>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View className="px-5 mb-6">
       {/* Section header */}
@@ -85,6 +143,7 @@ export function HomeHealthSummaryGrid({ dailyScore, loading }: HomeHealthSummary
             value={actividadValue}
             iconName="sun.max.fill"
             iconColor="#325F3F"
+            index={0}
           />
         </View>
         <View className="flex-1">
@@ -93,6 +152,7 @@ export function HomeHealthSummaryGrid({ dailyScore, loading }: HomeHealthSummary
             value={saludValue}
             iconName="heart.fill"
             iconColor="#325F3F"
+            index={1}
           />
         </View>
       </View>
@@ -104,6 +164,7 @@ export function HomeHealthSummaryGrid({ dailyScore, loading }: HomeHealthSummary
           value={estadoValue}
           iconName="face.smiling.inverse"
           iconColor="#325F3F"
+          index={2}
         />
       </View>
 
@@ -114,6 +175,7 @@ export function HomeHealthSummaryGrid({ dailyScore, loading }: HomeHealthSummary
           value={medicinaValue}
           iconName="pills.fill"
           iconColor="#325F3F"
+          index={3}
         />
       </View>
     </View>

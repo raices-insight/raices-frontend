@@ -1,5 +1,5 @@
-import { Image, Text as RNText } from 'react-native';
-import { View } from '@/core/ui/tw';
+import { useState } from 'react';
+import { Image, Text as RNText, View } from 'react-native';
 
 interface UserAvatarProps {
   name: string | null;
@@ -7,25 +7,28 @@ interface UserAvatarProps {
   size?: number;
 }
 
-export function UserAvatar({ name, photo, size = 40 }: UserAvatarProps) {
-  const initial = name ? name.trim().charAt(0).toUpperCase() : '?';
-  const style = { width: size, height: size, borderRadius: size / 2 };
+const PRIMARY = '#325F3F';
 
-  if (photo) {
+export function UserAvatar({ name, photo, size = 40 }: UserAvatarProps) {
+  const [imgError, setImgError] = useState(false);
+  const initial = name ? name.trim().charAt(0).toUpperCase() : '?';
+  const circle = { width: size, height: size, borderRadius: size / 2 };
+
+  if (photo && !imgError) {
     return (
-      <Image
-        source={{ uri: photo }}
-        style={style}
-        resizeMode="cover"
-      />
+      <View style={[circle, { overflow: 'hidden', backgroundColor: PRIMARY }]}>
+        <Image
+          source={{ uri: photo }}
+          style={{ width: '100%', height: '100%' }}
+          resizeMode="cover"
+          onError={() => setImgError(true)}
+        />
+      </View>
     );
   }
 
   return (
-    <View
-      style={style}
-      className="bg-raices-primary items-center justify-center"
-    >
+    <View style={[circle, { backgroundColor: PRIMARY, alignItems: 'center', justifyContent: 'center' }]}>
       <RNText
         style={{
           fontSize: size * 0.4,

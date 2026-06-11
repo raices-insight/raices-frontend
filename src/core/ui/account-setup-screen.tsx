@@ -90,7 +90,10 @@ export function AccountSetupScreen({ user, onComplete, onSignOut, loading = fals
                 maxLength={3}
                 onChangeText={handleAgeText}
                 selectTextOnFocus
+                accessibilityLabel="Edad"
+                accessibilityHint="Toca para escribir tu edad directamente"
               />
+              <Text style={styles.ageCircleHint}>toca para editar</Text>
             </View>
 
             <Pressable
@@ -269,6 +272,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: 110,
     includeFontPadding: false,
+  },
+  ageCircleHint: {
+    fontFamily: 'PlusJakartaSans_400Regular',
+    fontSize: 10,
+    color: 'rgba(34,80,49,0.45)',
+    textAlign: 'center',
+    marginTop: 2,
+    letterSpacing: 0.3,
   },
   anosLabel: {
     fontFamily: 'PlusJakartaSans_700Bold',

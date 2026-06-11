@@ -1,5 +1,5 @@
-import { Modal, View, Text, StyleSheet } from 'react-native';
-import { Button } from '@/core/ui/button';
+import { Modal, View, Text, StyleSheet } from "react-native";
+import { Button } from "@/core/ui/button";
 
 interface DeleteFamilyModalProps {
   visible: boolean;
@@ -25,7 +25,8 @@ export function DeleteFamilyModal({
         <View style={styles.modalView}>
           <Text style={styles.title}>¿Eliminar Familia?</Text>
           <Text style={styles.subtitle}>
-            Esta acción es irreversible. Todos los miembros serán desvinculados y se perderá el acceso a la información compartida.
+            Esta acción es irreversible. Todos los miembros serán desvinculados
+            y se perderá el acceso a la información compartida.
           </Text>
 
           <View style={styles.buttonContainer}>
@@ -52,17 +53,17 @@ export function DeleteFamilyModal({
 const styles = StyleSheet.create({
   centeredView: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.6)",
   },
   modalView: {
     margin: 20,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 20,
     padding: 35,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -73,20 +74,20 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontFamily: 'PlusJakartaSans-Bold',
+    fontFamily: "PlusJakartaSans-Bold",
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    fontFamily: 'BeVietnamPro-Regular',
-    textAlign: 'center',
+    fontFamily: "BeVietnamPro-Regular",
+    textAlign: "center",
     marginBottom: 24,
-    color: '#474747',
+    color: "#474747",
   },
   buttonContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
-    width: '100%',
+    width: "100%",
   },
 });
