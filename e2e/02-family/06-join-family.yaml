@@ -1,0 +1,26 @@
+appId: com.raicesfrontend.app
+---
+# We continue from 05-invalid-code which leaves us on the Join Family screen as cg4@example.com
+
+# Wait for the join family screen (just to be sure)
+- assertVisible: "Unirse a Familia"
+
+- scrollUntilVisible:
+    element: "EJ: BRC-7086"
+    direction: DOWN
+
+# Clear the old invalid code first!
+# We use doubleTapOn to select the whole word (which is why we use a code with no spaces in 05)
+- doubleTapOn: "INVALIDCODE123"
+- eraseText: 1
+
+# Enter the correct seeded invitation code
+- inputText: "ROJAS-SEPULVEDA-2024"
+- hideKeyboard
+
+- tapOn: "Validar Código"
+
+# Verify we reached the Family Management screen
+- extendedWaitUntil:
+    visible: "Familia Rojas Sepulveda"
+    timeout: 10000

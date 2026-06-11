@@ -1,0 +1,40 @@
+appId: com.raicesfrontend.app
+env:
+  TEST_EMAIL: caregiver@example.com
+---
+- runFlow:
+    file: ../flows/dev-login.yaml
+
+# Navigate to the family tab
+- tapOn: "Familia"
+
+# Scroll down until the create family card is visible
+- scrollUntilVisible:
+    element: "Crear mi propia familia"
+    direction: DOWN
+
+# Tap the create family card
+- tapOn: "Crear mi propia familia"
+
+# Wait for the screen to load
+- assertVisible: "Crea tu Círculo Familiar"
+
+# Input the family name
+- tapOn: "Ej: Familia García López"
+- inputText: "Familia Maestro Test"
+- hideKeyboard
+
+# Submit the creation form
+- tapOn: "Crear Familia"
+
+# Verify we reached the Family Management screen by checking the Family Name
+- extendedWaitUntil:
+    visible: "Familia Maestro Test"
+    timeout: 10000
+
+# Scroll down to find the Delete Family button (Admins only)
+- scrollUntilVisible:
+    element: "Eliminar Familia"
+    direction: DOWN
+
+- assertVisible: "Eliminar Familia"

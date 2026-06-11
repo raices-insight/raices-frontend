@@ -26,7 +26,11 @@ export function FamilyHeader({ imageUrl, familyName }: FamilyHeaderProps) {
         </View>
       </View>
 
-      <Text style={styles.title}>Mi Familia</Text>
+      <Text style={styles.title}>
+        {familyName 
+          ? (familyName.toLowerCase().includes('familia') ? familyName : `Familia ${familyName}`) 
+          : "Mi Familia"}
+      </Text>
       <Text style={styles.subtitle}>
         Gestiona los miembros de tu hogar y comparte momentos seguros.
       </Text>

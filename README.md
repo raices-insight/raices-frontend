@@ -84,6 +84,18 @@ npm run test:e2e:auth
 ```
 *(This command runs all the tests inside the `e2e/01-auth/` module sequentially).*
 
+**Run the Family Management Test Suite (Sequential):**
+```bash
+npm run test:e2e:family
+```
+*(This command runs all the tests inside the `e2e/02-family/` module sequentially).*
+
+**Run the Family Test Suite WITH a Backend Database Reset:**
+```bash
+npm run test:e2e:family:reset
+```
+*(Use this to guarantee a perfectly clean state. It runs the backend seed scripts first, deleting any leftover test families created by previous runs).*
+
 **Run an individual granular test:**
 ```bash
 maestro test e2e/01-auth/login-caregiver-success.yaml

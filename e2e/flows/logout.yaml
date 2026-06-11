@@ -1,0 +1,21 @@
+appId: com.raicesfrontend.app
+---
+# We restart the app so we are at the root navigator
+- stopApp
+- launchApp:
+    appId: com.raicesfrontend.app
+
+- extendedWaitUntil:
+    visible: "Perfil"
+    timeout: 45000
+
+- tapOn: "Perfil"
+- tapOn: "Cerrar sesión"
+
+# Confirm the alert
+- tapOn: "Cerrar sesión"
+
+# Wait for login screen
+- extendedWaitUntil:
+    visible: "Correo electrónico"
+    timeout: 10000

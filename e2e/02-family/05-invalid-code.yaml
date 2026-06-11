@@ -1,0 +1,30 @@
+appId: com.raicesfrontend.app
+env:
+  TEST_EMAIL: cg4@example.com
+---
+- runFlow:
+    file: ../flows/dev-login.yaml
+
+# Navigate to the family tab
+- tapOn: "Familia"
+
+# Wait for the join family screen
+- assertVisible: "Unirse a Familia"
+
+- scrollUntilVisible:
+    element: "EJ: BRC-7086"
+    direction: DOWN
+
+# Tap on the code input and enter an invalid code
+- tapOn: "EJ: BRC-7086"
+- inputText: "INVALIDCODE123"
+- hideKeyboard
+
+- tapOn: "Validar Código"
+
+- scrollUntilVisible:
+    element: "Unirse a Familia"
+    direction: UP
+# We commented out the toast check because Maestro struggles with ephemeral toasts
+# but we DO check that we haven't navigated away from the join screen.
+- assertVisible: "Unirse a Familia"

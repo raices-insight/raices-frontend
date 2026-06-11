@@ -10,6 +10,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test:e2e:auth": "maestro test e2e/01-auth/",
+    "test:e2e:family": "maestro test e2e/02-family/",
+    "test:e2e:family:reset": "npx -y tsx scripts/run-e2e-family.ts",
     "lint": "expo lint",
     "test": "jest",
     "test:watch": "jest --watch"

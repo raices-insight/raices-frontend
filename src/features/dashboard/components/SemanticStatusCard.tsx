@@ -10,6 +10,26 @@ interface SemanticStatusCardProps {
 }
 
 export function SemanticStatusCard({ dailyScore }: SemanticStatusCardProps) {
+  const progressWidth = useSharedValue(0);
+  const barStyle = useAnimatedStyle(() => ({ width: `${progressWidth.value}%` as any }));
+
+  const [displayScore, setDisplayScore] = useState(0);
+
+  useEffect(() => {
+    if (!dailyScore) return;
+    progressWidth.value = withDelay(200, withSpring(dailyScore.score, { damping: 18, stiffness: 60 }));
+
+    const target = Math.round(dailyScore.score);
+    let current = 0;
+    const step = Math.max(1, Math.ceil(target / 28));
+    const interval = setInterval(() => {
+      current = Math.min(current + step, target);
+      setDisplayScore(current);
+      if (current >= target) clearInterval(interval);
+    }, 38);
+    return () => clearInterval(interval);
+  }, [dailyScore?.score]);
+
   // Empty State
   if (!dailyScore) {
     return (
@@ -51,25 +71,6 @@ export function SemanticStatusCard({ dailyScore }: SemanticStatusCardProps) {
   };
 
   const style = statusStyles[dailyScore.overall_status as keyof typeof statusStyles] || statusStyles.green;
-
-  const progressWidth = useSharedValue(0);
-  const barStyle = useAnimatedStyle(() => ({ width: `${progressWidth.value}%` as any }));
-
-  const [displayScore, setDisplayScore] = useState(0);
-
-  useEffect(() => {
-    progressWidth.value = withDelay(200, withSpring(dailyScore.score, { damping: 18, stiffness: 60 }));
-
-    const target = Math.round(dailyScore.score);
-    let current = 0;
-    const step = Math.max(1, Math.ceil(target / 28));
-    const interval = setInterval(() => {
-      current = Math.min(current + step, target);
-      setDisplayScore(current);
-      if (current >= target) clearInterval(interval);
-    }, 38);
-    return () => clearInterval(interval);
-  }, [dailyScore.score]);
 
   return (
     <View className="w-full bg-white border border-black/5 rounded-3xl shadow-md overflow-hidden flex-row">
