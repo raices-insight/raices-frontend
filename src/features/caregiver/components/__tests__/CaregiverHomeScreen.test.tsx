@@ -155,7 +155,8 @@ jest.mock('@/features/caregiver/hooks/use-voice-recordings', () => ({
 describe('CaregiverHomeScreen', () => {
   it('shows the caregiver greeting', () => {
     render(<CaregiverHomeScreen />);
-    expect(screen.getByText(/Hola, Ana/i)).toBeOnTheScreen();
+    // greeting is time-based: "Buenos días/Buenas tardes/Buenas noches, Ana"
+    expect(screen.getByText(/Ana/i)).toBeOnTheScreen();
   });
 
   it('shows the older adult chip selector when multiple adults exist', () => {
