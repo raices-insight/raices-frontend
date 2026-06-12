@@ -100,6 +100,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
     const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [category, setCategory] = useState<string>(CATEGORIES[0].id);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     const insets = useSafeAreaInsets();
     const toast = useToast();
@@ -157,6 +158,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
             setName("");
             setRecordedAudioUri(null);
             setCategory(CATEGORIES[0].id);
+            setErrorMsg(null);
         }
     }, [selectedDate, visible]);
 
@@ -171,13 +173,6 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
         if (next < startOfToday) {
             const safe = new Date(now);
             return safe;
-        }
-        const sameDay =
-            next.getFullYear() === now.getFullYear() &&
-            next.getMonth() === now.getMonth() &&
-            next.getDate() === now.getDate();
-        if (sameDay && next < now) {
-            return now;
         }
         return next;
     };
@@ -256,13 +251,14 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
     };
 
     const onSend = async () => {
+        setErrorMsg(null);
         if (!name.trim()) {
-            toast.error("Por favor, ingresa el nombre del evento.");
+            setErrorMsg("Por favor, ingresa el nombre del evento.");
             return;
         }
 
         if (startDate < new Date()) {
-            toast.error("No puedes crear eventos en fechas pasadas.");
+            setErrorMsg("No puedes crear eventos en fechas pasadas.");
             return;
         }
 
@@ -305,7 +301,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
             onClose();
         } catch (err) {
             logger.error("Failed to create calendar event", err);
-            toast.error("Error al crear el evento.");
+            setErrorMsg("Error al crear el evento.");
         } finally {
             setIsSaving(false);
         }
@@ -368,6 +364,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
                                 value={name}
                                 onChangeText={setName}
                                 editable={!isSaving}
+                                maxLength={50}
                             />
                         </View>
 
@@ -406,6 +403,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
                                 </View>
                             ) : (
                                 <Pressable
+                                    testID="time-picker-button"
                                     onPress={() => showMode('time')}
                                     style={[fieldBoxStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
                                 >
@@ -477,6 +475,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
                                 ) : null}
 
                                 <Pressable
+                                    testID="mic-button"
                                     onPress={handleMicPress}
                                     disabled={isSaving}
                                     className="rounded-full items-center justify-center"
@@ -528,6 +527,14 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
                                 ) : null}
                             </View>
                         </View>
+
+                        {/* ERROR MESSAGE */}
+                        {errorMsg ? (
+                            <View className="w-full mt-4 bg-raices-error/10 p-3 rounded-xl border border-raices-error/20 flex-row items-center justify-center" style={{ gap: 8 }}>
+                                <IconSymbol name="exclamationmark.triangle.fill" size={20} color="#C0392B" />
+                                <Text className="font-body text-sm text-raices-error font-semibold text-center">{errorMsg}</Text>
+                            </View>
+                        ) : null}
 
                         {/* SAVE BUTTON */}
                         <Pressable

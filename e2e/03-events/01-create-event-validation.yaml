@@ -1,0 +1,87 @@
+appId: com.raicesfrontend.app
+env:
+  TEST_EMAIL: cg2@example.com
+---
+- runFlow:
+    file: ../flows/dev-login.yaml
+
+- tapOn: "Calendario"
+- scrollUntilVisible:
+    element: "Crear Evento"
+    direction: DOWN
+- tapOn: "Crear Evento"
+- assertVisible: "Nombre del Evento"
+
+- scrollUntilVisible:
+    element: "Guardar Evento"
+    direction: DOWN
+- tapOn: "Guardar Evento"
+- assertVisible: "Por favor, ingresa el nombre del evento."
+
+- scrollUntilVisible:
+    element: "Cancelar"
+    direction: DOWN
+- tapOn: "Cancelar"
+- assertVisible: "Crear Evento"
+
+- tapOn: "Crear Evento"
+- assertVisible: "Nombre del Evento"
+
+- tapOn: "Ej: Medicamento Presión"
+- inputText: "Este es un titulo extremadamente largo que supera los cincuenta caracteres para probar el limite"
+- hideKeyboard
+- assertVisible: "Este es un titulo extremadamente largo que supera "
+
+# Tap the time picker. It opens in Hour mode.
+- tapOn:
+    id: "time-picker-button"
+
+# Try to toggle to keyboard mode if available
+- tapOn:
+    id: ".*toggle_mode.*"
+    optional: true
+
+# Type 00 for hour
+- inputText: "12"
+
+# Tap minute input and type 00
+- pressKey: Enter
+- inputText: "00"
+
+# Tap AM
+- tapOn:
+    text: "AM"
+    optional: true
+
+- tapOn:
+    text: "PM"
+    optional: true
+
+- tapOn:
+    text: "AM"
+
+# Tap OK/Aceptar
+- tapOn:
+    id: "android:id/button1"
+    optional: true
+- tapOn:
+    text: "Aceptar"
+    optional: true
+- tapOn:
+    text: "OK"
+    optional: true
+- tapOn:
+    text: "Listo"
+    optional: true
+
+- scrollUntilVisible:
+    element: "Guardar Evento"
+    direction: DOWN
+- tapOn: "Guardar Evento"
+- assertVisible: "No puedes crear eventos en fechas pasadas."
+
+- scrollUntilVisible:
+    element: "Cancelar"
+    direction: DOWN
+- tapOn: "Cancelar"
+- assertVisible: "Crear Evento"

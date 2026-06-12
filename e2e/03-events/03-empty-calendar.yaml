@@ -1,0 +1,10 @@
+appId: com.raicesfrontend.app
+env:
+  TEST_EMAIL: oa2@example.com
+---
+- runFlow:
+    file: ../flows/dev-login.yaml
+
+- tapOn: "Calendario"
+- assertVisible: ".*Pedro.*"
+- assertVisible: "No hay eventos para este día."

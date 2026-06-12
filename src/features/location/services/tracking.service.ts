@@ -27,7 +27,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
     try {
       await apiClient.post("/location", coords);
     } catch (e) {
-      console.error("lol lmao ", e);
+      console.warn("lol lmao ", e);
     }
   }
 });

@@ -96,6 +96,12 @@ npm run test:e2e:family:reset
 ```
 *(Use this to guarantee a perfectly clean state. It runs the backend seed scripts first, deleting any leftover test families created by previous runs).*
 
+**Run the Events Test Suite WITH a Backend Database Reset:**
+```bash
+npm run test:e2e:events:reset
+```
+*(Use this to test the Calendar/Events flow. It resets Auth, Family, and Assistant databases and enables the Audio Mock).*
+
 **Run an individual granular test:**
 ```bash
 maestro test e2e/01-auth/login-caregiver-success.yaml

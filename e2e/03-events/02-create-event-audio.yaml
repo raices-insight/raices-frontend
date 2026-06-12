@@ -1,0 +1,52 @@
+appId: com.raicesfrontend.app
+---
+# We continue from 01-create-event-validation, which left us on the CaregiverCalendarScreen 
+# with the "Crear Evento" button visible.
+
+- scrollUntilVisible:
+    element: "Crear Evento"
+    direction: DOWN
+- tapOn: "Crear Evento"
+
+# Input the event name using the placeholder as target
+- tapOn: "Ej: Medicamento Presión"
+- inputText: "Cita medica Dr. Soto"
+- hideKeyboard
+
+# Select the "CITA" category
+- tapOn: "CITA"
+
+# Scroll down to ensure mic button is visible
+- scrollUntilVisible:
+    element:
+      id: "mic-button"
+    direction: DOWN
+
+# Tap the microphone button to trigger the audio mock
+- tapOn: 
+    id: "mic-button"
+
+- scrollUntilVisible:
+    element: "Audio grabado"
+    direction: DOWN
+
+# Wait for the mock to process and attach (it might take a second)
+- assertVisible: "Audio grabado"
+
+- scrollUntilVisible:
+    element: "Eliminar"
+    direction: DOWN
+
+- assertVisible: "Eliminar"
+
+# Save the event
+- scrollUntilVisible:
+    element: "Guardar Evento"
+    direction: DOWN
+- tapOn: "Guardar Evento"
+
+# Verify success
+- assertVisible: "¡Evento creado con éxito!"
+
+# Verify it appears in the calendar list
+- assertVisible: "Cita medica Dr. Soto"
