@@ -8,7 +8,7 @@ import { useFamily } from '@/features/family/hooks/use-family';
 import { useFamilyOlderAdults } from '@/features/family/hooks/use-family-older-adults';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, RefreshControl } from 'react-native';
 import { LocationIndicator } from '../../location/components/LocationIndicator';
 import { useSelectedOlderAdult } from '../hooks/use-selected-older-adult';
 import { useVoiceRecordings } from '../hooks/use-voice-recordings';
@@ -22,10 +22,16 @@ import { OlderAdultChipSelector } from './OlderAdultChipSelector';
 function HomeContent() {
   const { olderAdults, loading } = useFamilyOlderAdults();
   const { selected, selectOlderAdult } = useSelectedOlderAdult(olderAdults);
-  const [scrollEnabled,setScrollEnabled]=useState(true)
+  const [refreshing, setRefreshing] = useState(false);
 
   // Dashboard data for the selected older adult
   const { dailyScore, yesterdayScore, refresh } = useDashboardSocket(selected?.profileId);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    refresh();
+    setTimeout(() => setRefreshing(false), 1500);
+  }, [refresh]);
 
   // Upcoming calendar events for the selected older adult (today → +7 days)
   const today = new Date();
@@ -84,7 +90,9 @@ function HomeContent() {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40, paddingTop: 8 }}
-        scrollEnabled={scrollEnabled}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#325F3F" colors={['#325F3F']} />
+        }
       >
         {/* Health summary: Actividad, Salud, Estado, Medicina */}
         <HomeHealthSummaryGrid
@@ -92,7 +100,7 @@ function HomeContent() {
           loading={loading}
         />
 
-        {/* Today's semantic status + previous day history (moved from Dashboard tab) */}
+        {/* Today's semantic status + previous day history */}
         <View className="px-5 mb-6">
           <SemanticStatusCard dailyScore={dailyScore} />
           <View className="h-4" />
@@ -111,11 +119,10 @@ function HomeContent() {
           loading={recordingsLoading}
         />
 
-        <View className='w-full max-w-[360px] items-center gap-3 bg-raices-surface rounded-[24px] border border-raices-secondary/15 py-7 px-5 shadow-sm elevation-2' onTouchStart={()=>setScrollEnabled(false)} onTouchEnd={()=>setScrollEnabled(true)}>
-          <LocationIndicator></LocationIndicator>
+        {/* Location map */}
+        <View className="mx-5 mb-5 bg-raices-surface rounded-[24px] border border-raices-secondary/15 overflow-hidden shadow-sm elevation-2">
+          <LocationIndicator />
         </View>
-
-        
       </ScrollView>
     </View>
   );

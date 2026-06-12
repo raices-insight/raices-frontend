@@ -97,6 +97,7 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
   const [category, setCategory] = useState<string>(CATEGORIES[0].id);
   const [isSaving, setIsSaving] = useState(false);
   const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const toast = useToast();
 
   const { startRecording, stopRecording, uploadAudio, cancelRecording, isRecording } = useAudioUpload();
@@ -144,6 +145,7 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
       setEventDate(new Date(event.due_date));
       setCategory(event.category_id ?? CATEGORIES[0].id);
       setRecordedAudioUri(null); // Reset audio uri on open
+      setErrorMsg(null);
     }
   }, [event, visible]);
 
@@ -214,8 +216,9 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
   };
 
   const handleSave = async () => {
+    setErrorMsg(null);
     if (!title.trim()) {
-      toast.error('Por favor, ingresa el nombre del evento.');
+      setErrorMsg('Por favor, ingresa el nombre del evento.');
       return;
     }
     if (!event) return;
@@ -238,7 +241,7 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
       onClose();
     } catch (err) {
       logger.error('Failed to update calendar event', err);
-      toast.error('Error al actualizar el evento.');
+      setErrorMsg('Error al actualizar el evento.');
     } finally {
       setIsSaving(false);
     }
@@ -456,6 +459,14 @@ export function EditEventModal({ event, visible, onClose, onSave }: EditEventMod
                 </View>
               </View>
             )}
+
+            {/* ERROR MESSAGE */}
+            {errorMsg ? (
+              <View className="w-full mt-4 bg-raices-error/10 p-3 rounded-xl border border-raices-error/20 flex-row items-center justify-center" style={{ gap: 8 }}>
+                <IconSymbol name="exclamationmark.triangle.fill" size={20} color="#C0392B" />
+                <Text className="font-body text-sm text-raices-error font-semibold text-center">{errorMsg}</Text>
+              </View>
+            ) : null}
 
             {/* SAVE BUTTON */}
             <Pressable

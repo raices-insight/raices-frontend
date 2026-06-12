@@ -1,0 +1,27 @@
+appId: com.raicesfrontend.app
+---
+# We continue from 03-view-members which leaves us on the Family Management screen as cg1@example.com
+
+# Wait for the Family Management screen to load (just to be safe)
+- assertVisible: "Familia Rojas Sepulveda"
+
+- scrollUntilVisible:
+    element: "Dejar Familia"
+    direction: DOWN
+
+# Attempt to leave the family
+- tapOn: "Dejar Familia"
+
+# Verify the Transfer Admin modal opens (Admins cannot leave without transferring ownership)
+- assertVisible: "Transferir administrador"
+
+# Select Maria Rojas as the new admin
+- tapOn: "Maria Rojas"
+
+# Confirm transfer and leave the family
+- tapOn: "Confirmar y salir"
+
+# Wait for navigation back to the "No Family" / "Join Family" screen
+- extendedWaitUntil:
+    visible: "Unirse a Familia"
+    timeout: 15000

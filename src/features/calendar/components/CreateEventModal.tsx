@@ -11,7 +11,6 @@ import { useToast } from '@/src/core/toast/use-toast';
 import { logger } from '@/src/core/logger';
 import { CONFIG } from '@/src/core/config';
 import { apiClient } from '@/src/core/api/client';
-import { ToastRenderer } from '@/src/core/toast/toast-renderer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface CreateEventModalProps {
@@ -36,17 +35,14 @@ const CATEGORIES: { id: string; label: string; icon: any; longLabel: string }[] 
 const formatDate = (date: Date) => {
     const d = date.getDate().toString().padStart(2, '0');
     const m = (date.getMonth() + 1).toString().padStart(2, '0');
-    const y = date.getFullYear().toString().slice(-2);
-    return `${d}-${m}-${y}`;
+    const y = date.getFullYear();
+    return `${d}/${m}/${y}`;
 };
 
 const formatTime = (date: Date) => {
-    let h = date.getHours();
+    const h = date.getHours().toString().padStart(2, '0');
     const m = date.getMinutes().toString().padStart(2, '0');
-    const period = h >= 12 ? 'PM' : 'AM';
-    h = h % 12;
-    if (h === 0) h = 12;
-    return `${h.toString().padStart(2, '0')}:${m}${period}`;
+    return `${h}:${m}`;
 };
 
 const toLocalISODate = (date: Date) => {
@@ -104,6 +100,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
     const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [category, setCategory] = useState<string>(CATEGORIES[0].id);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     const insets = useSafeAreaInsets();
     const toast = useToast();
@@ -161,6 +158,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
             setName("");
             setRecordedAudioUri(null);
             setCategory(CATEGORIES[0].id);
+            setErrorMsg(null);
         }
     }, [selectedDate, visible]);
 
@@ -175,13 +173,6 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
         if (next < startOfToday) {
             const safe = new Date(now);
             return safe;
-        }
-        const sameDay =
-            next.getFullYear() === now.getFullYear() &&
-            next.getMonth() === now.getMonth() &&
-            next.getDate() === now.getDate();
-        if (sameDay && next < now) {
-            return now;
         }
         return next;
     };
@@ -260,13 +251,14 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
     };
 
     const onSend = async () => {
+        setErrorMsg(null);
         if (!name.trim()) {
-            toast.error("Por favor, ingresa el nombre del evento.");
+            setErrorMsg("Por favor, ingresa el nombre del evento.");
             return;
         }
 
         if (startDate < new Date()) {
-            toast.error("No puedes crear eventos en fechas pasadas.");
+            setErrorMsg("No puedes crear eventos en fechas pasadas.");
             return;
         }
 
@@ -309,7 +301,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
             onClose();
         } catch (err) {
             logger.error("Failed to create calendar event", err);
-            toast.error("Error al crear el evento.");
+            setErrorMsg("Error al crear el evento.");
         } finally {
             setIsSaving(false);
         }
@@ -372,6 +364,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
                                 value={name}
                                 onChangeText={setName}
                                 editable={!isSaving}
+                                maxLength={50}
                             />
                         </View>
 
@@ -410,6 +403,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
                                 </View>
                             ) : (
                                 <Pressable
+                                    testID="time-picker-button"
                                     onPress={() => showMode('time')}
                                     style={[fieldBoxStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
                                 >
@@ -421,19 +415,11 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
                             )}
                         </View>
 
-                        {/* CATEGORY */}
+                        {/* CATEGORY CHIPS */}
                         <View className="w-full mt-4" style={{ gap: 8 }}>
                             <Text className="text-base font-headline font-bold text-raices-text">Categoría</Text>
-                            <View style={[fieldBoxStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-                                <Text className="text-base font-body text-raices-text">
-                                    {selectedCategoryLong}
-                                </Text>
-                                <IconSymbol name="chevron.right" size={18} color="#1F1B15" style={{ transform: [{ rotate: '90deg' }] }} />
-                            </View>
                         </View>
-
-                        {/* CATEGORY CHIPS */}
-                        <View className="w-full flex-row mt-4" style={{ gap: 10 }}>
+                        <View className="w-full flex-row mt-2" style={{ gap: 10 }}>
                             {CATEGORIES.map(cat => {
                                 const isActive = cat.id === category;
                                 return (
@@ -489,6 +475,7 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
                                 ) : null}
 
                                 <Pressable
+                                    testID="mic-button"
                                     onPress={handleMicPress}
                                     disabled={isSaving}
                                     className="rounded-full items-center justify-center"
@@ -541,6 +528,14 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
                             </View>
                         </View>
 
+                        {/* ERROR MESSAGE */}
+                        {errorMsg ? (
+                            <View className="w-full mt-4 bg-raices-error/10 p-3 rounded-xl border border-raices-error/20 flex-row items-center justify-center" style={{ gap: 8 }}>
+                                <IconSymbol name="exclamationmark.triangle.fill" size={20} color="#C0392B" />
+                                <Text className="font-body text-sm text-raices-error font-semibold text-center">{errorMsg}</Text>
+                            </View>
+                        ) : null}
+
                         {/* SAVE BUTTON */}
                         <Pressable
                             onPress={onSend}
@@ -564,19 +559,18 @@ export function CreateEventModal({ selectedDate, visible, addEvent, onClose, tar
                             )}
                         </Pressable>
 
-                        {/* CANCEL (kept as a subtle text link to preserve dismiss behavior) */}
+                        {/* CANCEL */}
                         <Pressable
                             onPress={onClose}
                             disabled={isSaving || isRecording}
                             className="w-full items-center mt-3"
-                            style={{ opacity: (isSaving || isRecording) ? 0.4 : 1, paddingVertical: 8 }}
+                            style={{ opacity: (isSaving || isRecording) ? 0.4 : 1, paddingVertical: 14 }}
                         >
                             <Text className="text-sm font-headline font-semibold text-raices-text-muted">Cancelar</Text>
                         </Pressable>
                     </ScrollView>
                 </View>
             </View>
-            <ToastRenderer />
         </Modal>
     );
 }

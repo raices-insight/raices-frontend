@@ -1,0 +1,14 @@
+appId: com.raicesfrontend.app
+---
+# We continue from 02-generate-invite which leaves us on the Family Management screen as cg1@example.com
+# Scroll back up to the top since the previous test left us at the bottom of the screen
+- scrollUntilVisible:
+    element: "Familia Rojas Sepulveda"
+    direction: UP
+
+# Verify the Family Management screen is loaded
+- assertVisible: "Familia Rojas Sepulveda"
+
+# Verify the seeded members are visible
+- assertVisible: "Maria Rojas"
+- assertVisible: "Pedro Soto"

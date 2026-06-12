@@ -34,11 +34,14 @@ const MAPPING = {
   'checkmark':                                'check',
   'xmark':                                    'close',
   'trash.fill':                               'trash-can',
+  'trash':                                    'trash-can-outline',
   'pencil':                                   'pencil',
   'plus':                                     'plus',
   'plus.circle.fill':                         'plus-circle',
   'minus':                                    'minus',
-	'ellipsis':                                 'dots-horizontal',
+  'ellipsis':                                 'dots-horizontal',
+  'rectangle.portrait.and.arrow.right':       'logout',
+  'square.and.arrow.up':                      'share-variant',
 
   // --- Health & Wellness ---
   'heart.fill':                               'heart',

@@ -1,9 +1,12 @@
+import { useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withDelay, withTiming, withSpring } from 'react-native-reanimated';
 import type { FamilyMember } from '../api/schemas';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 
 type MemberListItemProps = {
   member: FamilyMember;
+  index?: number;
   currentUserId: string | null;
   currentUserName: string | null;
   isAdmin: boolean;
@@ -27,16 +30,35 @@ function pickColor(seed: string): string {
 
 export function MemberListItem({
   member,
+  index = 0,
   currentUserId,
   isAdmin,
   onShowActions,
 }: MemberListItemProps) {
   const displayName = member.name;
-  const initials = displayName.slice(0, 2).toUpperCase();
+
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(12);
+  useEffect(() => {
+    const delay = index * 60;
+    opacity.value = withDelay(delay, withTiming(1, { duration: 260 }));
+    translateY.value = withDelay(delay, withSpring(0, { damping: 20, stiffness: 260 }));
+  }, []);
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+  const initials = displayName
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
   const isAdminRole = member.role === 'ADMINISTRATOR';
   const avatarBg = pickColor(member.id);
 
   return (
+    <Animated.View style={animStyle}>
     <View style={styles.card}>
       <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
         <Text style={styles.avatarText}>{initials}</Text>
@@ -59,6 +81,7 @@ export function MemberListItem({
         </Pressable>
       )}
     </View>
+    </Animated.View>
   );
 }
 

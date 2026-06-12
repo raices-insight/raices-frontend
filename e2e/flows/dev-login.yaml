@@ -1,0 +1,36 @@
+appId: com.raicesfrontend.app
+---
+# Reusable dev-login flow
+# Expected env variables:
+# - TEST_EMAIL
+# - TEST_PASSWORD (optional, defaults to password123)
+
+- launchApp:
+    appId: com.raicesfrontend.app
+
+# Try to find the login screen directly
+- extendedWaitUntil:
+    visible: "Raíces"
+    timeout: 45000
+
+# If we don't see the email input, we must be logged in from a previous test
+- runFlow:
+    when:
+      notVisible: "Correo electrónico"
+    file: logout.yaml
+
+- assertVisible: "Correo electrónico"
+
+- tapOn: "Correo electrónico"
+- inputText: ${TEST_EMAIL}
+- tapOn: "Contraseña"
+- inputText: "password123"
+
+- hideKeyboard
+
+- tapOn: "Iniciar sesión"
+
+# Wait for the bottom tab navigator to load before returning to the main test
+- extendedWaitUntil:
+    visible: "Perfil"
+    timeout: 15000

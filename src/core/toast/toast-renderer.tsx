@@ -1,14 +1,13 @@
-import React, { useCallback, useEffect } from 'react';
-import { View as RNView, Platform, Modal } from 'react-native';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { View as RNView, Pressable } from 'react-native';
 import Reanimated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withSequence,
-  withDelay,
-  runOnJS,
   Easing,
+  runOnJS,
 } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { View, Text } from '@/core/ui/tw';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { type ToastItem, type ToastVariant } from './types';
@@ -34,28 +33,41 @@ interface ToastCardProps {
 function ToastCard({ item, onDismiss }: ToastCardProps) {
   const translateY = useSharedValue(-120);
   const opacity    = useSharedValue(0);
+  const timerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const dismiss = useCallback(() => {
     runOnJS(onDismiss)(item.id);
   }, [item.id, onDismiss]);
 
+  const animateOut = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    translateY.value = withTiming(-120, { duration: 300, easing: Easing.in(Easing.ease) });
+    opacity.value    = withTiming(0, { duration: 300 }, (finished) => {
+      if (finished) runOnJS(dismiss)();
+    });
+  }, [dismiss, translateY, opacity]);
+
   useEffect(() => {
-    // 1. Slide in immediately
+    // Haptic feedback based on variant
+    if (item.variant === 'success') {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else if (item.variant === 'error') {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } else if (item.variant === 'warning') {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    }
+
+    // Slide in
     translateY.value = withTiming(0, { duration: 350, easing: Easing.out(Easing.back(1.2)) });
     opacity.value    = withTiming(1, { duration: 250 });
 
-    // 2. Use a standard timer for the dismissal sequence
-    // This is much more reliable on Web than Reanimated's withDelay
-    const timer = setTimeout(() => {
-      // Slide out
-      translateY.value = withTiming(-120, { duration: 300, easing: Easing.in(Easing.ease) });
-      opacity.value    = withTiming(0, { duration: 300 }, (finished) => {
-        if (finished) runOnJS(dismiss)();
-      });
-    }, item.duration - 300);
+    // Auto-dismiss
+    timerRef.current = setTimeout(animateOut, item.duration - 300);
 
-    return () => clearTimeout(timer);
-  }, [item.id, item.duration, dismiss]);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [item.id, item.duration, item.variant, animateOut]);
 
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
@@ -66,18 +78,18 @@ function ToastCard({ item, onDismiss }: ToastCardProps) {
 
   return (
     <Reanimated.View style={animStyle}>
-      <View className={`flex-row items-center gap-3 px-4 py-3 rounded-2xl shadow-lg elevation-6 ${container}`}>
-        <IconSymbol name={icon as any} size={20} color="#FFFFFF" />
-        <Text className={`font-body text-sm flex-1 ${text}`}>{item.message}</Text>
-      </View>
+      <Pressable onPress={animateOut}>
+        <View className={`flex-row items-center gap-3 px-4 py-3 rounded-2xl shadow-lg elevation-6 ${container}`}>
+          <IconSymbol name={icon as any} size={20} color="#FFFFFF" />
+          <Text className={`font-body text-sm flex-1 ${text}`}>{item.message}</Text>
+          <IconSymbol name="xmark" size={12} color="rgba(255,255,255,0.6)" />
+        </View>
+      </Pressable>
     </Reanimated.View>
   );
 }
 
 // --- Toast Renderer -----------------------------------------------------------
-// Uses Modal so it renders above all navigation stacks regardless of z-index.
-// On web, absolute positioning inside a Stack view is buried by the stacking
-// context — Modal is the only reliable way to guarantee top-layer rendering.
 
 export function ToastRenderer() {
   const { toasts, dismiss } = useToastContext();

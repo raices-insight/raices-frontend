@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { useGoogleAuth, type GoogleUser } from '@/features/auth/hooks/use-google-auth';
 import { useLocalAuth } from '@/features/auth/hooks/use-local-auth';
 import { setSessionToken as setGlobalSessionToken } from '@/core/session';
-import { setFamilyState } from '@/features/family/state/family-state';
+import { clearAppState } from '@/core/clear-app-state';
 import { globalEvents } from '@/src/core/events';
 import { stopTrackingLocation } from '@/features/location/services/tracking.service';
 import { CONFIG } from '@/core/config';
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logger.warn('[SignOut] Could not stop location tracking', e),
     );
 
-    setFamilyState(null);
+    clearAppState();
     googleAuth.signOut();
     localAuth.signOut();
   };

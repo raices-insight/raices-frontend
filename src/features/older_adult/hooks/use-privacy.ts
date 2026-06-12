@@ -2,6 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/features/auth/context/auth-context';
 import { privacyApi, type PrivacyRecord } from '../api/privacy-api';
 
+type PrivacyOverrides = {
+  isMoodShared?: boolean;
+  isActivityShared?: boolean;
+  isHealthShared?: boolean;
+};
+
 interface UsePrivacyReturn {
   isMoodShared: boolean;
   isActivityShared: boolean;
@@ -12,7 +18,7 @@ interface UsePrivacyReturn {
   loading: boolean;
   saving: boolean;
   error: string | null;
-  save: () => Promise<void>;
+  save: (overrides?: PrivacyOverrides) => Promise<void>;
 }
 
 export function usePrivacy(): UsePrivacyReturn {
@@ -60,14 +66,18 @@ export function usePrivacy(): UsePrivacyReturn {
     };
   }, [sessionToken]);
 
-  const save = useCallback(async () => {
+  const save = useCallback(async (overrides?: PrivacyOverrides) => {
     if (!sessionToken || !user) return;
 
     setSaving(true);
     setError(null);
 
     try {
-      const payload = { isMoodShared, isActivityShared, isHealthShared };
+      const payload = {
+        isMoodShared: overrides?.isMoodShared ?? isMoodShared,
+        isActivityShared: overrides?.isActivityShared ?? isActivityShared,
+        isHealthShared: overrides?.isHealthShared ?? isHealthShared,
+      };
 
       if (record) {
         const { data } = await privacyApi.update(sessionToken, record.id, payload);

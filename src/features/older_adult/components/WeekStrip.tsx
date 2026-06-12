@@ -64,9 +64,9 @@ export function WeekStrip() {
               key={idx}
               className={[
                 'items-center justify-center py-4 rounded-3xl',
-                todayCell ? 'bg-raices-primary' : 'bg-white shadow-sm',
+                todayCell ? 'bg-raices-primary' : 'bg-white/60',
               ].join(' ')}
-              style={{ width: CELL_WIDTH, elevation: todayCell ? 0 : 2 }}
+              style={{ width: CELL_WIDTH }}
             >
               <Text
                 className={[

@@ -1,14 +1,36 @@
+import { useCallback } from 'react';
 import { ActivityIndicator, Alert } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { Animated } from '@/core/ui/animated';
 import { View, ScrollView, Text, Pressable } from '@/core/ui/tw';
 import { IconSymbol } from '@/core/ui/icon-symbol';
 import { UserAvatar } from '@/core/ui/UserAvatar';
+import { Button } from '@/core/ui/button';
 import { useAuth } from '@/features/auth/context/auth-context';
 import { useFamily } from '@/features/family/hooks/use-family';
 
 export function CaregiverProfileScreen() {
   const { user, signOut } = useAuth();
   const { family, isFamily, loading: familyLoading } = useFamily();
+
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(20);
+  const screenStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  useFocusEffect(
+    useCallback(() => {
+      opacity.value = withTiming(1, { duration: 350 });
+      translateY.value = withTiming(0, { duration: 350 });
+      return () => {
+        opacity.value = 0;
+        translateY.value = 20;
+      };
+    }, [opacity, translateY])
+  );
 
   const handleSignOut = () => {
     Alert.alert(
@@ -31,23 +53,25 @@ export function CaregiverProfileScreen() {
   const firstName = user?.name?.split(' ')[0] ?? 'Cuidador';
 
   return (
-    <View className="flex-1 bg-raices-bg">
+    <Animated.View className="flex-1 bg-raices-bg" style={screenStyle}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 pt-14 pb-10 gap-5">
 
           {/* ── HERO ─────────────────────────────────────────── */}
-          <View className="gap-3 mb-2">
-            <View className="bg-raices-primary/10 px-3 py-1 rounded-full self-start">
-              <Text className="text-xs font-label font-bold text-raices-primary uppercase tracking-widest">
-                Cuidador
+          <View className="flex-row items-center justify-between mb-2">
+            <View className="gap-1">
+              <View className="bg-raices-primary/10 px-3 py-1 rounded-full self-start">
+                <Text className="text-xs font-label font-bold text-raices-primary uppercase tracking-widest">
+                  Cuidador
+                </Text>
+              </View>
+              <Text className="text-3xl font-headline font-bold text-raices-primary">
+                Mi Perfil
+              </Text>
+              <Text className="font-body text-sm" style={{ color: '#544438' }}>
+                Hola {firstName}, gestiona tu cuenta aquí.
               </Text>
             </View>
-            <Text className="text-5xl font-headline font-bold text-raices-primary" style={{ lineHeight: 52 }}>
-              Mi Perfil
-            </Text>
-            <Text className="font-body text-lg leading-7" style={{ color: '#544438' }}>
-              Hola {firstName}, gestiona tu cuenta y la familia que cuidas desde aquí.
-            </Text>
           </View>
 
           {/* ── ACCOUNT CARD ────────────────────────────────── */}
@@ -56,9 +80,7 @@ export function CaregiverProfileScreen() {
             style={{ backgroundColor: 'rgba(188, 239, 197, 0.4)' }}
           >
             <View className="flex-row items-center gap-4">
-              <View className="w-20 h-20 rounded-full overflow-hidden">
-                <UserAvatar name={user?.name ?? null} photo={user?.photo ?? null} size={80} />
-              </View>
+              <UserAvatar name={user?.name ?? null} photo={user?.photo ?? null} size={80} />
               <View className="flex-1">
                 <Text className="text-xl font-headline font-bold text-raices-text">
                   {user?.name ?? 'Usuario'}
@@ -151,18 +173,11 @@ export function CaregiverProfileScreen() {
           </View>
 
           {/* ── SIGN OUT ────────────────────────────────────── */}
-          <Pressable
-            className="w-full py-4 rounded-full items-center justify-center border border-red-200 bg-red-50"
-            onPress={handleSignOut}
-          >
-            <Text className="font-headline font-bold text-red-600">
-              Cerrar sesión
-            </Text>
-          </Pressable>
+          <Button label="Cerrar sesión" variant="danger" fullWidth onPress={handleSignOut} />
 
         </View>
       </ScrollView>
-    </View>
+    </Animated.View>
   );
 }
 

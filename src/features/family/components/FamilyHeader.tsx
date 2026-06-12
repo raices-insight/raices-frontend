@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, Image } from 'react-native';
-import { IconSymbol } from '@/core/ui/icon-symbol';
+import { View, Text, StyleSheet, Image } from "react-native";
+import { IconSymbol } from "@/core/ui/icon-symbol";
 
 interface FamilyHeaderProps {
   imageUrl?: string | null;
@@ -7,7 +7,9 @@ interface FamilyHeaderProps {
 }
 
 export function FamilyHeader({ imageUrl, familyName }: FamilyHeaderProps) {
-  const initial = familyName ? familyName.trim().charAt(0).toUpperCase() : 'F';
+  const initial = familyName
+    ? familyName.trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()
+    : "F";
 
   return (
     <View style={styles.container}>
@@ -24,7 +26,11 @@ export function FamilyHeader({ imageUrl, familyName }: FamilyHeaderProps) {
         </View>
       </View>
 
-      <Text style={styles.title}>Mi Familia</Text>
+      <Text style={styles.title}>
+        {familyName 
+          ? (familyName.toLowerCase().includes('familia') ? familyName : `Familia ${familyName}`) 
+          : "Mi Familia"}
+      </Text>
       <Text style={styles.subtitle}>
         Gestiona los miembros de tu hogar y comparte momentos seguros.
       </Text>
@@ -34,13 +40,13 @@ export function FamilyHeader({ imageUrl, familyName }: FamilyHeaderProps) {
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingTop: 32,
     paddingBottom: 24,
     paddingHorizontal: 32,
   },
   avatarWrapper: {
-    position: 'relative',
+    position: "relative",
     width: 112,
     height: 112,
     marginBottom: 16,
@@ -50,44 +56,44 @@ const styles = StyleSheet.create({
     height: 112,
     borderRadius: 56,
     borderWidth: 4,
-    borderColor: '#FFFFFF',
+    borderColor: "#FFFFFF",
   },
   avatarPlaceholder: {
-    backgroundColor: '#D9E2C7',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#D9E2C7",
+    alignItems: "center",
+    justifyContent: "center",
   },
   avatarInitial: {
-    fontFamily: 'PlusJakartaSans-ExtraBold',
+    fontFamily: "PlusJakartaSans-ExtraBold",
     fontSize: 42,
-    color: '#325F3F',
+    color: "#325F3F",
   },
   heartBadge: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 4,
     right: 4,
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#53815F',
+    backgroundColor: "#53815F",
     borderWidth: 3,
-    borderColor: '#F0F5EC',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: "#F0F5EC",
+    alignItems: "center",
+    justifyContent: "center",
   },
   title: {
-    fontFamily: 'PlusJakartaSans-ExtraBold',
+    fontFamily: "PlusJakartaSans-ExtraBold",
     fontSize: 28,
-    fontWeight: '800',
-    color: '#1F1B15',
-    textAlign: 'center',
+    fontWeight: "800",
+    color: "#1F1B15",
+    textAlign: "center",
     marginTop: 4,
   },
   subtitle: {
-    fontFamily: 'BeVietnamPro-Regular',
+    fontFamily: "BeVietnamPro-Regular",
     fontSize: 15,
-    color: '#474747',
-    textAlign: 'center',
+    color: "#474747",
+    textAlign: "center",
     marginTop: 8,
     lineHeight: 22,
   },

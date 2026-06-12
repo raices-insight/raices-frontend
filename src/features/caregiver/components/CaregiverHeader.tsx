@@ -1,5 +1,6 @@
 import { View, Text, Pressable } from '@/core/ui/tw';
 import { UserAvatar } from '@/core/ui/UserAvatar';
+import { getTimeGreeting } from '@/core/utils/time-greeting';
 import type { GoogleUser } from '@/features/auth/hooks/use-google-auth';
 
 interface CaregiverHeaderProps {
@@ -13,7 +14,7 @@ export function CaregiverHeader({ user, onProfilePress }: CaregiverHeaderProps) 
       <View className="flex-row items-center justify-between mb-2">
         <View className="bg-raices-primary/10 px-3 py-1 rounded-full">
           <Text className="text-xs font-label font-bold text-raices-primary uppercase tracking-widest">
-            Dashboard - Cuidador
+            Panel del Cuidador
           </Text>
         </View>
         <Pressable
@@ -25,7 +26,7 @@ export function CaregiverHeader({ user, onProfilePress }: CaregiverHeaderProps) 
         </Pressable>
       </View>
       <Text className="text-3xl font-headline font-bold text-raices-primary mt-2">
-        {user?.name ? `Hola, ${user.name.split(' ')[0]}` : 'Bienvenido'}
+        {getTimeGreeting(user?.name?.split(' ')[0])}
       </Text>
       <Text className="text-base font-body text-raices-text-muted mt-1">
         Aquí podrás gestionar el cuidado de tus seres queridos.

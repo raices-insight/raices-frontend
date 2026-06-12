@@ -52,6 +52,9 @@ export function TransferAdminModal({
                 <Pressable
                   onPress={() => setSelectedId(item.profileId)}
                   style={[styles.memberRow, isSelected && styles.memberRowSelected]}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: isSelected }}
+                  accessibilityLabel={item.name}
                 >
                   <View style={[styles.radio, isSelected && styles.radioSelected]} />
                   <Text style={styles.memberName}>{item.name}</Text>

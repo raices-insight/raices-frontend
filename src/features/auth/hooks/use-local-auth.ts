@@ -83,7 +83,7 @@ export function useLocalAuth(): LocalAuthState {
         role: session.user.roles?.[0] ?? 'user',
       });
     } catch (e) {
-      console.error('[LocalAuth Restore] Failed to restore session:', e);
+      console.warn('[LocalAuth Restore] Failed to restore session:', e);
       await storage.removeItem('session_token');
     }
   }, []);

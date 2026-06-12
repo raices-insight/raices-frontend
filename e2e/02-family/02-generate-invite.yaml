@@ -1,0 +1,31 @@
+appId: com.raicesfrontend.app
+env:
+  TEST_EMAIL: cg1@example.com
+---
+- runFlow:
+    file: ../flows/dev-login.yaml
+
+# Navigate to the family tab
+- tapOn: "Familia"
+
+# Scroll to the Invitation Section (Only admins see this)
+- scrollUntilVisible:
+    element: "Invitar nuevos miembros"
+    direction: DOWN
+
+- assertVisible: "Invitar nuevos miembros"
+
+# Verify the seeded invitation code is displayed
+- assertVisible: "ROJAS-SEPULVEDA-2024"
+
+# Verify the QR button is visible
+- assertVisible: "Mostrar QR"
+
+# Open the QR Modal
+- tapOn: "Mostrar QR"
+
+# Verify the modal opened properly
+- assertVisible: "Código QR de Invitación"
+
+# Close the modal using the device back button so next tests can continue
+- back

@@ -3,7 +3,6 @@ import { Image } from '@/core/ui/image';
 import { Pressable, Text, View } from '@/core/ui/tw';
 import type { GoogleUser } from '@/features/auth/hooks/use-google-auth';
 import { Modal } from 'react-native';
-import { LocationIndicator } from '../../location/components/LocationIndicator';
 
 
 interface ProfileScreenProps {
@@ -44,7 +43,6 @@ export function ProfileScreen({
         <Text className="font-body text-raices-text-muted">
           {user.email}
         </Text>
-        <LocationIndicator></LocationIndicator>
         <Pressable 
           className="mt-4 py-4 px-8 rounded-full items-center justify-center w-full max-w-[280px] bg-raices-secondary" 
           onPress={onSignOut}
