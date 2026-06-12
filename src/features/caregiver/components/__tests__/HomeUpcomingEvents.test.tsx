@@ -50,8 +50,11 @@ describe('HomeUpcomingEvents', () => {
     expect(toJSON()).toBeNull();
   });
 
-  it('does not render when loading and no events', () => {
+  it('shows a skeleton while loading (no events yet)', () => {
     const { toJSON } = render(<HomeUpcomingEvents events={[]} loading={true} />);
-    expect(toJSON()).toBeNull();
+    // skeleton renders instead of returning null
+    expect(toJSON()).not.toBeNull();
+    // section title is not visible during loading
+    expect(screen.queryByText('Próximos eventos')).toBeNull();
   });
 });

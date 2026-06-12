@@ -60,11 +60,12 @@ describe('HomeHealthSummaryGrid', () => {
     expect(screen.getByText('Inactivo')).toBeOnTheScreen();
   });
 
-  it('shows loading skeleton text when loading=true and no score', () => {
-    render(<HomeHealthSummaryGrid dailyScore={null} loading={true} />);
-    expect(screen.getByText('Resumen del Día')).toBeOnTheScreen();
-    // Cards should still be visible but with placeholder values
-    expect(screen.getByText('Actividad')).toBeOnTheScreen();
+  it('shows loading skeleton when loading=true and no score', () => {
+    const { toJSON } = render(<HomeHealthSummaryGrid dailyScore={null} loading={true} />);
+    // pure skeleton renders (no text content)
+    expect(toJSON()).not.toBeNull();
+    expect(screen.queryByText('Resumen del Día')).toBeNull();
+    expect(screen.queryByText('Actividad')).toBeNull();
   });
 
   it('shows "—" placeholders when there is no score data', () => {
