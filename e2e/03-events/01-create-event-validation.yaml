@@ -48,17 +48,13 @@ env:
 - pressKey: Enter
 - inputText: "00"
 
-# Tap AM
-- tapOn:
-    text: "AM"
-    optional: true
-
-- tapOn:
-    text: "PM"
-    optional: true
-
-- tapOn:
-    text: "AM"
+# If the time picker currently shows PM, tap it to open the dropdown and select AM
+- runFlow:
+    when:
+      visible: "PM"
+    commands:
+      - tapOn: "PM"
+      - tapOn: "AM"
 
 # Tap OK/Aceptar
 - tapOn:

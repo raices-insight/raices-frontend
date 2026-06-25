@@ -50,11 +50,21 @@ try {
   execSync('uv run python scripts/init_db.py --reset', { cwd: assistantServiceDir, stdio: 'inherit' });
   console.log('✅ Assistant Service Seeded.\n');
 
-  // 5. Run Maestro Tests
+  // 5. Run Maestro Tests sequentially by reading and sorting the files
   console.log('📱 Launching Maestro Events E2E Suite...');
   const frontendDir = path.resolve(__dirname, '../');
+  const eventsDir = path.join(frontendDir, 'e2e/03-events');
   const env = { ...process.env, EXPO_PUBLIC_USE_AUDIO_MOCK: 'true' };
-  execSync('maestro test e2e/03-events/', { cwd: frontendDir, stdio: 'inherit', env });
+  
+  // Read directory, filter for yaml files, and sort alphabetically
+  const files = fs.readdirSync(eventsDir)
+    .filter(f => f.endsWith('.yaml') || f.endsWith('.yml'))
+    .sort();
+
+  for (const file of files) {
+    console.log(`\n▶️ Running Flow: ${file}...`);
+    execSync(`maestro test e2e/03-events/${file}`, { cwd: frontendDir, stdio: 'inherit', env });
+  }
   
   console.log('\n🎉 All E2E Events tests completed successfully!');
 
