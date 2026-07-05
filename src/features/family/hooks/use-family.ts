@@ -124,7 +124,7 @@ export function useCreateFamily() {
       try {
         const validation = CreateFamilyPayloadSchema.safeParse(payload);
         if (!validation.success) {
-          const msg = validation.error.errors[0]?.message || "Datos inválidos";
+          const msg = validation.error.issues[0]?.message || "Datos inválidos";
           setError(msg);
           toast.error(msg);
           return null;
