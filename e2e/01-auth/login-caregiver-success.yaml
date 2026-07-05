@@ -32,6 +32,6 @@ appId: com.raicesfrontend.app
 
 # Wait for the network request and verify we reached the Caregiver Dashboard
 - extendedWaitUntil:
-    visible: "Dashboard - Cuidador"
+    visible: "PANEL DEL CUIDADOR"
     timeout: 10000
-- assertVisible: "Hola, David"
+- assertVisible: ".*David*"

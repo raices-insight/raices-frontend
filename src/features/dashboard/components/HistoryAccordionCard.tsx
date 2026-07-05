@@ -14,9 +14,17 @@ import { ActivityPills } from './ActivityPills';
 
 interface HistoryAccordionCardProps {
   data: DashboardDailyScore | null;
+  isMoodShared?: boolean;
+  isActivityShared?: boolean;
+  isHealthShared?: boolean;
 }
 
-export function HistoryAccordionCard({ data }: HistoryAccordionCardProps) {
+export function HistoryAccordionCard({ 
+  data,
+  isMoodShared = true,
+  isActivityShared = true,
+  isHealthShared = true
+}: HistoryAccordionCardProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Animación de rotación del chevron
@@ -71,6 +79,8 @@ export function HistoryAccordionCard({ data }: HistoryAccordionCardProps) {
   };
 
   const style = statusStyles[data.overall_status as keyof typeof statusStyles] || statusStyles.green;
+  
+  const allShared = isMoodShared && isActivityShared && isHealthShared;
 
   return (
     <View className={`${style.bg} border ${style.border} rounded-3xl mb-4 overflow-hidden shadow-md flex-row`}>
@@ -114,28 +124,30 @@ export function HistoryAccordionCard({ data }: HistoryAccordionCardProps) {
           <View className="h-[1px] bg-black/5 mb-4" />
           
           <Text className="font-body text-sm text-black/70 mb-4 leading-5">
-            {data.description}
+            {allShared ? data.description : "La descripción no está disponible por privacidad."}
           </Text>
 
           {/* Métricas Ultra-Compactas */}
           <View className="flex-row items-center gap-3 mb-6">
             <View className="flex-row items-baseline gap-1.5">
               <Text className="font-headline text-[10px] text-raices-text-muted uppercase tracking-wider">Salud:</Text>
-              <Text className="font-body font-bold text-xs text-black/70 capitalize">{data.health}</Text>
+              <Text className="font-body font-bold text-xs text-black/70 capitalize">{!isHealthShared ? '—' : data.health}</Text>
             </View>
             <Text className="text-black/10 text-xs">•</Text>
             <View className="flex-row items-baseline gap-1.5">
               <Text className="font-headline text-[10px] text-raices-text-muted uppercase tracking-wider">Ánimo:</Text>
-              <Text className="font-body font-bold text-xs text-black/70 capitalize">{data.mood}</Text>
+              <Text className="font-body font-bold text-xs text-black/70 capitalize">{!isMoodShared ? '—' : data.mood}</Text>
             </View>
           </View>
 
-          <View>
-            <Text className="font-headline text-[10px] font-bold text-raices-text-muted uppercase mb-2 tracking-wider">
-              Actividades detectadas
-            </Text>
-            <ActivityPills activities={data.activity} />
-          </View>
+          {isActivityShared && (
+            <View>
+              <Text className="font-headline text-[10px] font-bold text-raices-text-muted uppercase mb-2 tracking-wider">
+                Actividades detectadas
+              </Text>
+              <ActivityPills activities={data.activity} />
+            </View>
+          )}
         </Animated.View>
       </View>
     </View>

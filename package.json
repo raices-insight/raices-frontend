@@ -10,9 +10,12 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test:e2e:auth": "npx -y tsx scripts/run-maestro-dir.ts e2e/01-auth",
+    "test:e2e:auth:reset": "npx -y tsx scripts/run-e2e-auth.ts",
     "test:e2e:family": "npx -y tsx scripts/run-maestro-dir.ts e2e/02-family",
     "test:e2e:family:reset": "npx -y tsx scripts/run-e2e-family.ts",
     "test:e2e:events:reset": "npx -y tsx scripts/run-e2e-events.ts",
+    "test:e2e:privacy": "npx -y tsx scripts/run-maestro-dir.ts e2e/04-privacy",
+    "test:e2e:privacy:reset": "npx -y tsx scripts/run-e2e-privacy.ts",
     "lint": "expo lint",
     "test": "jest",
     "test:watch": "jest --watch"

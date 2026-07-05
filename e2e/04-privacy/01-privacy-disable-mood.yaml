@@ -1,0 +1,20 @@
+appId: com.raicesfrontend.app
+env:
+  TEST_EMAIL: oa1@example.com
+---
+- runFlow:
+    file: ../flows/dev-login.yaml
+
+# Go to settings tab
+- tapOn: "Perfil"
+
+# Ensure we are on the Privacy screen
+- assertVisible: "Mi Privacidad"
+
+# Disable mood (seeded as ON)
+- tapOn:
+    id: "privacy-toggle-Compartir Ánimo-on"
+
+# Verify toggle switches to OFF state
+- assertVisible:
+    id: "privacy-toggle-Compartir Ánimo-off"

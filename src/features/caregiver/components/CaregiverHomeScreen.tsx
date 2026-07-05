@@ -6,6 +6,7 @@ import { SemanticStatusCard } from '@/features/dashboard/components/SemanticStat
 import { useDashboardSocket } from '@/features/dashboard/hooks/useDashboardSocket';
 import { useFamily } from '@/features/family/hooks/use-family';
 import { useFamilyOlderAdults } from '@/features/family/hooks/use-family-older-adults';
+import { usePrivacyForProfile } from '@/features/older_adult/hooks/use-privacy-for-profile';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, RefreshControl } from 'react-native';
@@ -26,6 +27,9 @@ function HomeContent() {
 
   // Dashboard data for the selected older adult
   const { dailyScore, yesterdayScore, refresh } = useDashboardSocket(selected?.profileId);
+
+  // Privacy flags for the selected older adult
+  const { isMoodShared, isActivityShared, isHealthShared } = usePrivacyForProfile(selected?.profileId);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
@@ -98,13 +102,26 @@ function HomeContent() {
         <HomeHealthSummaryGrid
           dailyScore={dailyScore}
           loading={loading}
+          isMoodShared={isMoodShared}
+          isActivityShared={isActivityShared}
+          isHealthShared={isHealthShared}
         />
 
         {/* Today's semantic status + previous day history */}
         <View className="px-5 mb-6">
-          <SemanticStatusCard dailyScore={dailyScore} />
+          <SemanticStatusCard 
+            dailyScore={dailyScore} 
+            isMoodShared={isMoodShared}
+            isActivityShared={isActivityShared}
+            isHealthShared={isHealthShared}
+          />
           <View className="h-4" />
-          <HistoryAccordionCard data={yesterdayScore} />
+          <HistoryAccordionCard 
+            data={yesterdayScore} 
+            isMoodShared={isMoodShared}
+            isActivityShared={isActivityShared}
+            isHealthShared={isHealthShared}
+          />
         </View>
 
         {/* Upcoming events horizontal strip */}
