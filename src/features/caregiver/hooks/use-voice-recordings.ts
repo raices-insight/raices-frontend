@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { z } from 'zod';
 import { apiClient } from '@/core/api/client';
+import { useWebSocket } from '@/core/websocket/websocket-provider';
 import { VoiceRecordingSchema, type VoiceRecording } from '../api/schemas';
 import { logger } from '@/core/logger';
 
@@ -20,6 +21,7 @@ export function useVoiceRecordings(
   profileId: string | null,
   limit = 5,
 ): UseVoiceRecordingsReturn {
+  const { subscribe } = useWebSocket();
   const [recordings, setRecordings] = useState<VoiceRecording[]>([]);
   // Start in loading state if we have a profileId so consumers can show
   // a skeleton immediately without waiting for the first effect flush.
@@ -82,6 +84,14 @@ export function useVoiceRecordings(
       return () => controller.abort();
     }, [fetchRecordings])
   );
+
+  // Refetch when the assistant finishes processing a new recording
+  useEffect(() => {
+    return subscribe('assistant:analysis_complete', () => {
+      logger.debug('[useVoiceRecordings] analysis_complete received — refetching');
+      void fetchRecordings();
+    });
+  }, [subscribe, fetchRecordings]);
 
   return { recordings, isLoading, error, refetch: fetchRecordings };
 }

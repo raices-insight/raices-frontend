@@ -23,11 +23,17 @@ export function SemanticStatusCard({
 
   const [displayScore, setDisplayScore] = useState(0);
 
+  // When the older adult has disabled every privacy option, the overall status,
+  // score and colour are all health-derived — showing them would imply real data
+  // that isn't being shared. Render a neutral "private" state instead.
+  const allPrivate = !isHealthShared && !isMoodShared && !isActivityShared;
+
   useEffect(() => {
     if (!dailyScore) return;
-    progressWidth.value = withDelay(200, withSpring(dailyScore.score, { damping: 18, stiffness: 60 }));
+    const targetScore = allPrivate ? 0 : dailyScore.score;
+    progressWidth.value = withDelay(200, withSpring(targetScore, { damping: 18, stiffness: 60 }));
 
-    const target = Math.round(dailyScore.score);
+    const target = Math.round(targetScore);
     let current = 0;
     const step = Math.max(1, Math.ceil(target / 28));
     const interval = setInterval(() => {
@@ -36,7 +42,7 @@ export function SemanticStatusCard({
       if (current >= target) clearInterval(interval);
     }, 38);
     return () => clearInterval(interval);
-  }, [dailyScore?.score]);
+  }, [dailyScore?.score, allPrivate]);
 
   // Empty State
   if (!dailyScore) {
@@ -75,10 +81,20 @@ export function SemanticStatusCard({
       iconName: 'exclamationmark.octagon.fill' as IconSymbolName,
       iconColor: '#E53E3E',
       statusText: 'Atención Médica'
+    },
+    private: {
+      accent: 'bg-black/10',
+      bar: 'bg-black/20',
+      text: 'text-raices-text-muted',
+      iconName: 'lock.fill' as IconSymbolName,
+      iconColor: '#9CA3AF',
+      statusText: 'Datos privados'
     }
   };
 
-  const style = statusStyles[dailyScore.overall_status as keyof typeof statusStyles] || statusStyles.green;
+  const style = allPrivate
+    ? statusStyles.private
+    : (statusStyles[dailyScore.overall_status as keyof typeof statusStyles] || statusStyles.green);
 
   return (
     <View className="w-full bg-white border border-black/5 rounded-3xl shadow-md overflow-hidden flex-row">
@@ -111,7 +127,7 @@ export function SemanticStatusCard({
               Índice de Bienestar
             </Text>
             <Text className={`font-headline font-bold text-sm ${style.text}`}>
-              {displayScore}/100
+              {allPrivate ? '—' : `${displayScore}/100`}
             </Text>
           </View>
           <View className="w-full h-3 rounded-full bg-black/5 overflow-hidden border border-black/5">
@@ -139,7 +155,7 @@ export function SemanticStatusCard({
           <View className="flex-1 pl-3" style={{ borderLeftWidth: 2, borderLeftColor: style.iconColor }}>
             <Text className={`font-headline text-[10px] text-raices-text-muted uppercase tracking-wider`}>Eventos</Text>
             <Text className={`font-body font-semibold text-sm mt-1 text-black/80`}>
-              {dailyScore.interaction_count} hoy
+              {allPrivate ? '—' : `${dailyScore.interaction_count} hoy`}
             </Text>
           </View>
         </View>

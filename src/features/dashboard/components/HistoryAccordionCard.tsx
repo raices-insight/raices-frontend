@@ -75,12 +75,25 @@ export function HistoryAccordionCard({
       accent: 'bg-raices-status-red-accent',
       iconBg: 'bg-raices-status-red-accent/10',
       iconColor: '#E53E3E'
+    },
+    private: {
+      bg: 'bg-white',
+      border: 'border-black/5',
+      text: 'text-raices-text-muted',
+      accent: 'bg-black/10',
+      iconBg: 'bg-black/5',
+      iconColor: '#9CA3AF'
     }
   };
 
-  const style = statusStyles[data.overall_status as keyof typeof statusStyles] || statusStyles.green;
-  
   const allShared = isMoodShared && isActivityShared && isHealthShared;
+  // Every privacy option off → the score/colour are health-derived, so neutralise
+  // them instead of showing a number that implies data that isn't being shared.
+  const allPrivate = !isMoodShared && !isActivityShared && !isHealthShared;
+
+  const style = allPrivate
+    ? statusStyles.private
+    : (statusStyles[data.overall_status as keyof typeof statusStyles] || statusStyles.green);
 
   return (
     <View className={`${style.bg} border ${style.border} rounded-3xl mb-4 overflow-hidden shadow-md flex-row`}>
@@ -110,7 +123,7 @@ export function HistoryAccordionCard({
             {/* Lado Derecho: Puntaje + Chevron */}
             <View className="flex-row items-center gap-3">
               <View className="items-end">
-                <Text className={`font-headline text-sm font-bold ${style.text}`}>{data.score.toFixed(0)}</Text>
+                <Text className={`font-headline text-sm font-bold ${style.text}`}>{allPrivate ? '—' : data.score.toFixed(0)}</Text>
                 <Text className="font-body text-[10px] text-raices-text-muted">Puntaje</Text>
               </View>
               <Animated.View style={animatedChevronStyle}>

@@ -1,4 +1,5 @@
 import { CONFIG } from '@/core/config';
+import { logger } from '@/core/logger';
 import { useAuth } from '@/features/auth/context/auth-context';
 import React, {
   createContext,
@@ -54,6 +55,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     // Track connection state for consumers
     socket.on('connect', () => setIsConnected(true));
     socket.on('disconnect', () => setIsConnected(false));
+    socket.on('connect_error', (err) => logger.warn('[WebSocket] connect_error', err.message));
 
     // Single routing point: forward every incoming event to registered handlers.
     // Using onAny avoids per-event socket.on() registrations and keeps the

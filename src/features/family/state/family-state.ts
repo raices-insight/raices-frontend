@@ -1,4 +1,9 @@
-import type { FamilyDetailsResponse } from '../api/schemas';
+import type { FamilyDetailsResponse, GetFamilyResponse } from '../api/schemas';
+
+/** El estado compartido puede contener la respuesta completa de detalles o la
+ *  respuesta más acotada de /family/my-family. Los consumidores solo leen
+ *  presencia (=== null) o campos comunes a ambas. */
+type FamilyStateValue = GetFamilyResponse | FamilyDetailsResponse;
 
 /**
  * Módulo compartido de estado de familia.
@@ -6,18 +11,18 @@ import type { FamilyDetailsResponse } from '../api/schemas';
  * el mismo dato sin necesidad de un React Context a nivel root.
  */
 
-let _family: FamilyDetailsResponse | null = null;
+let _family: FamilyStateValue | null = null;
 const _listeners = new Set<() => void>();
 
 function notify(): void {
   _listeners.forEach((fn) => fn());
 }
 
-export function getFamilyState(): FamilyDetailsResponse | null {
+export function getFamilyState(): FamilyStateValue | null {
   return _family;
 }
 
-export function setFamilyState(family: FamilyDetailsResponse | null): void {
+export function setFamilyState(family: FamilyStateValue | null): void {
   _family = family;
   notify();
 }

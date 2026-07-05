@@ -5,7 +5,7 @@ import { Camera, Map, Marker } from "@maplibre/maplibre-react-native";
 import { useEffect, useState } from "react";
 
 export function LocationIndicator() {
-  const socket = useWebSocket();
+  const { subscribe } = useWebSocket();
 
   const [location, setLocation] = useState<{
     longitude: number;
@@ -15,17 +15,15 @@ export function LocationIndicator() {
     latitude: 0,
   });
 
-  // NOTE: It is no errors handle in right here
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  socket.subscribe(
-    "location.track.update",
-    (data: { longitude: number; latitude: number }) => {
+  useEffect(() => {
+    return subscribe("location.track.update", (data) => {
       if (data.longitude !== 0 && data.latitude !== 0) {
         setLocation(data);
       }
-    },
-  );
+    });
+  }, [subscribe]);
 
   useEffect(() => {
     async function getLatestLocation() {
