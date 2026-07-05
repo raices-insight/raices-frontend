@@ -97,6 +97,17 @@ jest.mock('@/features/family/hooks/use-family-older-adults', () => ({
   }),
 }));
 
+jest.mock('@/features/older_adult/hooks/use-privacy-for-profile', () => ({
+  usePrivacyForProfile: () => ({
+    privacy: { isActivityShared: true, isMoodShared: true, isHealthShared: true },
+    isActivityShared: true,
+    isMoodShared: true,
+    isHealthShared: true,
+    loading: false,
+    error: null,
+  }),
+}));
+
 jest.mock('@/features/dashboard/hooks/useDashboardSocket', () => ({
   useDashboardSocket: () => ({
     dailyScore: mockDailyScore,
