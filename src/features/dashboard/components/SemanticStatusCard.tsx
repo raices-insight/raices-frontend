@@ -7,9 +7,17 @@ import { ActivityPills } from './ActivityPills';
 
 interface SemanticStatusCardProps {
   dailyScore: DashboardDailyScore | null;
+  isMoodShared?: boolean;
+  isActivityShared?: boolean;
+  isHealthShared?: boolean;
 }
 
-export function SemanticStatusCard({ dailyScore }: SemanticStatusCardProps) {
+export function SemanticStatusCard({ 
+  dailyScore,
+  isMoodShared = true,
+  isActivityShared = true,
+  isHealthShared = true
+}: SemanticStatusCardProps) {
   const progressWidth = useSharedValue(0);
   const barStyle = useAnimatedStyle(() => ({ width: `${progressWidth.value}%` as any }));
 
@@ -119,13 +127,13 @@ export function SemanticStatusCard({ dailyScore }: SemanticStatusCardProps) {
           <View className="flex-1 pl-3" style={{ borderLeftWidth: 2, borderLeftColor: style.iconColor }}>
             <Text className={`font-headline text-[10px] text-raices-text-muted uppercase tracking-wider`}>Salud</Text>
             <Text className={`font-body font-semibold capitalize text-sm mt-1 text-black/80`}>
-              {dailyScore.health}
+              {!isHealthShared ? '—' : dailyScore.health}
             </Text>
           </View>
           <View className="flex-1 pl-3" style={{ borderLeftWidth: 2, borderLeftColor: style.iconColor }}>
             <Text className={`font-headline text-[10px] text-raices-text-muted uppercase tracking-wider`}>Ánimo</Text>
             <Text className={`font-body font-semibold capitalize text-sm mt-1 text-black/80`}>
-              {dailyScore.mood}
+              {!isMoodShared ? '—' : dailyScore.mood}
             </Text>
           </View>
           <View className="flex-1 pl-3" style={{ borderLeftWidth: 2, borderLeftColor: style.iconColor }}>
@@ -137,7 +145,7 @@ export function SemanticStatusCard({ dailyScore }: SemanticStatusCardProps) {
         </View>
 
         {/* ── Activity Pills ── */}
-        {dailyScore.activity.length > 0 && (
+        {(dailyScore.activity.length > 0 && isActivityShared) && (
           <View className="mt-2">
             <Text className={`font-headline text-[10px] text-raices-text-muted uppercase tracking-wider mb-2`}>
               Actividades Detectadas

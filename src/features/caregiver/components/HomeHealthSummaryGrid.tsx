@@ -8,6 +8,9 @@ import type { DashboardDailyScore } from '@/features/dashboard/api/schemas';
 interface HomeHealthSummaryGridProps {
   dailyScore: DashboardDailyScore | null;
   loading: boolean;
+  isMoodShared?: boolean;
+  isActivityShared?: boolean;
+  isHealthShared?: boolean;
 }
 
 interface StatusCardProps {
@@ -66,16 +69,22 @@ function deriveMedicina(status: DashboardDailyScore['overall_status']): string {
  *
  * Data comes from the dashboard DailyScore for the selected older adult.
  */
-export function HomeHealthSummaryGrid({ dailyScore, loading }: HomeHealthSummaryGridProps) {
+export function HomeHealthSummaryGrid({ 
+  dailyScore, 
+  loading,
+  isMoodShared = true,
+  isActivityShared = true,
+  isHealthShared = true
+}: HomeHealthSummaryGridProps) {
   // Derive card values — show "—" when no data, regardless of loading state
-  const actividadValue = !dailyScore
+  const actividadValue = !dailyScore || !isActivityShared
     ? '—'
     : dailyScore.activity.length > 0
     ? 'Activo'
     : 'Inactivo';
 
-  const saludValue = dailyScore?.health ?? '—';
-  const estadoValue = dailyScore?.mood ?? '—';
+  const saludValue = !isHealthShared ? '—' : (dailyScore?.health ?? '—');
+  const estadoValue = !isMoodShared ? '—' : (dailyScore?.mood ?? '—');
   const medicinaValue = dailyScore ? deriveMedicina(dailyScore.overall_status) : '—';
 
   // Today's date label

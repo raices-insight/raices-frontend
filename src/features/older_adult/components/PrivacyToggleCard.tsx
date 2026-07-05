@@ -26,6 +26,7 @@ export function PrivacyToggleCard({ icon, title, description, value, onToggle }:
         {description}
       </Text>
       <Switch
+        testID={`privacy-toggle-${title}-${value ? 'on' : 'off'}`}
         value={value}
         onValueChange={onToggle}
         trackColor={{ false: '#d1d5db', true: '#325F3F' }}

@@ -1,3 +1,5 @@
+import { LogBox } from 'react-native';
+
 /**
  * Patches console.warn to suppress known, unfixable upstream library warnings
  * that would otherwise flood the dev terminal.
@@ -25,3 +27,8 @@ console.warn = (...args: unknown[]) => {
   }
   _originalWarn(...args);
 };
+
+// Disable all on-screen toasts during E2E testing
+if (process.env.EXPO_PUBLIC_E2E_TESTING === 'true') {
+  LogBox.ignoreAllLogs(true);
+}

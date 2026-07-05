@@ -1,0 +1,19 @@
+appId: com.raicesfrontend.app
+env:
+  TEST_EMAIL: cg1@example.com
+---
+- runFlow:
+    file: ../flows/dev-login.yaml
+
+# Dashboard should be visible
+- assertVisible: "Resumen del Día"
+
+# Maria is the first adult, ensure we are on her view.
+- tapOn: "Maria Rojas"
+
+# The mood (Ánimo) is disabled, so we expect '—' for mood instead of 'tired' (which is the seeded data).
+- assertVisible: "—"
+
+# Specifically, we shouldn't see 'tired' which is the seeded mood for Maria
+- assertNotVisible: "cansada"
+- assertNotVisible: "tired"

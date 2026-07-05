@@ -1,0 +1,29 @@
+appId: com.raicesfrontend.app
+env:
+  TEST_EMAIL: cg1@example.com
+---
+- runFlow:
+    file: ../flows/dev-login.yaml
+
+# Dashboard should be visible
+- assertVisible: "Resumen del Día"
+
+# Maria is the first adult, ensure we are on her view.
+- tapOn: "Maria Rojas"
+
+# The activity and health are disabled, so we expect '—' instead of values.
+# Seeded values are: health='good', activity=['caminata']
+- assertVisible: "—"
+- assertNotVisible: "Activo"
+- assertNotVisible: "caminata"
+- assertNotVisible: "buena"
+- assertNotVisible: "good"
+
+# Make sure we see the privacy warning on the accordion
+- scrollUntilVisible:
+    element: "Día Anterior"
+    direction: DOWN
+    timeout: 20000
+- tapOn: "Día Anterior"
+- assertVisible: "La descripción no está disponible por privacidad."
+- assertNotVisible: "caminata"
