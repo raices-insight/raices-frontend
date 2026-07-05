@@ -44,10 +44,20 @@ try {
   execSync('npm run seed', { cwd: familyServiceDir, stdio: 'inherit' });
   console.log('✅ Family Service Seeded.\n');
 
-  // 4. Run Maestro Tests
+  // 4. Run Maestro Tests sequentially by reading and sorting the files
   console.log('📱 Launching Maestro Family E2E Suite...');
   const frontendDir = path.resolve(__dirname, '../');
-  execSync('maestro test e2e/02-family/', { cwd: frontendDir, stdio: 'inherit' });
+  const familyDir = path.join(frontendDir, 'e2e/02-family');
+
+  // Read directory, filter for yaml files, and sort alphabetically
+  const files = fs.readdirSync(familyDir)
+    .filter(f => f.endsWith('.yaml') || f.endsWith('.yml'))
+    .sort();
+
+  for (const file of files) {
+    console.log(`\n▶️ Running Flow: ${file}...`);
+    execSync(`maestro test e2e/02-family/${file}`, { cwd: frontendDir, stdio: 'inherit' });
+  }
   
   console.log('\n🎉 All E2E Family tests completed successfully!');
 
