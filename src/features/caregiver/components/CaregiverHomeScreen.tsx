@@ -8,7 +8,7 @@ import { useFamily } from '@/features/family/hooks/use-family';
 import { useFamilyOlderAdults } from '@/features/family/hooks/use-family-older-adults';
 import { usePrivacyForProfile } from '@/features/older_adult/hooks/use-privacy-for-profile';
 import { router, useFocusEffect } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, RefreshControl } from 'react-native';
 import { LocationIndicator } from '../../location/components/LocationIndicator';
 import { useSelectedOlderAdult } from '../hooks/use-selected-older-adult';
@@ -38,9 +38,14 @@ function HomeContent() {
   }, [refresh]);
 
   // Upcoming calendar events for the selected older adult (today → +7 days)
-  const today = new Date();
-  const startDate = today.toISOString();
-  const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  // Memoised so the ISO strings don't change on every render and cause excessive fetches
+  const { startDate, endDate } = useMemo(() => {
+    const today = new Date();
+    return {
+      startDate: today.toISOString(),
+      endDate: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+  }, []);
 
   const { events, isLoading: eventsLoading } = useAssistantCalendarEvents({
     startDate,

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { apiClient } from '@/core/api/client';
 import type { PrivacyRecord } from '../api/privacy-api';
 
@@ -16,39 +17,41 @@ export function usePrivacyForProfile(profileId: string | null | undefined): UseP
   const [loading, setLoading] = useState<boolean>(!!profileId);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!profileId) {
-      setPrivacy(null);
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    const fetchPrivacy = async () => {
-      try {
-        const { data } = await apiClient.get<PrivacyRecord | PrivacyRecord[]>(
-          `/privacy/profile/${profileId}`,
-        );
-        if (cancelled) return;
-        const record = Array.isArray(data) ? (data[0] ?? null) : data ?? null;
-        setPrivacy(record);
-      } catch (e: any) {
-        if (cancelled) return;
+  useFocusEffect(
+    useCallback(() => {
+      if (!profileId) {
         setPrivacy(null);
-        setError(e?.message ?? 'No se pudo cargar la configuración de privacidad.');
-      } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
+        return;
       }
-    };
 
-    void fetchPrivacy();
-    return () => {
-      cancelled = true;
-    };
-  }, [profileId]);
+      let cancelled = false;
+      setLoading(true);
+      setError(null);
+
+      const fetchPrivacy = async () => {
+        try {
+          const { data } = await apiClient.get<PrivacyRecord | PrivacyRecord[]>(
+            `/privacy/profile/${profileId}`,
+          );
+          if (cancelled) return;
+          const record = Array.isArray(data) ? (data[0] ?? null) : data ?? null;
+          setPrivacy(record);
+        } catch (e: any) {
+          if (cancelled) return;
+          setPrivacy(null);
+          setError(e?.message ?? 'No se pudo cargar la configuración de privacidad.');
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      };
+
+      void fetchPrivacy();
+      return () => {
+        cancelled = true;
+      };
+    }, [profileId]),
+  );
 
   return {
     privacy,

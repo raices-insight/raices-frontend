@@ -37,16 +37,16 @@ function StatusCard({ label, value, iconName, iconColor = '#325F3F', index = 0 }
   }));
 
   return (
-    <Animated.View style={animStyle}>
+    <Animated.View style={[{ flex: 1 }, animStyle]}>
       <View className="bg-white rounded-2xl p-4 border border-black/5 flex-row items-center gap-3">
         <View className="w-10 h-10 rounded-full bg-raices-primary/10 items-center justify-center">
           <IconSymbol name={iconName} size={20} color={iconColor} />
         </View>
-        <View>
-          <Text className="font-label text-xs text-raices-text-muted uppercase tracking-wide">
+        <View className="flex-1">
+          <Text className="font-label text-xs text-raices-text-muted uppercase tracking-wide" numberOfLines={1}>
             {label}
           </Text>
-          <Text className="font-headline font-bold text-raices-text text-base capitalize mt-0.5">
+          <Text className="font-headline font-bold text-raices-text text-base capitalize mt-0.5" numberOfLines={1}>
             {value}
           </Text>
         </View>
@@ -85,7 +85,7 @@ export function HomeHealthSummaryGrid({
 
   const saludValue = !isHealthShared ? '—' : (dailyScore?.health ?? '—');
   const estadoValue = !isMoodShared ? '—' : (dailyScore?.mood ?? '—');
-  const medicinaValue = dailyScore ? deriveMedicina(dailyScore.overall_status) : '—';
+  const medicinaValue = !isHealthShared ? '—' : (dailyScore ? deriveMedicina(dailyScore.overall_status) : '—');
 
   // Today's date label
   const today = new Date();

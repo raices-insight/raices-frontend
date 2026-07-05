@@ -14,6 +14,12 @@ jest.mock('@/core/api/client', () => ({
     get: jest.fn(),
   },
 }));
+
+// Mock WebSocket provider — severs the GoogleSignin native-module import chain
+// (websocket-provider → auth-context → use-google-auth → @react-native-google-signin)
+jest.mock('@/core/websocket/websocket-provider', () => ({
+  useWebSocket: () => ({ subscribe: jest.fn(() => jest.fn()) }),
+}));
 const mockGet = apiClient.get as jest.Mock;
 
 const MOCK_RECORDINGS = [
