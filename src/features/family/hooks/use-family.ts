@@ -369,6 +369,7 @@ export function useRegenerateCode() {
           return null;
         }
 
+        setFamilyState(null); // bust cache → triggers reactive refetch in useFamilyDetails
         toast.success("Código de invitación regenerado exitosamente");
         return validation.data.invitationCode;
       } catch (err: unknown) {
