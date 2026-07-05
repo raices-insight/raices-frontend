@@ -49,46 +49,50 @@ export function useFamily(): UseFamily {
         setError(null);
       });
 
-      if (getFamilyState() !== null) {
-        setFamily(getFamilyState());
+      // Show cached data immediately so UI is instant, then always re-validate
+      const cached = getFamilyState();
+      if (cached !== null) {
+        setFamily(cached);
         setLoading(false);
-      } else {
-        const fetchFamily = async () => {
-          setLoading(true);
-          setError(null);
-
-          try {
-            const { data } =
-              await apiClient.get<GetFamilyResponse>("/family/my-family");
-
-            if (cancelled) return;
-
-            const validation = GetFamilyResponseSchema.safeParse(data);
-            if (!validation.success) {
-              logger.error(
-                "Respuesta inesperada al obtener familia",
-                validation.error,
-              );
-              setError("Error al procesar la información de la familia");
-              setLoading(false);
-              return;
-            }
-
-            setFamilyState(validation.data);
-          } catch (err: unknown) {
-            if (cancelled) return;
-            const message =
-              err instanceof Error ? err.message : "Error al consultar familia";
-            logger.info("No se encontró familia para el usuario", err);
-            setFamily(null);
-            setError(message);
-          } finally {
-            if (!cancelled) setLoading(false);
-          }
-        };
-
-        void fetchFamily();
       }
+
+      const fetchFamily = async () => {
+        if (cached === null) setLoading(true);
+        setError(null);
+
+        try {
+          const { data } =
+            await apiClient.get<GetFamilyResponse>("/family/my-family");
+
+          if (cancelled) return;
+
+          const validation = GetFamilyResponseSchema.safeParse(data);
+          if (!validation.success) {
+            logger.error(
+              "Respuesta inesperada al obtener familia",
+              validation.error,
+            );
+            setError("Error al procesar la información de la familia");
+            setLoading(false);
+            return;
+          }
+
+          setFamilyState(validation.data);
+        } catch (err: unknown) {
+          if (cancelled) return;
+          const message =
+            err instanceof Error ? err.message : "Error al consultar familia";
+          logger.info("No se encontró familia para el usuario", err);
+          // Keep cached family on transient revalidation errors so the UI
+          // doesn't flicker to the empty state; only clear when nothing was shown
+          if (cached === null) setFamily(null);
+          setError(message);
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      };
+
+      void fetchFamily();
 
       return () => {
         cancelled = true;
@@ -120,7 +124,7 @@ export function useCreateFamily() {
       try {
         const validation = CreateFamilyPayloadSchema.safeParse(payload);
         if (!validation.success) {
-          const msg = validation.error.errors[0]?.message || "Datos inválidos";
+          const msg = validation.error.issues[0]?.message || "Datos inválidos";
           setError(msg);
           toast.error(msg);
           return null;
@@ -231,6 +235,15 @@ export function useFamilyDetails(familyId: string | undefined) {
     }, [fetchDetails]),
   );
 
+  // Refetch immediately when a mutation busts the cache (setFamilyState(null))
+  useEffect(() => {
+    return subscribe(() => {
+      if (getFamilyState() === null && familyId) {
+        void fetchDetails();
+      }
+    });
+  }, [familyId, fetchDetails]);
+
   return {
     details,
     members: details?.members ?? [],
@@ -266,6 +279,7 @@ export function useUpdateMemberRole() {
       try {
         await apiClient.patch(`/family/${familyId}/member-role`, payload);
 
+        setFamilyState(null); // bust cache → triggers reactive refetch in useFamilyDetails
         toast.success("Rol actualizado exitosamente");
         return true;
       } catch (err: unknown) {
@@ -305,6 +319,7 @@ export function useExpulseMember() {
       try {
         await apiClient.post(`/family/${familyId}/expulse`, payload);
 
+        setFamilyState(null); // bust cache → triggers reactive refetch in useFamilyDetails
         toast.success("Miembro expulsado exitosamente");
         return true;
       } catch (err: unknown) {
@@ -354,6 +369,7 @@ export function useRegenerateCode() {
           return null;
         }
 
+        setFamilyState(null); // bust cache → triggers reactive refetch in useFamilyDetails
         toast.success("Código de invitación regenerado exitosamente");
         return validation.data.invitationCode;
       } catch (err: unknown) {

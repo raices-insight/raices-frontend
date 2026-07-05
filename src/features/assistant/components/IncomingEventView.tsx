@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useWindowDimensions, ActivityIndicator } from 'react-native';
 import {
   useSharedValue, useAnimatedStyle,
@@ -63,6 +63,8 @@ export function IncomingEventView() {
   
   // Track the audio profile ID of the currently uploading/processing recording
   const [uploadAudioProfileId, setUploadAudioProfileId] = useState<string | null>(null);
+  const uploadAudioProfileIdRef = useRef(uploadAudioProfileId);
+  useEffect(() => { uploadAudioProfileIdRef.current = uploadAudioProfileId; }, [uploadAudioProfileId]);
 
   const { subscribe } = useWebSocket();
 
@@ -70,20 +72,21 @@ export function IncomingEventView() {
   useEffect(() => {
     return subscribe('assistant:analysis_complete', (data) => {
       logger.info('Received assistant:analysis_complete', data);
-      
+
       // Only process the analysis if it belongs to the audio we just uploaded
-      if (!uploadAudioProfileId || data.audio_profile_id !== uploadAudioProfileId) {
+      const currentId = uploadAudioProfileIdRef.current;
+      if (!currentId || data.audio_profile_id !== currentId) {
         logger.debug(`Ignoring analysis for different or null audio profile: ${data.audio_profile_id}`);
         return;
       }
-      
+
       setAnalysisResult({
         waiting: false,
         description: data.description ?? null,
         analysisStatus: data.status,
       });
     });
-  }, [subscribe, uploadAudioProfileId]);
+  }, [subscribe]);
 
   // When upload is acknowledged by the server, start waiting for the async analysis
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useWebSocket } from '@/core/websocket/websocket-provider';
 import { setFamilyState, getFamilyState } from '../state/family-state';
 import { stopTrackingLocation } from '@/features/location/services/tracking.service';
@@ -15,6 +15,8 @@ import { logger } from '@/core/logger';
 export function useFamilyMembershipListener() {
   const { subscribe } = useWebSocket();
   const toast = useToast();
+  const toastRef = useRef(toast);
+  useEffect(() => { toastRef.current = toast; }, [toast]);
 
   useEffect(() => {
     return subscribe('family.member.expelled', ({ familyId }) => {
@@ -27,7 +29,7 @@ export function useFamilyMembershipListener() {
       void stopTrackingLocation().catch((e) =>
         logger.warn('[FamilyMembership] Could not stop location tracking', e),
       );
-      toast.error('Has sido expulsado de la familia');
+      toastRef.current.error('Has sido expulsado de la familia');
     });
-  }, [subscribe, toast]);
+  }, [subscribe]);
 }

@@ -1,5 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/features/auth/context/auth-context';
+import { apiClient } from '@/src/core/api/client';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { stopTrackingLocation } from '../../location/services/tracking.service';
 import { privacyApi, type PrivacyRecord } from '../api/privacy-api';
 
 type PrivacyOverrides = {
@@ -32,39 +35,41 @@ export function usePrivacy(): UsePrivacyReturn {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!sessionToken) {
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    const fetchPrivacy = async () => {
-      try {
-        const { data } = await privacyApi.getMyPrivacy(sessionToken);
-        if (cancelled) return;
-
-        if (data.length > 0) {
-          const r = data[0];
-          setRecord(r);
-          setIsMoodShared(r.isMoodShared);
-          setIsActivityShared(r.isActivityShared);
-          setIsHealthShared(r.isHealthShared);
-        }
-      } catch {
-        if (!cancelled) setError('No se pudieron cargar tus preferencias de privacidad.');
-      } finally {
-        if (!cancelled) setLoading(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!sessionToken) {
+        setLoading(false);
+        return;
       }
-    };
 
-    void fetchPrivacy();
+      let cancelled = false;
 
-    return () => {
-      cancelled = true;
-    };
-  }, [sessionToken]);
+      const fetchPrivacy = async () => {
+        try {
+          const { data } = await privacyApi.getMyPrivacy(sessionToken);
+          if (cancelled) return;
+
+          if (data.length > 0) {
+            const r = data[0];
+            setRecord(r);
+            setIsMoodShared(r.isMoodShared);
+            setIsActivityShared(r.isActivityShared);
+            setIsHealthShared(r.isHealthShared);
+          }
+        } catch {
+          if (!cancelled) setError('No se pudieron cargar tus preferencias de privacidad.');
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      };
+
+      void fetchPrivacy();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [sessionToken]),
+  );
 
   const save = useCallback(async (overrides?: PrivacyOverrides) => {
     if (!sessionToken || !user) return;
@@ -85,6 +90,18 @@ export function usePrivacy(): UsePrivacyReturn {
       } else {
         const { data } = await privacyApi.create(sessionToken, { profileId: user.id, ...payload });
         setRecord(data);
+      }
+
+      if (overrides?.isActivityShared??isActivityShared==false){
+        console.log("stopping location task and zeroing coordinates")
+        stopTrackingLocation();
+
+        let coords = {
+          latitude: 0,
+          longitude: 0,
+        };
+        await apiClient.post("/location", coords)
+        console.log("done.")
       }
     } catch (e) {
       setError('No se pudieron guardar tus preferencias. Intenta de nuevo.');

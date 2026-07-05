@@ -54,6 +54,11 @@ describe('HomeHealthSummaryGrid', () => {
     expect(screen.getByText('Al día')).toBeOnTheScreen();
   });
 
+  it('shows "—" for Medicina when isHealthShared is false', () => {
+    render(<HomeHealthSummaryGrid dailyScore={mockScore} loading={false} isHealthShared={false} />);
+    expect(screen.queryByText('Al día')).toBeNull();
+  });
+
   it('shows "Inactivo" when activity list is empty', () => {
     const noActivity = { ...mockScore, activity: [] };
     render(<HomeHealthSummaryGrid dailyScore={noActivity} loading={false} />);

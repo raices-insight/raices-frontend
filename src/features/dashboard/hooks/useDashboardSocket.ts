@@ -79,9 +79,13 @@ export const useDashboardSocket = (profileId: string | undefined) => {
         logger.error('Invalid daily_score_update payload', parsed.error);
         return;
       }
+      if (profileId && parsed.data.profile_id !== profileId) {
+        logger.debug(`Ignoring daily_score_update for different profile ${parsed.data.profile_id}`);
+        return;
+      }
       setDailyScore(parsed.data);
     });
-  }, [subscribe]);
+  }, [subscribe, profileId]);
 
   // ─── On-demand refresh (call from useFocusEffect in the screen) ───────────────
 

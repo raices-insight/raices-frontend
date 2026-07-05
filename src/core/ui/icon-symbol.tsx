@@ -9,7 +9,7 @@ import { ComponentProps } from 'react';
 import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 
 type IconMapping = Record<string, ComponentProps<typeof MaterialCommunityIcons>['name']>;
-type IconSymbolName = keyof typeof MAPPING;
+export type IconSymbolName = keyof typeof MAPPING;
 
 /**
  * SF Symbol → MaterialCommunityIcons mapping.
@@ -77,7 +77,7 @@ const MAPPING = {
   'calendar.badge.minus':                     'calendar-blank',
   'pill.fill':                                'pill',
   'stethoscope':                              'stethoscope',
-  
+
   // --- Dashboard / Medical ---
   'chart.bar.fill':                           'chart-bar',
   'waveform.path.ecg':                        'heart-pulse',
