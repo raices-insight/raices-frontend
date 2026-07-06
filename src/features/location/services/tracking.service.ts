@@ -4,7 +4,7 @@ import * as TaskManager from "expo-task-manager";
 
 export const LOCATION_TASK_NAME = "background-location-task";
 const PSYCHO_TRACK_INTERVAL = 3 * 60 * 1000;
-const RELAX_TRACK_INTERVAL = 30 * 60 * 1000;
+const RELAX_TRACK_INTERVAL = 5 * 60 * 1000;
 
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
   if (error) {

@@ -143,7 +143,7 @@ function HomeContent() {
 
         {/* Location map */}
         <View className="mx-5 mb-5 bg-raices-surface rounded-[24px] border border-raices-secondary/15 overflow-hidden shadow-sm elevation-2">
-          <LocationIndicator />
+          <LocationIndicator profileId={selected?.profileId} />
         </View>
       </ScrollView>
     </View>
