@@ -17,6 +17,7 @@ export type WebSocketEventMap = {
   };
 
   "location.track.update":{
+    profile_id: string,
     latitude:number,
     longitude:number
   }
