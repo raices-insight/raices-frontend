@@ -1,7 +1,7 @@
 {
   "name": "raices-frontend",
   "main": "expo-router/entry",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "scripts": {
     "start": "expo start",
     "start:android": "adb reverse tcp:8081 tcp:8081 && REACT_NATIVE_PACKAGER_HOSTNAME=localhost expo start",
